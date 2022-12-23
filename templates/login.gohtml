@@ -15,7 +15,8 @@
     <div class="form-control w-full max-w-xs">
       <input
         :id="field.label"
-        class="input input-bordered m-2 w-full"
+        :name="field.label"
+        class="input input-bordered w-full"
         :class="{'input-error' : invalidMessage}"
         type="text"
         :placeholder="field.label"
@@ -28,12 +29,23 @@
     </div>
   </template>
 
-  <div class="flex justify-center">
-    <form class="p-10" @submit.prevent="">
+  <div class="flex justify-center" id="login-form">
+    <form class="p-10 grid gap-5 hidden" @submit.prevent="" v-scope @vue:mounted="$el.classList.remove('hidden')">
       <div
         v-for="(field, key) in fields"
         v-scope="FieldComponent({field, invalidMessage:()=>invalids[key], validate:()=>validateField(key,field), submit:()=>submit()})"
       ></div>
+      <button class="btn btn-primary gap-2 w-full" type="submit" @click.prevent="submit">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </svg>
+        Login
+      </button>
     </form>
   </div>
 {{ end }}

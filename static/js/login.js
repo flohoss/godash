@@ -1,4 +1,4 @@
-import { createApp, nextTick } from "https://unpkg.com/petite-vue?module";
+import { createApp, nextTick } from "https://unpkg.com/petite-vue@0.4.1/dist/petite-vue.iife.js";
 
 function FieldComponent(props) {
   return {
@@ -61,4 +61,4 @@ createApp({
     if (this.isInvalid) return;
     console.log("doing submit", this.fields);
   },
-}).mount();
+}).mount("#login-form");
