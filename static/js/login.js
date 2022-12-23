@@ -3,10 +3,20 @@ import { createApp, nextTick } from "https://unpkg.com/petite-vue?module";
 function FieldComponent(props) {
   return {
     $template: "#field-component-template",
-    id: props.id,
     field: props.field,
     get invalidMessage() {
       return props.invalidMessage();
+    },
+    validate(e) {
+      if (e.key === "Escape") {
+        this.field.value = "";
+      } else if (e.key === "Enter") {
+        props.submit();
+      } else {
+        nextTick(() => {
+          if (this.invalidMessage) props.validate();
+        });
+      }
     },
   };
 }
@@ -18,7 +28,6 @@ function requiredFieldMessage(what) {
 createApp({
   FieldComponent,
   $delimiters: ["[[", "]]"],
-  submitted: false,
   invalids: {},
   fields: {
     name: {
@@ -51,13 +60,5 @@ createApp({
     this.validate();
     if (this.isInvalid) return;
     console.log("doing submit", this.fields);
-    this.submitted = true;
-  },
-  handleInput(event) {
-    if (event.key === "Escape") {
-      this.fields[event.target.id].value = "";
-    } else if (event.key === "Enter") {
-      this.submit();
-    }
   },
 }).mount();

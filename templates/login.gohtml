@@ -13,17 +13,14 @@
   <template id="field-component-template">
     <!--Form Field-->
     <div class="form-control w-full max-w-xs">
-      <label :for="id" class="label">
-        <span class="label-text">What is your [[ field.label ]]?</span>
-      </label>
       <input
-        :id="id"
+        :id="field.label"
         class="input input-bordered m-2 w-full"
         :class="{'input-error' : invalidMessage}"
         type="text"
-        :placeholder="id"
+        :placeholder="field.label"
         v-model="field.value"
-        @keyup="handleInput"
+        @keyup="validate"
       />
       <label class="label" v-if="invalidMessage">
         <span class="label-text-alt text-error">[[invalidMessage]]</span>
@@ -33,7 +30,10 @@
 
   <div class="flex justify-center">
     <form class="p-10" @submit.prevent="">
-      <div v-for="(field, id) in fields" v-scope="FieldComponent({id, field, invalidMessage: () => invalids[id]})"></div>
+      <div
+        v-for="(field, key) in fields"
+        v-scope="FieldComponent({field, invalidMessage:()=>invalids[key], validate:()=>validateField(key,field), submit:()=>submit()})"
+      ></div>
     </form>
   </div>
 {{ end }}
