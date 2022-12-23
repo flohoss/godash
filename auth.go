@@ -14,7 +14,7 @@ func (g *goDash) authMiddleware() echo.MiddlewareFunc {
 		Skipper: func(c echo.Context) bool {
 			return g.config.Password == "" || c.Path() == "/auth/login" || c.Path() == "/health" || strings.Contains(c.Path(), "/static")
 		},
-		SigningKey:  []byte("secret"),
+		SigningKey:  []byte(g.config.Secret),
 		TokenLookup: "cookie:" + g.cookieName(),
 		AuthScheme:  "",
 		ErrorHandlerWithContext: func(err error, c echo.Context) error {
@@ -57,7 +57,7 @@ func (g *goDash) loginHandler(c echo.Context) error {
 	claims := &jwt.StandardClaims{ExpiresAt: expires.Unix()}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	t, err := token.SignedString([]byte("secret"))
+	t, err := token.SignedString([]byte(g.config.Secret))
 	if err != nil {
 		return err
 	}
@@ -68,5 +68,5 @@ func (g *goDash) loginHandler(c echo.Context) error {
 
 func (g *goDash) logoutHandler(c echo.Context) error {
 	g.setupCookie(c, "", time.Now())
-	return c.Redirect(http.StatusTemporaryRedirect, "/")
+	return c.JSON(http.StatusOK, echo.Map{"message": "Logged out"})
 }

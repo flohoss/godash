@@ -38,6 +38,7 @@ type config struct {
 	LogLevel   string  `env:"LOG_LEVEL" envDefault:"info"`
 	LiveSystem bool    `env:"LIVE_SYSTEM" envDefault:"true"`
 	Password   string  `env:"PASSWORD" envDefault:""`
+	Secret     string  `env:"SECRET" envDefault:"superSecureSecret"`
 }
 
 func (g *goDash) createInfoServices() {

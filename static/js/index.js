@@ -24,6 +24,13 @@ const uptimeHours = document.getElementById("uptimeHours");
 const uptimeMinutes = document.getElementById("uptimeMinutes");
 const uptimeSeconds = document.getElementById("uptimeSeconds");
 
+// auth elements
+const logoutBtn = document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener("click", () => {
+  fetch("/auth/logout", { method: "post" }).finally(() => window.location.reload());
+});
+
 function connect() {
   let ws = new WebSocket(wsUrl);
   ws.onopen = () => {
