@@ -89,6 +89,9 @@ WEATHER_UNITS = "metric"
 WEATHER_DIGITS = true
 
 LIVE_SYSTEM = true
+
+PASSWORD = ""
+SECRET = "superSecureSecret"
 ```
 
 ## Heartbeat
@@ -132,6 +135,9 @@ services:
       - LOCATION_LONGITUDE=9.349618464869025
       # show live system information
       - LIVE_SYSTEM=true
+      # authentication, remove password for no auth
+      - PASSWORD=password
+      - SECRET=superSecureSecret
     volumes:
       # to mount the config.yaml and the icons folder on the system
       - ./storage:/app/storage

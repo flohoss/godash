@@ -1,15 +1,17 @@
 package main
 
 func (g *goDash) setupRouter() {
-	g.router.Use(g.authMiddleware())
 	g.router.GET("/", g.homePage)
 	g.router.GET("/ws", g.ws)
 	g.router.GET("/robots.txt", robotsHandler)
 
-	auth := g.router.Group("/auth")
-	auth.GET("/login", g.loginPage)
-	auth.POST("/login", g.loginHandler)
-	auth.POST("/logout", g.logoutHandler)
+	if g.config.Password != "" {
+		g.router.Use(g.authMiddleware())
+		auth := g.router.Group("/auth")
+		auth.GET("/login", g.loginPage)
+		auth.POST("/login", g.loginHandler)
+		auth.POST("/logout", g.logoutHandler)
+	}
 
 	static := g.router.Group("/static", longCacheLifetime)
 	static.Static("/", "static")

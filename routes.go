@@ -17,6 +17,7 @@ func (g *goDash) homePage(c echo.Context) error {
 		"Weather": g.info.weather.CurrentWeather,
 		"Parsed":  g.info.bookmarks.Parsed,
 		"System":  g.info.system,
+		"Auth":    g.config.Password != "",
 	})
 }
 
