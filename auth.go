@@ -12,7 +12,7 @@ import (
 func (g *goDash) authMiddleware() echo.MiddlewareFunc {
 	return middleware.JWTWithConfig(middleware.JWTConfig{
 		Skipper: func(c echo.Context) bool {
-			return g.config.Password == "" || c.Path() == "/auth/login" || strings.Contains(c.Path(), "/static")
+			return g.config.Password == "" || c.Path() == "/auth/login" || c.Path() == "/health" || strings.Contains(c.Path(), "/static")
 		},
 		SigningKey:  []byte("secret"),
 		TokenLookup: "cookie:" + g.cookieName(),
@@ -68,7 +68,7 @@ func (g *goDash) loginHandler(c echo.Context) error {
 	}
 
 	g.setupCookie(c, t, expires)
-	return c.Redirect(http.StatusTemporaryRedirect, "/")
+	return c.JSON(http.StatusOK, echo.Map{"message": "Authorized"})
 }
 
 func (g *goDash) logoutHandler(c echo.Context) error {

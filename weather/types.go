@@ -17,7 +17,6 @@ type config struct {
 	Longitude float32 `env:"LOCATION_LONGITUDE" envDefault:"9.177968320179422"`
 	Key       string  `env:"WEATHER_KEY" envDefault:""`
 	Units     string  `env:"WEATHER_UNITS" envDefault:"metric"`
-	Lang      string  `env:"WEATHER_LANG" envDefault:"en"`
 	Digits    bool    `env:"WEATHER_DIGITS" envDefault:"true"`
 }
 

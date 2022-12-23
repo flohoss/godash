@@ -4,6 +4,36 @@
   {{ .Title }}
 {{ end }}
 
+{{ define "script" }}
+  <script type="module" src="/static/js/login.min.js"></script>
+{{ end }}
+
 {{ define "content" }}
-  <div class="flex justify-center">Login</div>
+  <!--Field Component Template-->
+  <template id="field-component-template">
+    <!--Form Field-->
+    <div class="form-control w-full max-w-xs">
+      <label :for="id" class="label">
+        <span class="label-text">What is your [[ field.label ]]?</span>
+      </label>
+      <input
+        :id="id"
+        class="input input-bordered m-2 w-full"
+        :class="{'input-error' : invalidMessage}"
+        type="text"
+        :placeholder="id"
+        v-model="field.value"
+        @keyup="handleInput"
+      />
+      <label class="label" v-if="invalidMessage">
+        <span class="label-text-alt text-error">[[invalidMessage]]</span>
+      </label>
+    </div>
+  </template>
+
+  <div class="flex justify-center">
+    <form class="p-10" @submit.prevent="">
+      <div v-for="(field, id) in fields" v-scope="FieldComponent({id, field, invalidMessage: () => invalids[id]})"></div>
+    </form>
+  </div>
 {{ end }}

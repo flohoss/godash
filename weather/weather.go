@@ -50,12 +50,11 @@ func (w *Weather) copyWeatherValues(weatherResp *OpenWeatherApiResponse) {
 func (w *Weather) updateWeather(interval time.Duration) {
 	var weatherResponse OpenWeatherApiResponse
 	for {
-		resp, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s&units=%s&lang=%s",
+		resp, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s&units=%s&lang=en",
 			w.config.Latitude,
 			w.config.Longitude,
 			w.config.Key,
-			w.config.Units,
-			w.config.Lang))
+			w.config.Units))
 		if err != nil || resp.StatusCode != 200 {
 			w.log.Error("weather cannot be updated, please check WEATHER_KEY")
 		} else {

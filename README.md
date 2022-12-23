@@ -86,7 +86,6 @@ LOCATION_LATITUDE = 48.780331609463815
 LOCATION_LONGITUDE = 9.177968320179422
 WEATHER_KEY = ""
 WEATHER_UNITS = "metric"
-WEATHER_LANG = "en"
 WEATHER_DIGITS = true
 
 LIVE_SYSTEM = true
@@ -126,8 +125,6 @@ services:
       - WEATHER_KEY=thisIsNoFunctioningKey
       # standard, metric or imperial
       - WEATHER_UNITS=metric
-      # https://openweathermap.org/current#multi
-      - WEATHER_LANG=en
       # Temp is normally xx.xx, can be rounded to xx if desired
       - WEATHER_DIGITS=true
       # location is needed for weather

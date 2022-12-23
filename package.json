@@ -1,12 +1,14 @@
 {
   "watch": {
-    "buildJavascript": "./static/js/app.js"
+    "buildIndexJS": "./static/js/index.js",
+    "buildLoginJS": "./static/js/login.js"
   },
   "scripts": {
     "watch": "npm-watch",
     "devTailwind": "npx tailwindcss -i ./static/css/input.css -o ./static/css/style.css --watch",
     "buildTailwind": "npx tailwindcss -i ./static/css/input.css -o ./static/css/style.css --minify",
-    "buildJavascript": "terser ./static/js/app.js -o ./static/js/app.min.js -c -m",
+    "buildIndexJS": "terser static/js/index.js -o ./static/js/index.min.js -c -m",
+    "buildLoginJS": "terser static/js/login.js -o ./static/js/login.min.js -c -m",
     "dev": "bash -c \"npm run devTailwind &npm run watch\"",
     "build": "npm run buildTailwind && npm run buildJavascript"
   },
