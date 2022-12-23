@@ -1,4 +1,4 @@
-{{ define "base" }}
+{{ define "base.gohtml" }}
   <!DOCTYPE html>
   <html lang="en">
     <head>
@@ -20,16 +20,17 @@
         }
       </style>
       <link rel="stylesheet" href="/static/css/style.css" />
-      <script type="module" src="/static/js/app.min.js"></script>
     </head>
 
     <body>
       <div class="mx-auto container px-5 lg:px-8 my-3 md:my-6 lg:my-10 xl:my-14">{{ template "content" . }}</div>
     </body>
+    {{ template "script" . }}
   </html>
 {{ end }}
 
 {{ define "content" }}{{ end }}
+{{ define "script" }}{{ end }}
 
 {{ define "systemIcons" }}
   <svg xmlns="http://www.w3.org/2000/svg" style="display: none">

@@ -11,8 +11,8 @@ var (
 	upgrader = websocket.Upgrader{}
 )
 
-func (g *goDash) index(c echo.Context) error {
-	return c.Render(http.StatusOK, "index.gohtml", map[string]interface{}{
+func (g *goDash) homePage(c echo.Context) error {
+	return c.Render(http.StatusOK, "index", map[string]interface{}{
 		"Title":   g.config.Title,
 		"Weather": g.info.weather.CurrentWeather,
 		"Parsed":  g.info.bookmarks.Parsed,
@@ -55,10 +55,10 @@ func (g *goDash) ws(c echo.Context) error {
 	}
 }
 
-func robots(c echo.Context) error {
+func robotsHandler(c echo.Context) error {
 	return c.String(http.StatusOK, "User-agent: *\nDisallow: /")
 }
 
 func redirectHome(c echo.Context) error {
-	return c.Redirect(http.StatusMovedPermanently, "/")
+	return c.Redirect(http.StatusTemporaryRedirect, "/")
 }

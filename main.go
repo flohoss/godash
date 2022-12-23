@@ -10,7 +10,6 @@ import (
 	"godash/hub"
 	"godash/system"
 	"godash/weather"
-	"html/template"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,19 +55,11 @@ func (g *goDash) startServer() {
 	}
 }
 
-func (g *goDash) setupTemplateRender() {
-	g.router.Renderer = &TemplateRenderer{
-		templates: template.Must(template.ParseGlob("templates/*.gohtml")),
-	}
-}
-
 func main() {
 	g := goDash{router: echo.New()}
 	if err := env.Parse(&g.config); err != nil {
 		panic(err)
 	}
-
-	g.router.Debug = true
 
 	g.setupTemplateRender()
 	g.setupLogger()

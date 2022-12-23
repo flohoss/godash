@@ -1,7 +1,11 @@
-{{ template "base" . }}
+{{ template "base.gohtml" . }}
 
 {{ define "title" }}
   {{ .Title }}
+{{ end }}
+
+{{ define "script" }}
+  <script type="module" src="/static/js/app.min.js"></script>
 {{ end }}
 
 {{ define "content" }}
