@@ -12,6 +12,7 @@ import (
 	"godash/weather"
 	"html/template"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"time"
@@ -32,11 +33,12 @@ type info struct {
 }
 
 type config struct {
-	Title        string   `env:"TITLE" envDefault:"goDash"`
-	Port         int      `env:"PORT" envDefault:"4000"`
-	AllowedHosts []string `env:"ALLOWED_HOSTS" envDefault:"*" envSeparator:","`
-	LogLevel     string   `env:"LOG_LEVEL" envDefault:"info"`
-	LiveSystem   bool     `env:"LIVE_SYSTEM" envDefault:"true"`
+	Title      string  `env:"TITLE" envDefault:"goDash"`
+	Port       int     `env:"PORT" envDefault:"4000"`
+	Domain     url.URL `env:"DOMAIN" envDefault:"http://localhost"`
+	LogLevel   string  `env:"LOG_LEVEL" envDefault:"info"`
+	LiveSystem bool    `env:"LIVE_SYSTEM" envDefault:"true"`
+	Password   string  `env:"PASSWORD" envDefault:""`
 }
 
 func (g *goDash) createInfoServices() {
@@ -66,6 +68,8 @@ func main() {
 		panic(err)
 	}
 
+	g.router.Debug = true
+
 	g.setupTemplateRender()
 	g.setupLogger()
 	defer func(logger *zap.SugaredLogger) {
@@ -77,7 +81,7 @@ func main() {
 	g.setupRouter()
 
 	go g.startServer()
-	g.logger.Infof("running on %s:%d", "http://localhost", g.config.Port)
+	g.logger.Infof("running on %s:%d", g.config.Domain.String(), g.config.Port)
 
 	// handle graceful shutdown
 	quit := make(chan os.Signal, 1)
