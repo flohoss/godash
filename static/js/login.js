@@ -1,4 +1,4 @@
-import { createApp, nextTick } from "https://unpkg.com/petite-vue@0.4.1/dist/petite-vue.iife.js";
+import { createApp, nextTick } from "https://unpkg.com/petite-vue?module";
 
 function FieldComponent(props) {
   return {
@@ -10,8 +10,6 @@ function FieldComponent(props) {
     validate(e) {
       if (e.key === "Escape") {
         this.field.value = "";
-      } else if (e.key === "Enter") {
-        props.submit();
       } else {
         nextTick(() => {
           if (this.invalidMessage) props.validate();
@@ -28,15 +26,13 @@ function requiredFieldMessage(what) {
 createApp({
   FieldComponent,
   $delimiters: ["[[", "]]"],
+  isLoading: false,
+  isError: false,
   invalids: {},
   fields: {
-    name: {
-      label: "Name",
-      value: "",
-      validation: { message: requiredFieldMessage("Name"), test: (value) => value },
-    },
     password: {
       label: "Password",
+      type: "password",
       value: "",
       validation: { message: requiredFieldMessage("Password"), test: (value) => value },
     },
@@ -59,6 +55,21 @@ createApp({
   submit() {
     this.validate();
     if (this.isInvalid) return;
-    console.log("doing submit", this.fields);
+    this.isLoading = true;
+    const FD = new FormData();
+    Object.entries(this.fields).forEach((key) => {
+      FD.append(key[0], key[1].value);
+    });
+    fetch("/auth/login", {
+      method: "post",
+      body: FD,
+    })
+      .then((resp) => {
+        if (resp.ok) {
+          window.location.href = "/";
+        } else this.isError = true;
+      })
+      .catch(() => (this.isError = true))
+      .finally(() => (this.isLoading = false));
   },
 }).mount("#login-form");

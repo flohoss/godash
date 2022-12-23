@@ -9,153 +9,154 @@
 {{ end }}
 
 {{ define "content" }}
-
-  <div class="grid gap-10">
-    {{ if .Weather.Icon }}
-      {{ template "weatherIcons" . }}
-
-
-      <div class="flex items-center select-none">
-        <svg class="h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14">
-          <use id="weatherIcon" xlink:href="#{{ .Weather.Icon }}"></use>
-        </svg>
-        <div>
-          <div class="text-4xl md:text-4xl">
-            <span id="weatherTemp">{{ .Weather.Temp }}</span> {{ .Weather.Units }}
-          </div>
-          <div class="flex items-center gap-5 text-xs">
-            <div class="flex items-center">
-              <svg class="extra-icon">
-                <use xlink:href="#quote"></use>
-              </svg>
-              <div id="weatherDescription" class="extra-info">{{ .Weather.Description }}</div>
-            </div>
-            <div class="flex items-center">
-              <svg class="extra-icon">
-                <use xlink:href="#humidity"></use>
-              </svg>
-              <div id="weatherHumidity" class="extra-info">{{ .Weather.Humidity }}%</div>
-            </div>
-            <div class="hidden sm:flex items-center">
-              <svg class="extra-sun-icon">
-                <use xlink:href="#sunrise"></use>
-              </svg>
-              <div id="weatherSunrise" class="extra-info">{{ .Weather.Sunrise }}</div>
-            </div>
-            <div class="hidden sm:flex items-center">
-              <svg class="extra-sun-icon">
-                <use xlink:href="#sunset"></use>
-              </svg>
-              <div id="weatherSunset" class="extra-info">{{ .Weather.Sunset }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    {{ end }}
-
-    {{ if .System.Static.Host.Architecture }}
-      {{ template "systemIcons" . }}
+  <div class="mx-auto container px-5 lg:px-8 my-3 md:my-6 lg:my-10 xl:my-14">
+    <div class="grid gap-10">
+      {{ if .Weather.Icon }}
+        {{ template "weatherIcons" . }}
 
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
-        <div class="flex items-center">
-          <svg class="system-icon">
-            <use xlink:href="#cpu"></use>
+        <div class="flex items-center select-none">
+          <svg class="h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14">
+            <use id="weatherIcon" xlink:href="#{{ .Weather.Icon }}"></use>
           </svg>
-          <div class="w-full truncate">
-            <div class="extra-info">{{ .System.Static.CPU.Threads }}</div>
-            <div class="truncate">{{ .System.Static.CPU.Name }}</div>
-            <div class="progress-bar-wrapper">
-              <div id="systemCpuPercentage" class="progress-bar" style="width: {{ .System.Live.CPU }}%"></div>
+          <div>
+            <div class="text-4xl md:text-4xl">
+              <span id="weatherTemp">{{ .Weather.Temp }}</span> {{ .Weather.Units }}
             </div>
-          </div>
-        </div>
-        <div class="flex items-center">
-          <svg class="system-icon">
-            <use xlink:href="#ram"></use>
-          </svg>
-          <div class="w-full truncate">
-            <div class="extra-info">{{ .System.Static.Ram.Swap }}</div>
-            <div class="truncate">
-              <span id="systemRamValue">{{ .System.Live.Ram.Value }}</span> /
-              {{ .System.Static.Ram.Total }}
-            </div>
-            <div class="progress-bar-wrapper">
-              <div id="systemRamPercentage" class="progress-bar" style="width: {{ .System.Live.Ram.Percentage }}%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center">
-          <svg class="system-icon">
-            <use xlink:href="#disk"></use>
-          </svg>
-          <div class="w-full truncate">
-            <div class="extra-info">{{ .System.Static.Disk.Partitions }}</div>
-            <div class="truncate">
-              <span id="systemDiskValue">{{ .System.Live.Disk.Value }}</span> /
-              {{ .System.Static.Disk.Total }}
-            </div>
-            <div class="progress-bar-wrapper">
-              <div id="systemDiskPercentage" class="progress-bar" style="width: {{ .System.Live.Disk.Percentage }}%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex items-center">
-          <svg class="system-icon">
-            <use xlink:href="#server"></use>
-          </svg>
-          <div class="w-full truncate">
-            <div class="extra-info">{{ .System.Static.Host.Architecture }}</div>
-            <div class="flex items-center gap-2 truncate">
-              <div class="truncate">
-                <span><span id="uptimeDays">{{ .System.Live.Uptime.Days }}</span> days</span>
-                <span class="countdown"><span id="uptimeHours" style="--value:{{ .System.Live.Uptime.Hours }};"></span></span> hours
-                <span class="countdown"><span id="uptimeMinutes" style="--value:{{ .System.Live.Uptime.Minutes }};"></span></span> min
-                <span class="countdown"><span id="uptimeSeconds" style="--value:{{ .System.Live.Uptime.Seconds }};"></span></span> sec
+            <div class="flex items-center gap-5 text-xs">
+              <div class="flex items-center">
+                <svg class="extra-icon">
+                  <use xlink:href="#quote"></use>
+                </svg>
+                <div id="weatherDescription" class="extra-info">{{ .Weather.Description }}</div>
+              </div>
+              <div class="flex items-center">
+                <svg class="extra-icon">
+                  <use xlink:href="#humidity"></use>
+                </svg>
+                <div id="weatherHumidity" class="extra-info">{{ .Weather.Humidity }}%</div>
+              </div>
+              <div class="hidden sm:flex items-center">
+                <svg class="extra-sun-icon">
+                  <use xlink:href="#sunrise"></use>
+                </svg>
+                <div id="weatherSunrise" class="extra-info">{{ .Weather.Sunrise }}</div>
+              </div>
+              <div class="hidden sm:flex items-center">
+                <svg class="extra-sun-icon">
+                  <use xlink:href="#sunset"></use>
+                </svg>
+                <div id="weatherSunset" class="extra-info">{{ .Weather.Sunset }}</div>
               </div>
             </div>
-            <div class="progress-bar-wrapper">
-              <div id="systemUptimePercentage" class="progress-bar" style="width: {{ .System.Live.Uptime.Percentage }}%"></div>
+          </div>
+        </div>
+      {{ end }}
+
+      {{ if .System.Static.Host.Architecture }}
+        {{ template "systemIcons" . }}
+
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
+          <div class="flex items-center">
+            <svg class="system-icon">
+              <use xlink:href="#cpu"></use>
+            </svg>
+            <div class="w-full truncate">
+              <div class="extra-info">{{ .System.Static.CPU.Threads }}</div>
+              <div class="truncate">{{ .System.Static.CPU.Name }}</div>
+              <div class="progress-bar-wrapper">
+                <div id="systemCpuPercentage" class="progress-bar" style="width: {{ .System.Live.CPU }}%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <svg class="system-icon">
+              <use xlink:href="#ram"></use>
+            </svg>
+            <div class="w-full truncate">
+              <div class="extra-info">{{ .System.Static.Ram.Swap }}</div>
+              <div class="truncate">
+                <span id="systemRamValue">{{ .System.Live.Ram.Value }}</span> /
+                {{ .System.Static.Ram.Total }}
+              </div>
+              <div class="progress-bar-wrapper">
+                <div id="systemRamPercentage" class="progress-bar" style="width: {{ .System.Live.Ram.Percentage }}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <svg class="system-icon">
+              <use xlink:href="#disk"></use>
+            </svg>
+            <div class="w-full truncate">
+              <div class="extra-info">{{ .System.Static.Disk.Partitions }}</div>
+              <div class="truncate">
+                <span id="systemDiskValue">{{ .System.Live.Disk.Value }}</span> /
+                {{ .System.Static.Disk.Total }}
+              </div>
+              <div class="progress-bar-wrapper">
+                <div id="systemDiskPercentage" class="progress-bar" style="width: {{ .System.Live.Disk.Percentage }}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            <svg class="system-icon">
+              <use xlink:href="#server"></use>
+            </svg>
+            <div class="w-full truncate">
+              <div class="extra-info">{{ .System.Static.Host.Architecture }}</div>
+              <div class="flex items-center gap-2 truncate">
+                <div class="truncate">
+                  <span><span id="uptimeDays">{{ .System.Live.Uptime.Days }}</span> days</span>
+                  <span class="countdown"><span id="uptimeHours" style="--value:{{ .System.Live.Uptime.Hours }};"></span></span> hours
+                  <span class="countdown"><span id="uptimeMinutes" style="--value:{{ .System.Live.Uptime.Minutes }};"></span></span> min
+                  <span class="countdown"><span id="uptimeSeconds" style="--value:{{ .System.Live.Uptime.Seconds }};"></span></span> sec
+                </div>
+              </div>
+              <div class="progress-bar-wrapper">
+                <div id="systemUptimePercentage" class="progress-bar" style="width: {{ .System.Live.Uptime.Percentage }}%"></div>
+              </div>
             </div>
           </div>
         </div>
+      {{ end }}
+
+
+      <div class="grid gap-4">
+        {{ range .Parsed.Applications }}
+          <div class="grid gap-2">
+            {{ if .Category }}
+              <div class="heading">{{ .Category }}</div>
+            {{ end }}
+            <div class="grid-apps">
+              {{ range .Entries }}
+                <a href="{{ .URL }}" class="bookmark-link flex items-center hover-effect">
+                  <div class="img rounded-md w-8 h-8 bg-cover bg-center opacity-90" style="background-image: url({{ .Icon }})"></div>
+                  <div class="uppercase truncate ml-2">{{ .Name }}</div>
+                </a>
+              {{ end }}
+            </div>
+          </div>
+        {{ end }}
       </div>
-    {{ end }}
 
-
-    <div class="grid gap-4">
-      {{ range .Parsed.Applications }}
-        <div class="grid gap-2">
-          {{ if .Category }}
-            <div class="heading">{{ .Category }}</div>
-          {{ end }}
-          <div class="grid-apps">
+      <div class="grid-apps">
+        {{ range .Parsed.Links }}
+          <div class="flex flex-col gap-2">
+            {{ if .Category }}
+              <div class="heading">{{ .Category }}</div>
+            {{ end }}
             {{ range .Entries }}
-              <a href="{{ .URL }}" class="bookmark-link flex items-center hover-effect">
-                <div class="img rounded-md w-8 h-8 bg-cover bg-center opacity-90" style="background-image: url({{ .Icon }})"></div>
-                <div class="uppercase truncate ml-2">{{ .Name }}</div>
+              <a href="{{ .URL }}" class="hover-effect">
+                <div class="uppercase truncate">{{ .Name }}</div>
               </a>
             {{ end }}
           </div>
-        </div>
-      {{ end }}
-    </div>
-
-    <div class="grid-apps">
-      {{ range .Parsed.Links }}
-        <div class="flex flex-col gap-2">
-          {{ if .Category }}
-            <div class="heading">{{ .Category }}</div>
-          {{ end }}
-          {{ range .Entries }}
-            <a href="{{ .URL }}" class="hover-effect">
-              <div class="uppercase truncate">{{ .Name }}</div>
-            </a>
-          {{ end }}
-        </div>
-      {{ end }}
+        {{ end }}
+      </div>
     </div>
   </div>
 {{ end }}

@@ -40,11 +40,6 @@ func (g *goDash) setupCookie(c echo.Context, value string, expires time.Time) {
 	})
 }
 
-type jwtCustomClaims struct {
-	Name string `json:"name"`
-	jwt.StandardClaims
-}
-
 func (g *goDash) loginPage(c echo.Context) error {
 	return c.Render(http.StatusOK, "login", map[string]interface{}{
 		"Title": g.config.Title + " - Login",
@@ -52,14 +47,14 @@ func (g *goDash) loginPage(c echo.Context) error {
 }
 
 func (g *goDash) loginHandler(c echo.Context) error {
-	name := c.FormValue("name")
 	password := c.FormValue("password")
 
 	if password != g.config.Password {
+		g.setupCookie(c, "", time.Now())
 		return echo.ErrUnauthorized
 	}
 	expires := time.Now().Add(time.Hour * 72)
-	claims := &jwtCustomClaims{name, jwt.StandardClaims{ExpiresAt: expires.Unix()}}
+	claims := &jwt.StandardClaims{ExpiresAt: expires.Unix()}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString([]byte("secret"))

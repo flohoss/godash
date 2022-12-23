@@ -10,7 +10,7 @@
     "buildIndexJS": "terser static/js/index.js -o ./static/js/index.min.js -c -m",
     "buildLoginJS": "terser static/js/login.js -o ./static/js/login.min.js -c -m",
     "dev": "bash -c \"npm run devTailwind &npm run watch\"",
-    "build": "npm run buildTailwind && npm run buildJavascript"
+    "build": "npm run buildTailwind && npm run buildIndexJS && npm run buildLoginJS"
   },
   "devDependencies": {
     "daisyui": "^2.33.0",

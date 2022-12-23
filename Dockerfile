@@ -35,7 +35,8 @@ COPY --from=go /backend/templates/ ./templates/
 # build static files and favicons
 COPY --from=go /backend/static/favicon/ ./static/favicon/
 COPY --from=go /backend/static/css/style.css ./static/css/style.css
-COPY --from=go /backend/static/js/app.min.js ./static/js/app.min.js
+COPY --from=go /backend/static/js/app.min.js ./static/js/index.min.js
+COPY --from=go /backend/static/js/app.min.js ./static/js/login.min.js
 # go executable
 COPY --from=go /backend/app .
 
