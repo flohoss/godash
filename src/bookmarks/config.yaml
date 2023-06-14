@@ -1,0 +1,30 @@
+links:
+  - category: "Code"
+    entries:
+      - name: "Github"
+        url: "https://github.com"
+  - category: "CI/CD"
+    entries:
+      - name: "Jenkins"
+        url: "https://www.jenkins.io/"
+  - category: "Server"
+    entries:
+      - name: "bwCloud"
+        url: "https://portal.bw-cloud.org"
+
+applications:
+  - category: "Code"
+    entries:
+      - name: "Github"
+        icon: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+        url: "https://github.com"
+  - category: ""
+    entries:
+      - name: "Jenkins"
+        icon: "https://www.jenkins.io/images/logos/jenkins/Jenkins-stop-the-war.svg"
+        url: "https://www.jenkins.io/"
+  - category: "Server"
+    entries:
+      - name: "bwCloud"
+        icon: "https://portal.bw-cloud.org/static/dashboard/img/logo-splash.svg"
+        url: "https://portal.bw-cloud.org"

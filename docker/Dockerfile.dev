@@ -1,0 +1,16 @@
+ARG GOLANG_VERSION
+FROM golang:${GOLANG_VERSION}-alpine
+RUN apk add --update --no-cache tzdata
+
+# GoDash
+WORKDIR /src
+COPY ./src/go.mod .
+COPY ./src/go.sum .
+RUN go mod download
+
+# Air
+RUN go install github.com/cosmtrek/air@latest
+
+# Envs
+ENV VERSION=v0.0.0-DEV
+ENV BUILDTIME=2023-04-05T20:48:07Z
