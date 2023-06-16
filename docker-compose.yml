@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: ./docker/Dockerfile.dev
       args:
-        GOLANG_VERSION: "1.20"
-    command: air --build.exclude_dir "static,docs,storage,tmp,dist,logs"
+        - GOLANG_VERSION=${GOLANG_VERSION}
+    command: air -c .air.toml
     environment:
       - TZ=Europe/Berlin
       - LOG_LEVEL=debug

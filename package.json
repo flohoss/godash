@@ -1,8 +1,8 @@
 {
   "license": "Apache-2.0",
   "scripts": {
-    "tailwind:dev": "npx tailwindcss -i ./src/static/css/tailwind.css -o ./src/static/css/style.css --watch",
-    "tailwind:build": "npx tailwindcss -i ./src/static/css/tailwind.css -o ./src/static/css/style.css --minify"
+    "tailwind:dev": "npx tailwindcss -i ./web/static/css/tailwind.css -o ./web/static/css/style.css --watch",
+    "tailwind:build": "npx tailwindcss -i ./web/static/css/tailwind.css -o ./web/static/css/style.css --minify"
   },
   "dependencies": {
     "autoprefixer": "^10.0.2",
@@ -15,6 +15,7 @@
   "prettier": {
     "printWidth": 160,
     "goTemplateBracketSpacing": true,
+    "singleQuote": true,
     "overrides": [
       {
         "files": [

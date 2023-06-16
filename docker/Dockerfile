@@ -2,24 +2,23 @@ ARG GOLANG_VERSION
 ARG NODE_VERSION
 ARG ALPINE_VERSION
 FROM golang:${GOLANG_VERSION}-alpine AS goBuilder
+WORKDIR /app
 
-WORKDIR /src
-COPY ./src/go.mod .
-COPY ./src/go.sum .
+COPY ./go.mod .
+COPY ./go.sum .
 RUN go mod download
 
-COPY ./src/ .
-RUN go build -ldflags="-s -w"
+COPY . .
+RUN go build -ldflags="-s -w" cmd/godash/godash.go
 
 FROM node:${NODE_VERSION}-alpine AS nodeBuilder
 
-COPY package.json .
-COPY yarn.lock .
+COPY ./package.json .
+COPY ./yarn.lock .
 RUN yarn install --frozen-lockfile
 
-COPY tailwind.config.js .
-COPY ./src/templates/ ./src/templates/
-COPY ./src/static/ ./src/static/
+COPY ./web ./web
+COPY ./tailwind.config.js .
 RUN yarn run tailwind:build
 
 FROM alpine:${ALPINE_VERSION} AS logo
@@ -27,18 +26,17 @@ RUN apk add figlet
 RUN figlet GoDash > logo.txt
 
 FROM alpine:${ALPINE_VERSION} AS final
-RUN apk add --update --no-cache tzdata
+RUN apk add tzdata
 
 # GoDash
-WORKDIR /src
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+WORKDIR /app
+COPY scripts/entrypoint.sh .
 
 COPY --from=logo /logo.txt .
-COPY --from=nodeBuilder /src/static/ ./static/
-COPY --from=nodeBuilder /src/templates ./templates/
-COPY --from=goBuilder /src/bookmarks/config.yaml ./bookmarks/config.yaml
-COPY --from=goBuilder /src/godash .
+COPY --from=nodeBuilder /web/static/ ./web/static/
+COPY --from=nodeBuilder /web/templates ./web/templates/
+COPY --from=goBuilder /app/bookmarks/config.yaml ./bookmarks/config.yaml
+COPY --from=goBuilder /app/godash .
 
 # Envs
 ARG VERSION
@@ -46,4 +44,4 @@ ENV VERSION=$VERSION
 ARG BUILDTIME
 ENV BUILDTIME=$BUILDTIME
 
-ENTRYPOINT ["/src/entrypoint.sh"]
+ENTRYPOINT ["/app/entrypoint.sh"]
