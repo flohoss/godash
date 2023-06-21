@@ -2,14 +2,12 @@ package weather
 
 import (
 	"github.com/r3labs/sse/v2"
-	"go.uber.org/zap"
 )
 
 type Weather struct {
 	CurrentWeather OpenWeather
 	sse            *sse.Server
 	config         config
-	log            *zap.SugaredLogger
 }
 
 type config struct {

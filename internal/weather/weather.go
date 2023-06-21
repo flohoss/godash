@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/caarlos0/env/v8"
 	"github.com/r3labs/sse/v2"
 	"go.uber.org/zap"
 )
 
-func NewWeatherService(logging *zap.SugaredLogger, sse *sse.Server) *Weather {
-	var w = Weather{log: logging, sse: sse}
+func NewWeatherService(sse *sse.Server) *Weather {
+	var w = Weather{sse: sse}
 	if err := env.Parse(&w.config); err != nil {
 		panic(err)
 	}
@@ -58,15 +58,15 @@ func (w *Weather) updateWeather(interval time.Duration) {
 			w.config.Units,
 			w.config.Lang))
 		if err != nil || resp.StatusCode != 200 {
-			w.log.Error("weather cannot be updated, please check WEATHER_KEY")
+			zap.L().Error("weather cannot be updated, please check WEATHER_KEY")
 		} else {
 			body, _ := io.ReadAll(resp.Body)
 			err = json.Unmarshal(body, &weatherResponse)
 			if err != nil {
-				w.log.Error("weather cannot be processed")
+				zap.L().Error("weather cannot be processed")
 			} else {
 				w.copyWeatherValues(&weatherResponse)
-				w.log.Debugw("weather updated", "temp", w.CurrentWeather.Temp)
+				zap.L().Debug("weather updated", zap.Float64("temp", w.CurrentWeather.Temp))
 			}
 			resp.Body.Close()
 			json, _ := json.Marshal(w.CurrentWeather)

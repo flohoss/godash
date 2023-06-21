@@ -2,12 +2,10 @@ package system
 
 import (
 	"github.com/r3labs/sse/v2"
-	"go.uber.org/zap"
 )
 
 type Config struct {
 	sse    *sse.Server
-	log    *zap.SugaredLogger
 	System System
 }
 

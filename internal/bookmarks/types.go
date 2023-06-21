@@ -1,9 +1,6 @@
 package bookmarks
 
-import "go.uber.org/zap"
-
 type Config struct {
-	log    *zap.SugaredLogger
 	Parsed struct {
 		Links []struct {
 			Category string

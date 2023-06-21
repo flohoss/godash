@@ -1,22 +1,23 @@
 package bookmarks
 
 import (
+	"io"
+	"os"
+	"strings"
+
 	"github.com/fsnotify/fsnotify"
 	folderCreate "github.com/unjx-de/go-folder"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
-	"io"
-	"os"
-	"strings"
 )
 
 const StorageDir = "storage/"
 const IconsDir = StorageDir + "icons/"
-const bookmarksFolder = "bookmarks/"
+const bookmarksFolder = "internal/bookmarks/"
 const configFile = "config.yaml"
 
-func NewBookmarkService(logging *zap.SugaredLogger) *Config {
-	c := Config{log: logging}
+func NewBookmarkService() *Config {
+	c := Config{}
 	c.createFolderStructure()
 	c.copyDefaultConfigIfNotExisting()
 	c.parseBookmarks()
@@ -28,44 +29,44 @@ func (c *Config) createFolderStructure() {
 	folders := []string{StorageDir, IconsDir}
 	err := folderCreate.CreateFolders(folders, 0755)
 	if err != nil {
-		c.log.Fatal(err)
+		zap.L().Fatal("cannot create folder", zap.Error(err))
 	}
-	c.log.Debugw("folders created", "folders", folders)
+	zap.L().Debug("folders created", zap.Strings("folders", folders))
 }
 
 func (c *Config) copyDefaultConfigIfNotExisting() {
 	_, err := os.Open(StorageDir + configFile)
 	if err != nil {
-		c.log.Debug(configFile + " not existing, creating...")
+		zap.L().Debug(configFile + " not existing, creating...")
 		source, _ := os.Open(bookmarksFolder + configFile)
 		defer source.Close()
 		destination, err := os.Create(StorageDir + configFile)
 		if err != nil {
-			c.log.Error(err)
+			zap.L().Error(err.Error())
 			return
 		}
 		defer destination.Close()
 		_, err = io.Copy(destination, source)
 		if err != nil {
-			c.log.Error(err)
+			zap.L().Error(err.Error())
 			return
 		}
-		c.log.Debug(configFile + " created")
+		zap.L().Debug(configFile + " created")
 	} else {
-		c.log.Debug(configFile + " existing, skipping creation")
+		zap.L().Debug(configFile + " existing, skipping creation")
 	}
 }
 
 func (c *Config) readBookmarksFile() []byte {
 	file, err := os.Open(StorageDir + configFile)
 	if err != nil {
-		c.log.Error(err)
+		zap.L().Error(err.Error())
 		return nil
 	}
 	defer file.Close()
 	byteValue, err := io.ReadAll(file)
 	if err != nil {
-		c.log.Error(err)
+		zap.L().Error(err.Error())
 		return nil
 	}
 	return byteValue
@@ -85,7 +86,7 @@ func (c *Config) parseBookmarks() {
 	byteValue := c.readBookmarksFile()
 	err := yaml.Unmarshal(byteValue, &c.Parsed)
 	if err != nil {
-		c.log.Error(err)
+		zap.L().Error(err.Error())
 		return
 	}
 	c.replaceIconString()
@@ -94,7 +95,7 @@ func (c *Config) parseBookmarks() {
 func (c *Config) watchBookmarks() {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		c.log.Error(err)
+		zap.L().Error(err.Error())
 	}
 	defer watcher.Close()
 	done := make(chan bool)
@@ -104,15 +105,15 @@ func (c *Config) watchBookmarks() {
 			select {
 			case _ = <-watcher.Events:
 				c.parseBookmarks()
-				c.log.Debug("bookmarks changed", "applications", len(c.Parsed.Applications), "links", len(c.Parsed.Links))
+				zap.L().Debug("bookmarks changed", zap.Int("applications", len(c.Parsed.Applications)), zap.Int("links", len(c.Parsed.Links)))
 			case err := <-watcher.Errors:
-				c.log.Error(err)
+				zap.L().Error(err.Error())
 			}
 		}
 	}()
 
 	if err := watcher.Add(StorageDir + configFile); err != nil {
-		c.log.Fatal()
+		zap.L().Fatal("cannot add watcher")
 	}
 	<-done
 }
