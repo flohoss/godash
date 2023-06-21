@@ -18,7 +18,3 @@ parse_yaml() {
 eval $(parse_yaml .gitlab-ci.yml)
 
 echo "GOLANG_VERSION="$variables_GOLANG_VERSION >>.env
-
-yarn install
-docker compose up --build &
-yarn run tailwind:dev

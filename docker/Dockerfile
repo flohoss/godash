@@ -35,7 +35,7 @@ COPY scripts/entrypoint.sh .
 COPY --from=logo /logo.txt .
 COPY --from=nodeBuilder /web/static/ ./web/static/
 COPY --from=nodeBuilder /web/templates ./web/templates/
-COPY --from=goBuilder /app/bookmarks/config.yaml ./bookmarks/config.yaml
+COPY --from=goBuilder /app/internal/bookmarks/config.yaml .internal/bookmarks/config.yaml
 COPY --from=goBuilder /app/godash .
 
 # Envs
