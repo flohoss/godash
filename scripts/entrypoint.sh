@@ -5,7 +5,7 @@ CMD=./godash
 
 if [ -n "$PUID" ] || [ -n "$PGID" ]; then
   USER=appuser
-  HOME=/src
+  HOME=/app
 
   if ! grep -q "$USER" /etc/passwd; then
     # Usage: addgroup [-g GID] [-S] [USER] GROUP
