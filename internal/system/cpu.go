@@ -1,10 +1,11 @@
 package system
 
 import (
-	"github.com/shirou/gopsutil/v3/cpu"
 	"math"
 	"runtime"
 	"strconv"
+
+	"github.com/shirou/gopsutil/v3/cpu"
 )
 
 func staticCpu() CPU {

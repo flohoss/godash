@@ -1,9 +1,10 @@
 package system
 
 import (
+	"math"
+
 	"github.com/dariubs/percent"
 	"github.com/shirou/gopsutil/v3/mem"
-	"math"
 )
 
 func staticRam() Ram {
