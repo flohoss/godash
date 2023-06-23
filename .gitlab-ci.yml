@@ -4,6 +4,7 @@ variables:
   GOLANG_VERSION: '1.20'
   NODE_VERSION: '18'
   ALPINE_VERSION: '3'
+  DEBIAN_VERSION: '12'
 
 image: docker:$DOCKER_VERSION-git
 
@@ -11,6 +12,7 @@ stages:
   - test
   - build
   - analyse
+  - deploy
 
 include:
   - local: .gitlab/_common.gitlab-ci.yml
@@ -63,3 +65,18 @@ container_scanning:
   variables:
     CS_IMAGE: $LATEST_IMAGE
     CS_DOCKERFILE_PATH: docker/Dockerfile
+
+deploy-job:
+  stage: deploy
+  image: debian:${DEBIAN_VERSION}-slim
+  id_tokens:
+    TBOT_GITLAB_JWT:
+      aud: tp.fhoss.de
+  script:
+    - cd /tmp
+    - apt-get curl
+    - 'curl -O https://cdn.teleport.dev/teleport-v13.1.1-linux-amd64-bin.tar.gz'
+    - tar -xvf teleport-v13.1.1-linux-amd64-bin.tar.gz
+    - ./teleport/install
+    - 'tbot start --token=gitlab --destination-dir=/tmp/tbot-user --data-dir=/tmp/tbot-data --auth-server=tp.fhoss.de:443 --join-method=gitlab --oneshot'
+    - 'tsh -i /tmp/tbot-user/identity --proxy tp.fhoss.de:443 ssh bot@benelli "echo $CI_JOB_ID >> ~/gitlab_run_log"'
