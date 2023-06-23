@@ -11,12 +11,12 @@ module.exports = {
     themes: [
       {
         light: {
-          ...require("daisyui/src/colors/themes")["[data-theme=garden]"],
+          ...require("daisyui/src/theming/themes")["[data-theme=garden]"],
           primary: "#f28c18",
           secondary: "rgba(70,70,70,0.7)",
         },
         dark: {
-          ...require("daisyui/src/colors/themes")["[data-theme=halloween]"],
+          ...require("daisyui/src/theming/themes")["[data-theme=halloween]"],
           secondary: "#a0a0a0",
         },
       },
