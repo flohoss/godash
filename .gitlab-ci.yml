@@ -4,7 +4,7 @@ variables:
   GOLANG_VERSION: '1.20'
   NODE_VERSION: '18'
   ALPINE_VERSION: '3'
-  DEBIAN_IMAGE: '12'
+  DEBIAN_VERSION: '12'
   TELEPORT_VERSION: '13.1.1'
 
 image: docker:$DOCKER_VERSION-git
@@ -70,7 +70,7 @@ container_scanning:
 deploy_release:
   rules: !reference [.rules:release, rules]
   stage: deploy
-  image: debian:${DEBIAN_IMAGE}-slim
+  image: debian:${DEBIAN_VERSION}-slim
   id_tokens:
     TBOT_GITLAB_JWT:
       aud: tp.fhoss.de

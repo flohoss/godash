@@ -17,6 +17,9 @@ parse_yaml() {
 
 eval $(parse_yaml .gitlab-ci.yml)
 
-echo "GOLANG_VERSION="$variables_GOLANG_VERSION >.env
-echo "ALPINE_VERSION="$variables_ALPINE_VERSION >>.env
+echo "DOCKER_VERSION="$variables_DOCKER_VERSION >.env
+echo "GOLANG_VERSION="$variables_GOLANG_VERSION >>.env
 echo "NODE_VERSION="$variables_NODE_VERSION >>.env
+echo "ALPINE_VERSION="$variables_ALPINE_VERSION >>.env
+echo "DEBIAN_VERSION="$variables_DEBIAN_VERSION >>.env
+echo "TELEPORT_VERSION="$variables_TELEPORT_VERSION >>.env
