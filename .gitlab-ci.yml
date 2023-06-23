@@ -74,7 +74,7 @@ deploy-job:
     TBOT_GITLAB_JWT:
       aud: tp.fhoss.de
   script:
-    - apt-get update && apt-get install curl
+    - apt-get update && apt-get install curl -y
     - cd /tmp
     - 'curl -O https://cdn.teleport.dev/teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz'
     - tar -xvf teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz
