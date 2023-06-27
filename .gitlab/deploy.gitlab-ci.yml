@@ -13,3 +13,6 @@ deploy_release:
     - ./teleport/install
     - 'tbot start --token=gitlab --destination-dir=/tmp/tbot-user --data-dir=/tmp/tbot-data --auth-server=tp.fhoss.de:443 --join-method=gitlab --oneshot'
     - 'tsh -i /tmp/tbot-user/identity --proxy tp.fhoss.de:443 ssh bot@benelli "docker compose -f /opt/docker/home/docker-compose.yml up -d --pull always"'
+  environment:
+    name: production
+    url: $PRODUCTION_URL
