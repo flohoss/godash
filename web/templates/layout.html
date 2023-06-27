@@ -18,12 +18,12 @@
         transition: opacity linear 0.15s;
       }
     </style>
-    <link rel="stylesheet" href="/static/css/style.css?v={{ env "VERSION" }}" />
+    <link rel="stylesheet" href="/static/css/style.css?v={{ env "APP_VERSION" }}" />
     {{ block "style". }}{{ end }}
   </head>
 
   <body>
-    <div class="absolute top-2 right-3 text-xs text-gray-500">{{ env "VERSION" }}</div>
+    <div class="absolute top-2 right-3 text-xs text-gray-500">{{ env "APP_VERSION" }}</div>
     <div class="p-4 sm:p-6 lg:p-8 xl:container xl:py-12">{{ block "content" . }}{{ end }}</div>
     {{ block "js". }}{{ end }}
   </body>

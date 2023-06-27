@@ -13,5 +13,5 @@ RUN go install github.com/cosmtrek/air@latest
 COPY ./.air.toml .
 
 # Envs
-ENV VERSION=v0.0.1-dev
-ENV BUILDTIME=2023-04-05T20:48:07Z
+ENV APP_VERSION=v0.0.1-dev
+ENV BUILD_TIME=2023-04-05T20:48:07Z
