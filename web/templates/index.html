@@ -316,61 +316,61 @@
   <script>
     let systemSSESource = null;
     let weatherSSESource = null;
-    addEventListener("beforeunload", () => {
+    addEventListener('beforeunload', () => {
       systemSSESource && systemSSESource.close();
       weatherSSESource && weatherSSESource.close();
     });
-    systemSSESource = new EventSource("/sse?stream=system");
+    systemSSESource = new EventSource('/sse?stream=system');
     systemSSESource.onmessage = (e) => {
       const parsed = JSON.parse(e.data);
       replaceSystem(parsed);
     };
-    weatherSSESource = new EventSource("/sse?stream=weather");
+    weatherSSESource = new EventSource('/sse?stream=weather');
     weatherSSESource.onmessage = (e) => {
       const parsed = JSON.parse(e.data);
       replaceWeather(parsed);
     };
 
     // weather elements
-    const weatherIcon = document.getElementById("weatherIcon");
-    const weatherTemp = document.getElementById("weatherTemp");
-    const weatherDescription = document.getElementById("weatherDescription");
-    const weatherHumidity = document.getElementById("weatherHumidity");
-    const weatherSunrise = document.getElementById("weatherSunrise");
-    const weatherSunset = document.getElementById("weatherSunset");
+    const weatherIcon = document.getElementById('weatherIcon');
+    const weatherTemp = document.getElementById('weatherTemp');
+    const weatherDescription = document.getElementById('weatherDescription');
+    const weatherHumidity = document.getElementById('weatherHumidity');
+    const weatherSunrise = document.getElementById('weatherSunrise');
+    const weatherSunset = document.getElementById('weatherSunset');
 
     // system elements
-    const systemCpuPercentage = document.getElementById("systemCpuPercentage");
-    const systemRamPercentage = document.getElementById("systemRamPercentage");
-    const systemRamValue = document.getElementById("systemRamValue");
-    const systemDiskPercentage = document.getElementById("systemDiskPercentage");
-    const systemDiskValue = document.getElementById("systemDiskValue");
-    const systemUptimePercentage = document.getElementById("systemUptimePercentage");
-    const uptimeDays = document.getElementById("uptimeDays");
-    const uptimeHours = document.getElementById("uptimeHours");
-    const uptimeMinutes = document.getElementById("uptimeMinutes");
-    const uptimeSeconds = document.getElementById("uptimeSeconds");
+    const systemCpuPercentage = document.getElementById('systemCpuPercentage');
+    const systemRamPercentage = document.getElementById('systemRamPercentage');
+    const systemRamValue = document.getElementById('systemRamValue');
+    const systemDiskPercentage = document.getElementById('systemDiskPercentage');
+    const systemDiskValue = document.getElementById('systemDiskValue');
+    const systemUptimePercentage = document.getElementById('systemUptimePercentage');
+    const uptimeDays = document.getElementById('uptimeDays');
+    const uptimeHours = document.getElementById('uptimeHours');
+    const uptimeMinutes = document.getElementById('uptimeMinutes');
+    const uptimeSeconds = document.getElementById('uptimeSeconds');
 
     function replaceWeather(parsed) {
-      weatherIcon.setAttribute("xlink:href", "#" + parsed.icon);
+      weatherIcon.setAttribute('xlink:href', '#' + parsed.icon);
       weatherTemp.innerText = parsed.temp;
       weatherDescription.innerText = parsed.description;
-      weatherHumidity.innerText = parsed.humidity + "%";
+      weatherHumidity.innerText = parsed.humidity + '%';
       weatherSunrise.innerText = parsed.sunrise;
       weatherSunset.innerText = parsed.sunset;
     }
 
     function replaceSystem(parsed) {
-      systemCpuPercentage.style = "width:" + parsed.cpu + "%";
-      systemRamPercentage.style = "width:" + parsed.ram.percentage + "%";
+      systemCpuPercentage.style = 'width:' + parsed.cpu + '%';
+      systemRamPercentage.style = 'width:' + parsed.ram.percentage + '%';
       systemRamValue.innerText = parsed.ram.value;
-      systemDiskPercentage.style = "width:" + parsed.disk.percentage + "%";
+      systemDiskPercentage.style = 'width:' + parsed.disk.percentage + '%';
       systemDiskValue.innerText = parsed.disk.value;
-      systemUptimePercentage.style = "width:" + parsed.uptime.percentage + "%";
-      uptimeDays.style = "--value:" + parsed.uptime.days;
-      uptimeHours.style = "--value:" + parsed.uptime.hours;
-      uptimeMinutes.style = "--value:" + parsed.uptime.minutes;
-      uptimeSeconds.style = "--value:" + parsed.uptime.seconds;
+      systemUptimePercentage.style = 'width:' + parsed.uptime.percentage + '%';
+      uptimeDays.style = '--value:' + parsed.uptime.days;
+      uptimeHours.style = '--value:' + parsed.uptime.hours;
+      uptimeMinutes.style = '--value:' + parsed.uptime.minutes;
+      uptimeSeconds.style = '--value:' + parsed.uptime.seconds;
     }
   </script>
 {{ end }}
