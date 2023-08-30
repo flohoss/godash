@@ -1,4 +1,4 @@
-build_release:
+build:
   rules: !reference [.rules:release, rules]
   stage: build
   extends: .login_registry
