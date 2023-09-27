@@ -287,7 +287,7 @@
           <div class="grid-apps">
             {{ range .Entries }}
               <a href="{{ .URL }}" class="bookmark-link flex items-center hover-effect">
-                <div class="img rounded-md w-8 h-8 bg-cover bg-center opacity-90" style="background-image: url({{ .Icon }})"></div>
+                <div class="img rounded-md w-8 h-8 bg-contain bg-center bg-no-repeat opacity-90" style="background-image: url({{ .Icon }})"></div>
                 <div class="uppercase truncate ml-2">{{ .Name }}</div>
               </a>
             {{ end }}
