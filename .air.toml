@@ -1,4 +1,5 @@
 [build]
 bin = "tmp/godash"
+pre_cmd = ["npx tailwindcss -i ./web/static/css/tailwind.css -o ./web/static/css/style.css"]
 cmd = "go build -o tmp/godash cmd/godash/godash.go"
 exclude_dir = [".gitlab", "docker", "scripts", "node_modules", "static", "storage", "tmp"]
