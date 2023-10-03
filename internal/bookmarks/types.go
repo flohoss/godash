@@ -5,16 +5,18 @@ type Config struct {
 		Links []struct {
 			Category string
 			Entries  []struct {
-				Name string
-				URL  string
+				Name       string
+				Background bool
+				URL        string
 			}
 		}
 		Applications []struct {
 			Category string
 			Entries  []struct {
-				Name string
-				Icon string
-				URL  string
+				Name       string
+				Icon       string
+				Background bool
+				URL        string
 			}
 		}
 	}
