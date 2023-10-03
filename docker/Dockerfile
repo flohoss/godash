@@ -12,13 +12,10 @@ COPY . .
 RUN go build -ldflags="-s -w" cmd/godash/godash.go
 
 FROM node:${NODE_VERSION}-alpine AS nodeBuilder
+WORKDIR /app
 
-COPY ./package.json .
-COPY ./yarn.lock .
+COPY ./web .
 RUN yarn install --frozen-lockfile
-
-COPY ./web ./web
-COPY ./tailwind.config.js .
 RUN yarn run tailwind:build
 
 FROM alpine:${ALPINE_VERSION} AS logo
