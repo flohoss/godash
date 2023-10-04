@@ -14,7 +14,7 @@ RUN go build -ldflags="-s -w" cmd/godash/godash.go
 FROM node:${NODE_VERSION}-alpine AS nodeBuilder
 WORKDIR /app
 
-COPY ./internal/router/templates.go ./internal/router/templates.go
+COPY ./internal/router/templates.go /internal/router/templates.go
 COPY ./web .
 RUN yarn install --frozen-lockfile
 RUN yarn run tailwind:build
