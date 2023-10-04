@@ -12,7 +12,7 @@ COPY . .
 RUN go build -ldflags="-s -w" cmd/godash/godash.go
 
 FROM node:${NODE_VERSION}-alpine AS nodeBuilder
-WORKDIR /app
+WORKDIR /web
 
 COPY ./internal/router/templates.go /internal/router/templates.go
 COPY ./web .

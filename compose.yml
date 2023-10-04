@@ -1,0 +1,63 @@
+services:
+  godash:
+    profiles: [build]
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+      args:
+        - GOLANG_VERSION=${GOLANG_VERSION}
+        - NODE_VERSION=${NODE_VERSION}
+        - ALPINE_VERSION=${ALPINE_VERSION}
+
+  backend:
+    build:
+      context: .
+      dockerfile_inline: |
+        ARG GOLANG_VERSION
+        FROM golang:${GOLANG_VERSION}-alpine
+        RUN apk add tzdata
+        WORKDIR /app
+        COPY ./go.mod .
+        COPY ./go.sum .
+        RUN go mod download
+        RUN go install github.com/cosmtrek/air@latest
+        COPY ./.air.toml .
+      args:
+        - GOLANG_VERSION=${GOLANG_VERSION}
+    command: air -c .air.toml
+    environment:
+      - TZ=Europe/Berlin
+      - LOG_LEVEL=debug
+      - TITLE=DEV
+      - APP_VERSION=v0.0.1-dev
+      - BUILD_TIME=2023-04-05T20:48:07Z
+    ports:
+      - 4000:4000
+    volumes:
+      - ./:/app/
+
+  frontend:
+    build:
+      context: .
+      dockerfile_inline: |
+        ARG NODE_VERSION
+        FROM node:${NODE_VERSION}-alpine
+        WORKDIR /app/web
+        COPY ./web/package.json .
+        COPY ./web/yarn.lock .
+        RUN yarn install --frozen-lockfile
+      args:
+        - NODE_VERSION=${NODE_VERSION}
+    container_name: frontend
+    command: yarn run tailwind:dev
+    tty: true
+    volumes:
+      - .:/app
+
+  yarn:
+    profiles: [install]
+    image: node:${NODE_VERSION}-alpine
+    working_dir: /app/web
+    entrypoint: yarn
+    volumes:
+      - .:/app
