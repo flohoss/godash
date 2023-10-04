@@ -6,7 +6,6 @@ type Config struct {
 			Category string
 			Entries  []struct {
 				Name       string
-				Background bool
 				URL        string
 			}
 		}
@@ -15,7 +14,7 @@ type Config struct {
 			Entries  []struct {
 				Name       string
 				Icon       string
-				Background bool
+				Background string
 				URL        string
 			}
 		}
