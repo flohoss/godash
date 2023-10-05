@@ -116,12 +116,12 @@ braces@^3.0.2, braces@~3.0.2:
     fill-range "^7.0.1"
 
 browserslist@^4.21.10:
-  version "4.22.0"
-  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.22.0.tgz#6adc8116589ccea8a99d0df79c5de2436199abdb"
-  integrity sha512-v+Jcv64L2LbfTC6OnRcaxtqJNJuQAVhZKSJfR/6hn7lhnChUXl4amwVviqN1k411BB+3rRoKMitELRn1CojeRA==
+  version "4.22.1"
+  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.22.1.tgz#ba91958d1a59b87dab6fed8dfbcb3da5e2e9c619"
+  integrity sha512-FEVc202+2iuClEhZhrWy6ZiAcRLvNMyYcxZ8raemul1DYVOVdFsbqckWLdsixQZCpJlwe77Z3UTalE7jsjnKfQ==
   dependencies:
-    caniuse-lite "^1.0.30001539"
-    electron-to-chromium "^1.4.530"
+    caniuse-lite "^1.0.30001541"
+    electron-to-chromium "^1.4.535"
     node-releases "^2.0.13"
     update-browserslist-db "^1.0.13"
 
@@ -130,10 +130,10 @@ camelcase-css@^2.0.1:
   resolved "https://registry.yarnpkg.com/camelcase-css/-/camelcase-css-2.0.1.tgz#ee978f6947914cc30c6b44741b6ed1df7f043fd5"
   integrity sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==
 
-caniuse-lite@^1.0.30001538, caniuse-lite@^1.0.30001539:
-  version "1.0.30001540"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001540.tgz#a316ca4f2ae673ab02ff0ec533334016d56ff658"
-  integrity sha512-9JL38jscuTJBTcuETxm8QLsFr/F6v0CYYTEU6r5+qSM98P2Q0Hmu0eG1dTG5GBUmywU3UlcVOUSIJYY47rdFSw==
+caniuse-lite@^1.0.30001538, caniuse-lite@^1.0.30001541:
+  version "1.0.30001546"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001546.tgz#10fdad03436cfe3cc632d3af7a99a0fb497407f0"
+  integrity sha512-zvtSJwuQFpewSyRrI3AsftF6rM0X80mZkChIt1spBGEvRglCrjTniXvinc8JKRoqTwXAgvqTImaN9igfSMtUBw==
 
 chokidar@^3.5.3:
   version "3.5.3"
@@ -179,15 +179,15 @@ cssesc@^3.0.0:
   integrity sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==
 
 daisyui@^3.1.5:
-  version "3.8.1"
-  resolved "https://registry.yarnpkg.com/daisyui/-/daisyui-3.8.1.tgz#1d87e03bef622c9faf83f6f7b4534476343dcd83"
-  integrity sha512-4ULfP67PScxnJed5hxV83HLOhk/nVqZYGBz7BLk5KvCTr2Ij1V+xTEhk5Ix1lhbQC4qEL6be/aio2XeEa3920g==
+  version "3.9.1"
+  resolved "https://registry.yarnpkg.com/daisyui/-/daisyui-3.9.1.tgz#ac0fc5cb57e586cd02e11193627e4818f9de6c9b"
+  integrity sha512-xkZgVpPPpNbaZiG+djoP+XZF+6YeVA8sIP5ZwDzhaOlg1tXHfXvqhTmwKXGKLng3la2rwDrHYw3zjMMHLIGFUQ==
   dependencies:
     colord "^2.9"
     css-selector-tokenizer "^0.8"
     postcss "^8"
     postcss-js "^4"
-    tailwindcss "^3"
+    tailwindcss "^3.1"
 
 didyoumean@^1.2.2:
   version "1.2.2"
@@ -199,10 +199,10 @@ dlv@^1.1.3:
   resolved "https://registry.yarnpkg.com/dlv/-/dlv-1.1.3.tgz#5c198a8a11453596e751494d49874bc7732f2e79"
   integrity sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==
 
-electron-to-chromium@^1.4.530:
-  version "1.4.531"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.531.tgz#22966d894c4680726c17cf2908ee82ff5d26ac25"
-  integrity sha512-H6gi5E41Rn3/mhKlPaT1aIMg/71hTAqn0gYEllSuw9igNWtvQwu185jiCZoZD29n7Zukgh7GVZ3zGf0XvkhqjQ==
+electron-to-chromium@^1.4.535:
+  version "1.4.542"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.542.tgz#9bfe19d8ddafc2591e4a17d04e60a5f5acc54965"
+  integrity sha512-6+cpa00G09N3sfh2joln4VUXHquWrOFx3FLZqiVQvl45+zS9DskDBTPvob+BhvFRmTBkyDSk0vvLMMRo/qc6mQ==
 
 escalade@^3.1.1:
   version "3.1.1"
@@ -254,11 +254,6 @@ fsevents@~2.3.2:
   resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.3.tgz#cac6407785d03675a2a5e1a5305c697b347d90d6"
   integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
-function-bind@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/function-bind/-/function-bind-1.1.1.tgz#a56899d3ea3c9bab874bb9773b7c5ede92f4895d"
-  integrity sha512-yIovAzMX49sF8Yl58fSCWJ5svSLuaibPxXQJFLmBObTuCr0Mf1KiPopGM9NiFjiYBCbfaa2Fh6breQ6ANVTI0A==
-
 glob-parent@^5.1.2, glob-parent@~5.1.2:
   version "5.1.2"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-5.1.2.tgz#869832c58034fe68a4093c17dc15e8340d8401c4"
@@ -286,11 +281,9 @@ glob@7.1.6:
     path-is-absolute "^1.0.0"
 
 has@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/has/-/has-1.0.3.tgz#722d7cbfc1f6aa8241f16dd814e011e1f41e8796"
-  integrity sha512-f2dvO0VU6Oej7RkWJGrehjbzMAjFp5/VKPp5tTpWIV4JHHZK1/BxbFRtf/siA2SWTe09caDmVtYYzWEIbBS4zw==
-  dependencies:
-    function-bind "^1.1.1"
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/has/-/has-1.0.4.tgz#2eb2860e000011dae4f1406a86fe80e530fb2ec6"
+  integrity sha512-qdSAmqLF6209RFj4VVItywPMbm3vWylknmB3nvNiUIs72xAimcM8nVYxYr7ncvZq5qzk9MKIZR8ijqD/1QuYjQ==
 
 inflight@^1.0.4:
   version "1.0.6"
@@ -492,9 +485,9 @@ postcss-value-parser@^4.0.0, postcss-value-parser@^4.2.0:
   integrity sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==
 
 postcss@^8, postcss@^8.1.6, postcss@^8.4.23:
-  version "8.4.30"
-  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.30.tgz#0e0648d551a606ef2192a26da4cabafcc09c1aa7"
-  integrity sha512-7ZEao1g4kd68l97aWG/etQKPKq07us0ieSZ2TnFDk11i0ZfDW2AwKHYU8qv4MZKqN2fdBfg+7q0ES06UA73C1g==
+  version "8.4.31"
+  resolved "https://registry.yarnpkg.com/postcss/-/postcss-8.4.31.tgz#92b451050a9f914da6755af352bdc0192508656d"
+  integrity sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==
   dependencies:
     nanoid "^3.3.6"
     picocolors "^1.0.0"
@@ -575,7 +568,7 @@ supports-preserve-symlinks-flag@^1.0.0:
   resolved "https://registry.yarnpkg.com/supports-preserve-symlinks-flag/-/supports-preserve-symlinks-flag-1.0.0.tgz#6eda4bd344a3c94aea376d4cc31bc77311039e09"
   integrity sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==
 
-tailwindcss@^3, tailwindcss@^3.2.7:
+tailwindcss@^3.1, tailwindcss@^3.2.7:
   version "3.3.3"
   resolved "https://registry.yarnpkg.com/tailwindcss/-/tailwindcss-3.3.3.tgz#90da807393a2859189e48e9e7000e6880a736daf"
   integrity sha512-A0KgSkef7eE4Mf+nKJ83i75TMyq8HqY3qmFIJSWy8bNt0v1lG7jUcpGpoTFxAwYcWOphcTBLPPJg+bDfhDf52w==

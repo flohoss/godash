@@ -8,10 +8,10 @@ require (
 	github.com/dariubs/percent v1.0.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/go-chi/chi/v5 v5.0.10
-	github.com/go-playground/validator/v10 v10.15.4
+	github.com/go-playground/validator/v10 v10.15.5
 	github.com/labstack/echo/v4 v4.11.1
 	github.com/r3labs/sse/v2 v2.10.0
-	github.com/shirou/gopsutil/v3 v3.23.8
+	github.com/shirou/gopsutil/v3 v3.23.9
 	github.com/stretchr/testify v1.8.4
 	github.com/unjx-de/go-folder v1.0.7
 	go.uber.org/zap v1.26.0

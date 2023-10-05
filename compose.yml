@@ -61,3 +61,11 @@ services:
     entrypoint: yarn
     volumes:
       - .:/app
+
+  go:
+    profiles: [install]
+    image: golang:${GOLANG_VERSION}-alpine
+    working_dir: /app
+    entrypoint: go
+    volumes:
+      - .:/app
