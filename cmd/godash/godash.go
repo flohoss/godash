@@ -2,29 +2,31 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"gitlab.unjx.de/flohoss/godash/internal/controller"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
-	"gitlab.unjx.de/flohoss/godash/internal/logging"
+	"gitlab.unjx.de/flohoss/godash/internal/logger"
 	"gitlab.unjx.de/flohoss/godash/internal/router"
-	"go.uber.org/zap"
 )
 
 func main() {
 	env, err := env.Parse()
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("cannot parse environment variables", "err", err)
+		os.Exit(1)
 	}
-	zap.ReplaceGlobals(logging.CreateLogger(env.LogLevel))
+	slog.SetDefault(logger.NewLogger(env.LogLevel))
 
 	r := router.InitRouter()
 	c := controller.NewController(env)
 	router.SetupRoutes(r, c)
 
-	zap.L().Info("starting server", zap.String("url", fmt.Sprintf("http://localhost:%d", env.Port)))
+	slog.Info("starting server", "url", fmt.Sprintf("http://localhost:%d", env.Port))
 	if err := r.Start(fmt.Sprintf(":%d", env.Port)); err != http.ErrServerClosed {
-		zap.L().Fatal("cannot start server", zap.Error(err))
+		slog.Error("cannot start server", "err", err)
+		os.Exit(1)
 	}
 }

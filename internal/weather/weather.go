@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"math"
 	"net/http"
 	"time"
 
 	"github.com/caarlos0/env/v8"
 	"github.com/r3labs/sse/v2"
-	"go.uber.org/zap"
 )
 
 func NewWeatherService(sse *sse.Server) *Weather {
@@ -58,15 +58,15 @@ func (w *Weather) updateWeather(interval time.Duration) {
 			w.config.Units,
 			w.config.Lang))
 		if err != nil || resp.StatusCode != 200 {
-			zap.L().Error("weather cannot be updated, please check WEATHER_KEY")
+			slog.Error("weather cannot be updated, please check WEATHER_KEY")
 		} else {
 			body, _ := io.ReadAll(resp.Body)
 			err = json.Unmarshal(body, &weatherResponse)
 			if err != nil {
-				zap.L().Error("weather cannot be processed")
+				slog.Error("weather cannot be processed")
 			} else {
 				w.copyWeatherValues(&weatherResponse)
-				zap.L().Debug("weather updated", zap.Float64("temp", w.CurrentWeather.Temp))
+				slog.Debug("weather updated", "temp", w.CurrentWeather.Temp)
 			}
 			resp.Body.Close()
 			json, _ := json.Marshal(w.CurrentWeather)

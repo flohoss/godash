@@ -2,10 +2,10 @@ package system
 
 import (
 	"encoding/json"
+	"log/slog"
 	"time"
 
 	"github.com/r3labs/sse/v2"
-	"go.uber.org/zap"
 )
 
 func NewSystemService(enabled bool, sse *sse.Server) *System {
@@ -35,5 +35,5 @@ func (c *Config) Initialize() {
 	c.System.Static.Ram = staticRam()
 	c.System.Static.Disk = staticDisk()
 	go c.UpdateLiveInformation()
-	zap.L().Debug("system updated", zap.String("cpu", c.System.Static.CPU.Name), zap.String("arch", c.System.Static.Host.Architecture))
+	slog.Debug("system updated", "cpu", c.System.Static.CPU.Name, "arch", c.System.Static.Host.Architecture)
 }
