@@ -15,13 +15,17 @@ services:
       dockerfile_inline: |
         ARG GOLANG_VERSION
         FROM golang:${GOLANG_VERSION}-alpine
+        RUN apk update
+        RUN apk upgrade
         RUN apk add tzdata
+
+        RUN go install github.com/cosmtrek/air@latest
+        COPY ./.air.toml .
+
         WORKDIR /app
         COPY ./go.mod .
         COPY ./go.sum .
         RUN go mod download
-        RUN go install github.com/cosmtrek/air@latest
-        COPY ./.air.toml .
       args:
         - GOLANG_VERSION=${GOLANG_VERSION}
     command: air -c .air.toml
@@ -34,7 +38,7 @@ services:
     ports:
       - 4000:4000
     volumes:
-      - ./:/app/
+      - .:/app/
 
   frontend:
     build:
@@ -42,6 +46,9 @@ services:
       dockerfile_inline: |
         ARG NODE_VERSION
         FROM node:${NODE_VERSION}-alpine
+        RUN apk update
+        RUN apk upgrade
+
         WORKDIR /app/web
         COPY ./web/package.json .
         COPY ./web/yarn.lock .
@@ -52,15 +59,7 @@ services:
     command: yarn run tailwind:dev
     tty: true
     volumes:
-      - .:/app
-
-  yarn:
-    profiles: [install]
-    image: node:${NODE_VERSION}-alpine
-    working_dir: /app/web
-    entrypoint: yarn
-    volumes:
-      - .:/app
+      - .:/app/
 
   go:
     profiles: [install]
@@ -68,4 +67,12 @@ services:
     working_dir: /app
     entrypoint: go
     volumes:
-      - .:/app
+      - .:/app/
+
+  yarn:
+    profiles: [install]
+    image: node:${NODE_VERSION}-alpine
+    working_dir: /app/web
+    entrypoint: yarn
+    volumes:
+      - .:/app/
