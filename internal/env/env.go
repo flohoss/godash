@@ -13,7 +13,7 @@ type Config struct {
 	TimeZone   string `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
 	Title      string `env:"TITLE" envDefault:"goDash"`
 	Port       int    `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
-	LogLevel   string `env:"LOG_LEVEL" envDefault:"info" validate:"oneof=debug info warn error panic fatal"`
+	LogLevel   string `env:"LOG_LEVEL" envDefault:"info" validate:"oneof=debug info warn error"`
 	LiveSystem bool   `env:"LIVE_SYSTEM" envDefault:"true"`
 }
 
