@@ -41,21 +41,8 @@ services:
       - .:/app/
 
   frontend:
-    build:
-      context: .
-      dockerfile_inline: |
-        ARG NODE_VERSION
-        FROM node:${NODE_VERSION}-alpine
-        RUN apk update
-        RUN apk upgrade
-
-        WORKDIR /app/web
-        COPY ./web/package.json .
-        COPY ./web/yarn.lock .
-        RUN yarn install --frozen-lockfile
-      args:
-        - NODE_VERSION=${NODE_VERSION}
-    container_name: frontend
+    image: node:${NODE_VERSION}-alpine
+    working_dir: /app/web
     command: yarn run tailwind:dev
     tty: true
     volumes:
