@@ -1,5 +1,6 @@
 services:
   godash:
+    profiles: [build]
     image: ${CURRENT_IMAGE}
     build:
       context: .
@@ -21,7 +22,7 @@ services:
             apk add tzdata
 
         RUN go install github.com/cosmtrek/air@latest
-        COPY scripts/.air.toml .
+        COPY .air.toml .
 
         WORKDIR /app
         COPY go.mod .

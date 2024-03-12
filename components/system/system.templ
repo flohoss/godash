@@ -1,8 +1,8 @@
-package components
+package system
 
 import "html/template"
 
-var barTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
+var BarTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
 
 type Bar struct {
 	Id         string
@@ -16,7 +16,7 @@ templ System(icon string, infoPre string, infoPost string, extraInfo string, per
 			<div class="extra-info">{ extraInfo }</div>
 			<div class="truncate"><span id={ valueId }>{ infoPre }</span>{ infoPost }</div>
 			<div class="progress-bar-wrapper">
-				@templ.FromGoHTML(barTemplate, Bar{Id:percentageId, Percentage:percentage})
+				@templ.FromGoHTML(BarTemplate, Bar{Id:percentageId, Percentage:percentage})
 			</div>
 		</div>
 	</div>

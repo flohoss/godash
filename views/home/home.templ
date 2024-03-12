@@ -2,39 +2,42 @@ package home
 
 import "gitlab.unjx.de/flohoss/godash/services"
 import "gitlab.unjx.de/flohoss/godash/views/layout"
-import "gitlab.unjx.de/flohoss/godash/components"
+import "gitlab.unjx.de/flohoss/godash/components/system"
+import "gitlab.unjx.de/flohoss/godash/components/uptime"
+import "gitlab.unjx.de/flohoss/godash/components/application"
+import "gitlab.unjx.de/flohoss/godash/components/link"
 import "fmt"
 
 templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation) {
 	<section class="grid gap-14">
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
-			@components.System("icon-[bi--cpu]",static.CPU.Name,"",static.CPU.Threads,"systemCpuPercentage","",live.CPU)
-			@components.System("icon-[bi--nvme]",live.Disk.Value,fmt.Sprintf(" | %s", static.Disk.Total),static.Disk.Partitions,"systemDiskPercentage","systemDiskValue",live.Disk.Percentage)
-			@components.System("icon-[bi--memory]",live.Ram.Value,fmt.Sprintf(" | %s", static.Ram.Total),static.Ram.Swap,"systemRamPercentage","systemRamValue",live.Ram.Percentage)
-			@components.Uptime(static.Host.Architecture,"systemUptimePercentage",live.Uptime)
+			@system.System("icon-[bi--cpu]",static.CPU.Name,"",static.CPU.Threads,"systemCpuPercentage","",live.CPU)
+			@system.System("icon-[bi--nvme]",live.Disk.Value,fmt.Sprintf(" | %s", static.Disk.Total),static.Disk.Partitions,"systemDiskPercentage","systemDiskValue",live.Disk.Percentage)
+			@system.System("icon-[bi--memory]",live.Ram.Value,fmt.Sprintf(" | %s", static.Ram.Total),static.Ram.Swap,"systemRamPercentage","systemRamValue",live.Ram.Percentage)
+			@uptime.Uptime(static.Host.Architecture,"systemUptimePercentage",live.Uptime)
 		</div>
 		<div class="grid gap-4">
-			for _, app := range bookmarks.Applications {
+			for _, a := range bookmarks.Applications {
 				<div class="grid gap-2">
-					if app.Category != "" {
-						<div class="heading">{ app.Category }</div>
+					if a.Category != "" {
+						<div class="heading">{ a.Category }</div>
 					}
 					<div class="grid-apps">
-						for _, entry := range app.Entries {
-							@components.Application(entry)
+						for _, entry := range a.Entries {
+							@application.Application(entry)
 						}
 					</div>
 				</div>
 			}
 		</div>
 		<div class="grid-apps">
-			for _, link := range bookmarks.Links {
+			for _, l := range bookmarks.Links {
 				<div class="flex flex-col gap-2">
-					if link.Category != "" {
-						<div class="heading">{ link.Category }</div>
+					if l.Category != "" {
+						<div class="heading">{ l.Category }</div>
 					}
-					for _, entry := range link.Entries {
-						@components.Link(entry)
+					for _, entry := range l.Entries {
+						@link.Link(entry)
 					}
 				</div>
 			}
