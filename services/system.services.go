@@ -13,7 +13,7 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
-	"gitlab.unjx.de/flohoss/godash/internal/storage"
+	"gitlab.unjx.de/flohoss/godash/internal/readable"
 )
 
 func NewSystemService(sse *sse.Server) *SystemService {
@@ -83,9 +83,9 @@ func staticRam() Ram {
 	if err != nil {
 		return result
 	}
-	result.Total = storage.ReadableSize(r.Total)
+	result.Total = readable.ReadableSize(r.Total)
 	if r.SwapTotal > 0 {
-		result.Swap = storage.ReadableSize(r.SwapTotal) + " swap"
+		result.Swap = readable.ReadableSize(r.SwapTotal) + " swap"
 	} else {
 		result.Swap = "no swap"
 	}
@@ -97,7 +97,7 @@ func (s *SystemService) liveRam() {
 	if err != nil {
 		return
 	}
-	s.Live.Ram.Value = storage.ReadableSize(r.Used)
+	s.Live.Ram.Value = readable.ReadableSize(r.Used)
 	s.Live.Ram.Percentage = math.RoundToEven(percent.PercentOfFloat(float64(r.Used), float64(r.Total)))
 }
 
@@ -111,7 +111,7 @@ func staticDisk() Disk {
 	if err != nil {
 		return result
 	}
-	result.Total = storage.ReadableSize(d.Total)
+	result.Total = readable.ReadableSize(d.Total)
 	result.Partitions = strconv.Itoa(len(p)) + " partitions"
 	return result
 }
@@ -121,7 +121,7 @@ func (s *SystemService) liveDisk() {
 	if err != nil {
 		return
 	}
-	s.Live.Disk.Value = storage.ReadableSize(d.Used)
+	s.Live.Disk.Value = readable.ReadableSize(d.Used)
 	s.Live.Disk.Percentage = math.RoundToEven(percent.PercentOfFloat(float64(d.Used), float64(d.Total)))
 }
 
