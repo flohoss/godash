@@ -49,7 +49,7 @@ deploy:
     - tar -xvf teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz
     - ./teleport/install
     - 'tbot start -c tbot.yaml'
-    - 'tsh -i /tmp/machine-id/identity --proxy tp.unjx.de:443 ssh gitlab@berg "docker compose -f /opt/docker/helper/compose.yml up home -d --pull always && docker system prune --force"'
+    - 'tsh -i /tmp/machine-id/identity --proxy tp.unjx.de:443 ssh gitlab@berg "docker compose -f /opt/docker/home/compose.yml up home -d --pull always && docker system prune --force"'
   environment:
     name: production
     url: $PRODUCTION_URL

@@ -211,3 +211,4 @@ dist
 storage/
 **/*_templ.*
 assets/css/style.css
+tmp/
