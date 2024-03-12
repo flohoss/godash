@@ -38,6 +38,7 @@ RUN apk add tzdata
 
 COPY scripts/entrypoint.sh .
 
+COPY assets/favicon ./assets/favicon
 COPY --from=logo /app/logo.txt .
 COPY --from=nodeBuilder /app/assets/css/style.css ./assets/css/style.css
 COPY --from=goBuilder /app/views ./views
