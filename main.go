@@ -40,7 +40,6 @@ func main() {
 
 	sse := sse.New()
 	sse.AutoReplay = false
-	sse.CreateStream("weather")
 
 	s := services.NewSystemService(sse)
 	b := services.NewBookmarkService()
