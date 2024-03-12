@@ -1,11 +1,55 @@
 stages:
-  - test
   - build
   - deploy
 
-include:
-  - local: .gitlab/_common.gitlab-ci.yml
-  - local: .gitlab/_rules.gitlab-ci.yml
-  - local: /.gitlab/test.gitlab-ci.yml
-  - local: /.gitlab/build.gitlab-ci.yml
-  - local: /.gitlab/deploy.gitlab-ci.yml
+variables:
+  LATEST_IMAGE: '$CI_REGISTRY_IMAGE:latest'
+  PRODUCTION_URL: 'https://home.unjx.de'
+
+image: docker:$DOCKER_VERSION-git
+
+.auth_gitlab:
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login --username $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  after_script:
+    - docker logout
+
+.rules:deploy:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE = "push" && $CI_COMMIT_BRANCH = $CI_DEFAULT_BRANCH'
+
+build:
+  rules: !reference [.rules:deploy, rules]
+  stage: build
+  variables:
+    DOCKER_BUILDKIT: 1
+    CURRENT_IMAGE: '$CI_REGISTRY_IMAGE:$CI_COMMIT_TAG'
+  before_script:
+    - !reference [.auth_gitlab, before_script]
+  script:
+    - docker compose build godash
+    - docker tag $CURRENT_IMAGE $LATEST_IMAGE
+    - docker push $CURRENT_IMAGE
+    - docker push $LATEST_IMAGE
+  after_script:
+    - !reference [.auth_gitlab, after_script]
+
+deploy:
+  rules: !reference [.rules:deploy, rules]
+  stage: deploy
+  image: debian:${DEBIAN_VERSION}-slim
+  id_tokens:
+    TBOT_GITLAB_JWT:
+      aud: tp.unjx.de
+  script:
+    - apt-get update && apt-get install curl -y
+    - cp tbot.yaml /tmp
+    - cd /tmp
+    - 'curl -O https://cdn.teleport.dev/teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz'
+    - tar -xvf teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz
+    - ./teleport/install
+    - 'tbot start -c tbot.yaml'
+    - 'tsh -i /tmp/machine-id/identity --proxy tp.unjx.de:443 ssh gitlab@berg "docker compose -f /opt/docker/helper/compose.yml up home -d --pull always && docker system prune --force"'
+  environment:
+    name: production
+    url: $PRODUCTION_URL

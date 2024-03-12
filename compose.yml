@@ -1,13 +1,14 @@
 services:
   godash:
-    profiles: [build]
+    image: ${CURRENT_IMAGE}
     build:
       context: .
-      dockerfile: ./docker/Dockerfile
+      dockerfile: Dockerfile
       args:
         - GOLANG_VERSION=${GOLANG_VERSION}
         - NODE_VERSION=${NODE_VERSION}
         - ALPINE_VERSION=${ALPINE_VERSION}
+        - APP_VERSION=${CI_COMMIT_TAG}
 
   backend:
     build:
@@ -15,16 +16,16 @@ services:
       dockerfile_inline: |
         ARG GOLANG_VERSION
         FROM golang:${GOLANG_VERSION}-alpine
-        RUN apk update
-        RUN apk upgrade
-        RUN apk add tzdata
+        RUN apk update && \
+            apk upgrade && \
+            apk add tzdata
 
         RUN go install github.com/cosmtrek/air@latest
-        COPY ./.air.toml .
+        COPY scripts/.air.toml .
 
         WORKDIR /app
-        COPY ./go.mod .
-        COPY ./go.sum .
+        COPY go.mod .
+        COPY go.sum .
         RUN go mod download
       args:
         - GOLANG_VERSION=${GOLANG_VERSION}
@@ -34,32 +35,45 @@ services:
       - LOG_LEVEL=debug
       - TITLE=DEV
       - APP_VERSION=v0.0.1-dev
-      - BUILD_TIME=2023-04-05T20:48:07Z
+    volumes:
+      - .:/app/
     ports:
       - 4000:4000
+      - 2345:2345
+
+  templ:
+    build:
+      context: .
+      dockerfile_inline: |
+        ARG GOLANG_VERSION
+        FROM golang:${GOLANG_VERSION}-alpine
+
+        RUN go install github.com/a-h/templ/cmd/templ@latest
+      args:
+        - GOLANG_VERSION=${GOLANG_VERSION}
+    working_dir: /app
+    command: templ generate --watch
     volumes:
       - .:/app/
 
-  frontend:
+  tailwind:
     image: node:${NODE_VERSION}-alpine
-    working_dir: /app/web
-    command: yarn run tailwind:dev
+    working_dir: /app
+    command: yarn tw:dev
     tty: true
     volumes:
       - .:/app/
 
-  go:
+  golang:
     profiles: [install]
     image: golang:${GOLANG_VERSION}-alpine
     working_dir: /app
-    entrypoint: go
     volumes:
       - .:/app/
 
-  yarn:
+  node:
     profiles: [install]
     image: node:${NODE_VERSION}-alpine
-    working_dir: /app/web
-    entrypoint: yarn
+    working_dir: /app
     volumes:
       - .:/app/

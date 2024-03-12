@@ -1,4 +1,0 @@
-[build]
-bin = "tmp/godash"
-cmd = "go build -o tmp/godash cmd/godash/godash.go"
-exclude_dir = [".gitlab", "docker", "scripts", "web/node_modules", "web/static", "storage", "tmp"]

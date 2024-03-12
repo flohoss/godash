@@ -2,19 +2,16 @@ package env
 
 import (
 	"errors"
-	"fmt"
-	"os"
 
-	"github.com/caarlos0/env/v8"
+	"github.com/caarlos0/env/v10"
 	"github.com/go-playground/validator/v10"
 )
 
 type Config struct {
-	TimeZone   string `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
-	Title      string `env:"TITLE" envDefault:"goDash"`
-	Port       int    `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
-	LogLevel   string `env:"LOG_LEVEL" envDefault:"info" validate:"oneof=debug info warn error"`
-	LiveSystem bool   `env:"LIVE_SYSTEM" envDefault:"true"`
+	TimeZone string `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
+	Title    string `env:"TITLE" envDefault:"goDash"`
+	Port     int    `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
+	Version  string `env:"APP_VERSION"`
 }
 
 var errParse = errors.New("error parsing environment variables")
@@ -27,7 +24,6 @@ func Parse() (*Config, error) {
 	if err := validateContent(cfg); err != nil {
 		return cfg, err
 	}
-	setAllDefaultEnvs(cfg)
 	return cfg, nil
 }
 
@@ -45,10 +41,4 @@ func validateContent(cfg *Config) error {
 		return errParse
 	}
 	return nil
-}
-
-func setAllDefaultEnvs(cfg *Config) {
-	os.Setenv("TZ", cfg.TimeZone)
-	os.Setenv("PORT", fmt.Sprintf("%d", cfg.Port))
-	os.Setenv("LOG_LEVEL", cfg.LogLevel)
 }

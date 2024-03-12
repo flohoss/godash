@@ -1,0 +1,12 @@
+package components
+
+import (
+	"gitlab.unjx.de/flohoss/godash/services"
+)
+
+templ Application(application services.Application) {
+	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">
+		<img class={ "rounded w-8 h-8 opacity-90", templ.KV("backgroundColor",application.Background !="") } src={ application.Icon }/>
+		<div class="uppercase truncate ml-2">{ application.Name }</div>
+	</a>
+}

@@ -1,0 +1,38 @@
+package components
+
+import "gitlab.unjx.de/flohoss/godash/services"
+import "fmt"
+import "html/template"
+
+var countDownTemplate = template.Must(template.New("countdown").Parse("<span id=\"{{ .Id }}\" style=\"--value: {{ .Value }};\"></span>"))
+
+type Countdown struct {
+	Id    string
+	Value uint16
+}
+
+templ Uptime(extraInfo string, id string, uptime services.Uptime) {
+	<div class="flex items-center">
+		<span class="system-icon icon-[bi--motherboard]"></span>
+		<div class="w-full truncate">
+			<div class="extra-info">{ extraInfo }</div>
+			<div class="flex items-center gap-2 truncate">
+				<div class="truncate">
+					<span><span id="uptimeDays">{ fmt.Sprintf("%d",uptime.Days) }</span> days</span>
+					<span class="countdown">
+						@templ.FromGoHTML(countDownTemplate, Countdown{Id:"uptimeHours", Value:uptime.Hours})
+					</span> hours
+					<span class="countdown">
+						@templ.FromGoHTML(countDownTemplate, Countdown{Id:"uptimeMinutes", Value:uptime.Minutes})
+					</span> min
+					<span class="countdown">
+						@templ.FromGoHTML(countDownTemplate, Countdown{Id:"uptimeSeconds", Value:uptime.Seconds})
+					</span> sec
+				</div>
+			</div>
+			<div class="progress-bar-wrapper">
+				@templ.FromGoHTML(barTemplate, Bar{Id:id, Percentage:float64(uptime.Percentage)})
+			</div>
+		</div>
+	</div>
+}

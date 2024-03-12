@@ -1,0 +1,22 @@
+{
+    "name": "GoDash: A blazing fast start-page written in Go",
+    "short_name": "GoDash",
+    "icons": [
+        {
+            "src": "/static/favicon/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/static/favicon/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#d07915",
+    "background_color": "#d07915",
+    "display": "standalone",
+    "description": "A blazing fast start page for your services written with Go and TailwindCSS",
+    "start_url": "/",
+    "scope": "/"
+}
