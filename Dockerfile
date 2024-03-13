@@ -1,7 +1,7 @@
-ARG GOLANG_VERSION
-ARG NODE_VERSION
-ARG ALPINE_VERSION
-FROM golang:${GOLANG_VERSION}-alpine AS goBuilder
+ARG V_GOLANG
+ARG V_NODE
+ARG V_ALPINE
+FROM golang:${V_GOLANG}-alpine AS goBuilder
 WORKDIR /app
 
 RUN go install github.com/a-h/templ/cmd/templ@latest
@@ -14,7 +14,7 @@ COPY . .
 RUN templ generate
 RUN go build -ldflags="-s -w" -o godash main.go
 
-FROM node:${NODE_VERSION}-alpine AS nodeBuilder
+FROM node:${V_NODE}-alpine AS nodeBuilder
 WORKDIR /app
 
 COPY package.json yarn.lock ./
@@ -26,12 +26,12 @@ COPY views ./views
 COPY tailwind.config.js .
 RUN yarn run tw:build
 
-FROM alpine:${ALPINE_VERSION} AS logo
+FROM alpine:${V_ALPINE} AS logo
 WORKDIR /app
 RUN apk add figlet
 RUN figlet GoDash > logo.txt
 
-FROM alpine:${ALPINE_VERSION} AS final
+FROM alpine:${V_ALPINE} AS final
 WORKDIR /app
 
 RUN apk add tzdata

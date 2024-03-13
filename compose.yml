@@ -6,17 +6,17 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        - GOLANG_VERSION=${GOLANG_VERSION}
-        - NODE_VERSION=${NODE_VERSION}
-        - ALPINE_VERSION=${ALPINE_VERSION}
+        - V_GOLANG=${V_GOLANG}
+        - V_NODE=${V_NODE}
+        - V_ALPINE=${V_ALPINE}
         - APP_VERSION=${CI_COMMIT_TAG}
 
   backend:
     build:
       context: .
       dockerfile_inline: |
-        ARG GOLANG_VERSION
-        FROM golang:${GOLANG_VERSION}-alpine
+        ARG V_GOLANG
+        FROM golang:${V_GOLANG}-alpine
         RUN apk update && \
             apk upgrade && \
             apk add tzdata
@@ -29,7 +29,7 @@ services:
         COPY go.sum .
         RUN go mod download
       args:
-        - GOLANG_VERSION=${GOLANG_VERSION}
+        - V_GOLANG=${V_GOLANG}
     command: air -c .air.toml
     environment:
       - TZ=Europe/Berlin
@@ -46,19 +46,19 @@ services:
     build:
       context: .
       dockerfile_inline: |
-        ARG GOLANG_VERSION
-        FROM golang:${GOLANG_VERSION}-alpine
+        ARG V_GOLANG
+        FROM golang:${V_GOLANG}-alpine
 
         RUN go install github.com/a-h/templ/cmd/templ@latest
       args:
-        - GOLANG_VERSION=${GOLANG_VERSION}
+        - V_GOLANG=${V_GOLANG}
     working_dir: /app
     command: templ generate --watch
     volumes:
       - .:/app/
 
   tailwind:
-    image: node:${NODE_VERSION}-alpine
+    image: node:${V_NODE}-alpine
     working_dir: /app
     command: yarn tw:dev
     tty: true
@@ -67,14 +67,14 @@ services:
 
   golang:
     profiles: [install]
-    image: golang:${GOLANG_VERSION}-alpine
+    image: golang:${V_GOLANG}-alpine
     working_dir: /app
     volumes:
       - .:/app/
 
   node:
     profiles: [install]
-    image: node:${NODE_VERSION}-alpine
+    image: node:${V_NODE}-alpine
     working_dir: /app
     volumes:
       - .:/app/

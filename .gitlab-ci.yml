@@ -6,7 +6,7 @@ variables:
   LATEST_IMAGE: '$CI_REGISTRY_IMAGE:latest'
   PRODUCTION_URL: 'https://home.unjx.de'
 
-image: docker:$DOCKER_VERSION-git
+image: docker:$V_DOCKER-git
 
 .auth_gitlab:
   before_script:
@@ -37,7 +37,7 @@ build:
 deploy:
   rules: !reference [.rules:deploy, rules]
   stage: deploy
-  image: debian:${DEBIAN_VERSION}-slim
+  image: debian:${V_DEBIAN}-slim
   id_tokens:
     TBOT_GITLAB_JWT:
       aud: tp.unjx.de
@@ -45,8 +45,8 @@ deploy:
     - apt-get update && apt-get install curl -y
     - cp tbot.yaml /tmp
     - cd /tmp
-    - 'curl -O https://cdn.teleport.dev/teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz'
-    - tar -xvf teleport-v${TELEPORT_VERSION}-linux-amd64-bin.tar.gz
+    - 'curl -O https://cdn.teleport.dev/teleport-v${V_TELEPORT}-linux-amd64-bin.tar.gz'
+    - tar -xvf teleport-v${V_TELEPORT}-linux-amd64-bin.tar.gz
     - ./teleport/install
     - 'tbot start -c tbot.yaml'
     - 'tsh -i /tmp/machine-id/identity --proxy tp.unjx.de:443 ssh gitlab@berg "docker compose -f /opt/docker/home/compose.yml up home -d --pull always && docker system prune --force"'
