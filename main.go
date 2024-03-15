@@ -42,9 +42,10 @@ func main() {
 	sse.AutoReplay = false
 
 	s := services.NewSystemService(sse)
+	w := services.NewWeatherService(sse, env)
 	b := services.NewBookmarkService()
 
-	ah := handlers.NewAppHandler(env, s, b)
+	ah := handlers.NewAppHandler(env, s, w, b)
 	handlers.SetupRoutes(e, sse, ah)
 
 	slog.Info("starting server", "url", fmt.Sprintf("http://localhost:%d", env.Port))

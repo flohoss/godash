@@ -8,8 +8,61 @@ import "gitlab.unjx.de/flohoss/godash/components/application"
 import "gitlab.unjx.de/flohoss/godash/components/link"
 import "fmt"
 
-templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation) {
-	<section class="grid gap-14">
+func getIcon(icon string) string {
+	switch icon {
+	case "01d":
+		return "icon-[bi--sun-fill]"
+	case "01n":
+		return "icon-[bi--moon-fill]"
+	case "02d":
+		return "icon-[bi--cloud-sun-fill]"
+	case "02n":
+		return "icon-[bi--cloud-moon-fill]"
+	case "03d", "03n":
+		return "icon-[bi--cloud-fill]"
+	case "04d", "04n":
+		return "icon-[bi--clouds-fill]"
+	case "09d", "09n":
+		return "icon-[bi--cloud-rain-heavy-fill]"
+	case "10d", "10n":
+		return "icon-[bi--cloud-drizzle-fill]"
+	case "11d", "11n":
+		return "icon-[bi--cloud-lightning-rain-fill]"
+	case "13d", "13n":
+		return "icon-[bi--cloud-snow-fill]"
+	case "50d", "50n":
+		return "icon-[bi--cloud-fog2-fill]"
+	default:
+		return ""
+	}
+}
+
+templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+	<section class="grid gap-10">
+		<div class="flex items-center select-none">
+			<span id="watherIcon" class={ "extra-icon h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14", getIcon(weather.Icon) }></span>
+			<div>
+				<div class="text-4xl md:text-4xl"><span id="weatherTemp">{ fmt.Sprintf("%0.2f",weather.Temp) }</span> { weather.Units }</div>
+				<div class="flex items-center gap-5 text-xs">
+					<div class="flex items-center">
+						<span class="extra-icon icon-[bi--chat-quote]"></span>
+						<div id="weatherDescription" class="extra-info">{ weather.Description }</div>
+					</div>
+					<div class="flex items-center">
+						<span class="extra-icon icon-[bi--droplet]"></span>
+						<div id="weatherHumidity" class="extra-info">{ fmt.Sprintf("%d %%",weather.Humidity) }</div>
+					</div>
+					<div class="hidden sm:flex items-center">
+						<span class="extra-icon icon-[bi--sunrise]"></span>
+						<div id="weatherSunrise" class="extra-info">{ weather.Sunrise }</div>
+					</div>
+					<div class="hidden sm:flex items-center">
+						<span class="extra-icon icon-[bi--sunset]"></span>
+						<div id="weatherSunset" class="extra-info">{ weather.Sunset }</div>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
 			@system.System("icon-[bi--cpu]",static.CPU.Name,"",static.CPU.Threads,"systemCpuPercentage","",live.CPU)
 			@system.System("icon-[bi--nvme]",live.Disk.Value,fmt.Sprintf(" | %s", static.Disk.Total),static.Disk.Partitions,"systemDiskPercentage","systemDiskValue",live.Disk.Percentage)
@@ -45,14 +98,30 @@ templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticI
 	</section>
 	<script>
 		let systemSSESource = null;
+    	let weatherSSESource = null;
 		addEventListener('beforeunload', () => {
 			systemSSESource && systemSSESource.close();
+      		weatherSSESource && weatherSSESource.close();
 		});
 		systemSSESource = new EventSource('/sse?stream=system');
 		systemSSESource.onmessage = (e) => {
 			const parsed = JSON.parse(e.data);
 			replaceSystem(parsed);
 		};
+		weatherSSESource = new EventSource('/sse?stream=weather');
+		weatherSSESource.onmessage = (e) => {
+			const parsed = JSON.parse(e.data);
+			replaceWeather(parsed);
+		};
+
+
+		// weather elements
+		const weatherIcon = document.getElementById('weatherIcon');
+		const weatherTemp = document.getElementById('weatherTemp');
+		const weatherDescription = document.getElementById('weatherDescription');
+		const weatherHumidity = document.getElementById('weatherHumidity');
+		const weatherSunrise = document.getElementById('weatherSunrise');
+		const weatherSunset = document.getElementById('weatherSunset');
 
 		// system elements
 		const systemCpuPercentage = document.getElementById('systemCpuPercentage');
@@ -65,6 +134,49 @@ templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticI
 		const uptimeHours = document.getElementById('uptimeHours');
 		const uptimeMinutes = document.getElementById('uptimeMinutes');
 		const uptimeSeconds = document.getElementById('uptimeSeconds');
+
+		function weatherClass(icon){
+			switch (icon) {
+			case "01d":
+				return "icon-[bi--sun-fill]"
+			case "01n":
+				return "icon-[bi--moon-fill]"
+			case "02d":
+				return "icon-[bi--cloud-sun-fill]"
+			case "02n":
+				return "icon-[bi--cloud-moon-fill]"
+			case "03d", "03n":
+				return "icon-[bi--cloud-fill]"
+			case "04d", "04n":
+				return "icon-[bi--clouds-fill]"
+			case "09d", "09n":
+				return "icon-[bi--cloud-rain-heavy-fill]"
+			case "10d", "10n":
+				return "icon-[bi--cloud-drizzle-fill]"
+			case "11d", "11n":
+				return "icon-[bi--cloud-lightning-rain-fill]"
+			case "13d", "13n":
+				return "icon-[bi--cloud-snow-fill]"
+			case "50d", "50n":
+				return "icon-[bi--cloud-fog2-fill]"
+			default:
+				return ""
+			}
+		}
+
+		function replaceWeather(parsed) {
+			weatherIcon.className.split(' ').forEach(function(className) {
+				if (className.startsWith('icon-')) {
+					weatherIcon.classList.remove(className);
+				}
+			});
+			weatherIcon.classList.add(weatherClass(parsed.icon));
+			weatherTemp.innerText = parsed.temp;
+			weatherDescription.innerText = parsed.description;
+			weatherHumidity.innerText = parsed.humidity + '%';
+			weatherSunrise.innerText = parsed.sunrise;
+			weatherSunset.innerText = parsed.sunset;
+		}
 
 		function replaceSystem(parsed) {
 			systemCpuPercentage.style = 'width:' + parsed.cpu + '%';
@@ -87,6 +199,7 @@ templ HomeIndex(
 	bookmarks *services.Bookmarks,
 	static *services.StaticInformation,
 	live *services.LiveInformation,
+	weather *services.OpenWeather,
 	cmp templ.Component,
 ) {
 	@layout.Base(title, version) {
