@@ -8,9 +8,18 @@ import (
 	"github.com/r3labs/sse/v2"
 )
 
-func SetupRoutes(e *echo.Echo, sse *sse.Server, bh *AppHandler) {
-	e.GET("/", bh.appHandler)
-	e.GET("/sse", echo.WrapHandler(http.HandlerFunc(sse.ServeHTTP)))
+func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
+	e.GET("/sign-in", authHandler.signInHandler)
+	e.GET("/sign-in-callback", authHandler.signInCallbackHandler)
+
+	secure := e.Group("/", authHandler.logtoMiddleware)
+	secure.GET("sign-out", authHandler.signOutCallbackHandler)
+
+	secure.GET("", appHandler.appHandler)
+	secure.GET("sse", echo.WrapHandler(http.HandlerFunc(sse.ServeHTTP)))
+
+	secure.Static("", "assets")
+	secure.Static("storage/icons", "storage/icons")
 }
 
 func renderView(c echo.Context, cmp templ.Component) error {

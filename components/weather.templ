@@ -36,7 +36,7 @@ func getIcon(icon string) string {
 
 templ Weather(weather *services.OpenWeather) {
 	<div class="flex items-center select-none">
-		<span id="watherIcon" class={ "extra-icon h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14", getIcon(weather.Icon) }></span>
+		<span id="weatherIcon" class={ "extra-icon h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14", getIcon(weather.Icon) }></span>
 		<div>
 			<div class="text-4xl md:text-4xl"><span id="weatherTemp">{ fmt.Sprintf("%0.2f",weather.Temp) }</span> { weather.Units }</div>
 			<div class="flex items-center gap-5 text-xs">

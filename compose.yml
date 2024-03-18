@@ -11,6 +11,31 @@ services:
         - V_ALPINE=${V_ALPINE}
         - APP_VERSION=${CI_COMMIT_TAG}
 
+  logto:
+    depends_on:
+      logto-db:
+        condition: service_healthy
+    image: svhd/logto:latest
+    entrypoint: ['sh', '-c', 'npm run cli db seed -- --swe && npm start']
+    ports:
+      - 3001:3001
+      - 3002:3002
+    environment:
+      - TRUST_PROXY_HEADER=1
+      - DB_URL=postgres://postgres:p0stgr3s@logto-db:5432/logto
+
+  logto-db:
+    image: postgres:14-alpine
+    user: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: p0stgr3s
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: .
@@ -31,12 +56,7 @@ services:
       args:
         - V_GOLANG=${V_GOLANG}
     command: air -c .air.toml
-    environment:
-      - TZ=Europe/Berlin
-      - LOG_LEVEL=debug
-      - TITLE=DEV
-      - APP_VERSION=v0.0.1-dev
-      - WEATHER_KEY=${WEATHER_KEY}
+    env_file: .env
     volumes:
       - .:/app/
     ports:
