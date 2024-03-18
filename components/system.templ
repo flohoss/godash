@@ -1,9 +1,30 @@
-package uptime
+package components
 
-import "gitlab.unjx.de/flohoss/godash/services"
-import "gitlab.unjx.de/flohoss/godash/components/system"
-import "fmt"
-import "html/template"
+import (
+	"html/template"
+	"gitlab.unjx.de/flohoss/godash/services"
+	"fmt"
+)
+
+var BarTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
+
+type Bar struct {
+	Id         string
+	Percentage float64
+}
+
+templ System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage float64) {
+	<div class="flex items-center">
+		<span class={ "system-icon", icon }></span>
+		<div class="w-full truncate">
+			<div class="extra-info">{ extraInfo }</div>
+			<div class="truncate"><span id={ valueId }>{ infoPre }</span>{ infoPost }</div>
+			<div class="progress-bar-wrapper">
+				@templ.FromGoHTML(BarTemplate, Bar{Id:percentageId, Percentage:percentage})
+			</div>
+		</div>
+	</div>
+}
 
 var countDownTemplate = template.Must(template.New("countdown").Parse("<span id=\"{{ .Id }}\" style=\"--value: {{ .Value }};\"></span>"))
 
@@ -32,7 +53,7 @@ templ Uptime(extraInfo string, id string, uptime services.Uptime) {
 				</div>
 			</div>
 			<div class="progress-bar-wrapper">
-				@templ.FromGoHTML(system.BarTemplate, system.Bar{Id:id, Percentage:float64(uptime.Percentage)})
+				@templ.FromGoHTML(BarTemplate, Bar{Id:id, Percentage:float64(uptime.Percentage)})
 			</div>
 		</div>
 	</div>
