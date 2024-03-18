@@ -45,5 +45,5 @@ func (bh *AppHandler) appHandler(c echo.Context) error {
 
 	titlePage := bh.env.Title
 
-	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, bookmarks, staticSystem, liveSystem, weather, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)))
+	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)))
 }
