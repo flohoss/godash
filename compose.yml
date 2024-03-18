@@ -56,7 +56,17 @@ services:
       args:
         - V_GOLANG=${V_GOLANG}
     command: air -c .air.toml
-    env_file: .env
+    environment:
+      - TZ=Europe/Berlin
+      - PUBLIC_URL=http://godash:4000
+      - LOG_LEVEL=debug
+      - TITLE=DEV
+      - APP_VERSION=v0.0.1-DEV
+      - WEATHER_KEY=${WEATHER_KEY}
+      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
+      - LOGTO_APP_ID=${LOGTO_APP_ID}
+      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
+      - SESSION_KEY=super-secure
     volumes:
       - .:/app/
     ports:
