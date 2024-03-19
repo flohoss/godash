@@ -17,7 +17,9 @@ func NewWeatherService(sse *sse.Server, env *env.Config) *WeatherService {
 	var w = WeatherService{sse: sse, env: env}
 	w.setWeatherUnits()
 	sse.CreateStream("weather")
-	go w.updateWeather(time.Second * 90)
+	if env.WeatherKey != "" {
+		go w.updateWeather(time.Second * 90)
+	}
 	return &w
 }
 
@@ -66,7 +68,6 @@ func (w *WeatherService) updateWeather(interval time.Duration) {
 				slog.Error("weather cannot be processed")
 			} else {
 				w.copyWeatherValues(&weatherResponse)
-				slog.Info("weather updated", "temp", w.CurrentWeather.Temp)
 			}
 			resp.Body.Close()
 			json, _ := json.Marshal(w.CurrentWeather)

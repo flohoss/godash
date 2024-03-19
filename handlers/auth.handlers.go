@@ -45,7 +45,7 @@ func (authHandler *AuthHandler) signInHandler(c echo.Context) error {
 	)
 	signInUri, err := logtoClient.SignIn(authHandler.env.PublicUrl + "/sign-in-callback")
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("cannot process sign in request", "err", err)
 		return echo.ErrInternalServerError
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, signInUri)
@@ -58,7 +58,7 @@ func (authHandler *AuthHandler) signInCallbackHandler(c echo.Context) error {
 	)
 	err := logtoClient.HandleSignInCallback(c.Request())
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("cannot process sign in callback", "err", err)
 		return echo.ErrInternalServerError
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, "/")
@@ -71,7 +71,7 @@ func (authHandler *AuthHandler) signOutCallbackHandler(c echo.Context) error {
 	)
 	signOutUri, err := logtoClient.SignOut(authHandler.env.PublicUrl)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error("cannot process sign out", "err", err)
 		return echo.ErrInternalServerError
 	}
 	return c.Redirect(http.StatusTemporaryRedirect, signOutUri)

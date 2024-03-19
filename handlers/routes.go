@@ -9,11 +9,16 @@ import (
 )
 
 func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
-	e.GET("/sign-in", authHandler.signInHandler)
-	e.GET("/sign-in-callback", authHandler.signInCallbackHandler)
+	if authHandler.env.LogtoEndpoint != "" {
+		e.GET("/sign-in", authHandler.signInHandler)
+		e.GET("/sign-in-callback", authHandler.signInCallbackHandler)
+		e.GET("/sign-out", authHandler.signOutCallbackHandler)
+	}
 
-	secure := e.Group("/", authHandler.logtoMiddleware)
-	secure.GET("sign-out", authHandler.signOutCallbackHandler)
+	secure := e.Group("/")
+	if authHandler.env.LogtoEndpoint != "" {
+		secure = e.Group("/", authHandler.logtoMiddleware)
+	}
 
 	secure.GET("", appHandler.appHandler)
 	secure.GET("sse", echo.WrapHandler(http.HandlerFunc(sse.ServeHTTP)))

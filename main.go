@@ -28,14 +28,16 @@ func main() {
 	e.HideBanner = true
 	e.HidePort = true
 
-	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.Recover())
+	e.Use(middleware.Logger())
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
 			return strings.Contains(c.Path(), "sse") || strings.Contains(c.Path(), "sign")
 		},
 	}))
-	e.Use(session.Middleware(memstore.NewMemStore([]byte(env.SessionKey))))
+	if env.LogtoEndpoint != "" {
+		e.Use(session.Middleware(memstore.NewMemStore([]byte(env.SessionKey))))
+	}
 
 	sse := sse.New()
 	sse.AutoReplay = false
@@ -49,7 +51,7 @@ func main() {
 	handlers.SetupRoutes(e, sse, appHandler, authHandler)
 
 	slog.Info("starting server", "url", env.PublicUrl)
-	if err := e.Start(fmt.Sprintf(":%d", env.Port)); err != http.ErrServerClosed {
+	if err := e.Start(fmt.Sprintf("0.0.0.0:%d", env.Port)); err != http.ErrServerClosed {
 		slog.Error("cannot start server", "err", err)
 		os.Exit(1)
 	}
