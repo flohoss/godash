@@ -58,3 +58,42 @@ templ Uptime(extraInfo string, id string, uptime services.Uptime) {
 		</div>
 	</div>
 }
+
+templ SystemScript() {
+	<script>
+		let systemSSESource = null;
+		addEventListener('beforeunload', () => {
+			systemSSESource && systemSSESource.close();
+		});
+		systemSSESource = new EventSource('/sse?stream=system');
+		systemSSESource.onmessage = (e) => {
+			const parsed = JSON.parse(e.data);
+			replaceSystem(parsed);
+		};
+
+		// system elements
+		const systemCpuPercentage = document.getElementById('systemCpuPercentage');
+		const systemRamPercentage = document.getElementById('systemRamPercentage');
+		const systemRamValue = document.getElementById('systemRamValue');
+		const systemDiskPercentage = document.getElementById('systemDiskPercentage');
+		const systemDiskValue = document.getElementById('systemDiskValue');
+		const systemUptimePercentage = document.getElementById('systemUptimePercentage');
+		const uptimeDays = document.getElementById('uptimeDays');
+		const uptimeHours = document.getElementById('uptimeHours');
+		const uptimeMinutes = document.getElementById('uptimeMinutes');
+		const uptimeSeconds = document.getElementById('uptimeSeconds');
+
+		function replaceSystem(parsed) {
+			systemCpuPercentage.style = 'width:' + parsed.cpu + '%';
+			systemRamPercentage.style = 'width:' + parsed.ram.percentage + '%';
+			systemRamValue.innerText = parsed.ram.value;
+			systemDiskPercentage.style = 'width:' + parsed.disk.percentage + '%';
+			systemDiskValue.innerText = parsed.disk.value;
+			systemUptimePercentage.style = 'width:' + parsed.uptime.percentage + '%';
+			uptimeDays.style = '--value:' + parsed.uptime.days;
+			uptimeHours.style = '--value:' + parsed.uptime.hours;
+			uptimeMinutes.style = '--value:' + parsed.uptime.minutes;
+			uptimeSeconds.style = '--value:' + parsed.uptime.seconds;
+		}
+  	</script>
+}

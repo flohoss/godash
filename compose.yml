@@ -1,40 +1,8 @@
 networks:
   net:
     external: false
-  proxy:
-    external: false
 
 services:
-  logto:
-    depends_on:
-      logto-db:
-        condition: service_healthy
-    image: svhd/logto:${V_LOGTO}
-    entrypoint: ['sh', '-c', 'npm run cli db seed -- --swe && npm start']
-    ports:
-      - 3001:3001
-      - 3002:3002
-    environment:
-      - TRUST_PROXY_HEADER=1
-      - DB_URL=postgres://postgres:p0stgr3s@logto-db:5432/logto
-      - ENDPOINT=http://0.0.0.0:3001
-    networks:
-      - net
-      - proxy
-
-  logto-db:
-    image: postgres:${V_POSTGRES}-alpine
-    user: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: p0stgr3s
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - net
 
   backend:
     build:
@@ -63,6 +31,7 @@ services:
       - TITLE=DEV
       - APP_VERSION=v0.0.1-DEV
       - WEATHER_KEY=${WEATHER_KEY}
+      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
       - LOGTO_APP_ID=${LOGTO_APP_ID}
       - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
       - SESSION_KEY=super-secure
@@ -70,8 +39,6 @@ services:
       - .:/app/
     ports:
       - 4000:4000
-    networks:
-      - proxy
 
   templ:
     profiles: [dev]

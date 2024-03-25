@@ -29,7 +29,6 @@ func main() {
 	e.HidePort = true
 
 	e.Use(middleware.Recover())
-	e.Use(middleware.Logger())
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
 			return strings.Contains(c.Path(), "sse") || strings.Contains(c.Path(), "sign")
@@ -46,8 +45,8 @@ func main() {
 	w := services.NewWeatherService(sse, env)
 	b := services.NewBookmarkService()
 
-	appHandler := handlers.NewAppHandler(env, s, w, b)
 	authHandler := handlers.NewAuthHandler(env)
+	appHandler := handlers.NewAppHandler(env, authHandler, s, w, b)
 	handlers.SetupRoutes(e, sse, appHandler, authHandler)
 
 	slog.Info("starting server", "url", env.PublicUrl)

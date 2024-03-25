@@ -20,30 +20,32 @@ type WeatherService interface {
 	GetCurrentWeather() *services.OpenWeather
 }
 
-func NewAppHandler(env *env.Config, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
-
+func NewAppHandler(env *env.Config, authHandler *AuthHandler, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
 	return &AppHandler{
 		env:             env,
-		SystemService:   s,
-		WeatherService:  w,
-		BookmarkService: b,
+		authHandler:     authHandler,
+		systemService:   s,
+		weatherService:  w,
+		bookmarkService: b,
 	}
 }
 
 type AppHandler struct {
 	env             *env.Config
-	SystemService   SystemService
-	WeatherService  WeatherService
-	BookmarkService BookmarkService
+	authHandler     *AuthHandler
+	systemService   SystemService
+	weatherService  WeatherService
+	bookmarkService BookmarkService
 }
 
 func (bh *AppHandler) appHandler(c echo.Context) error {
-	bookmarks := bh.BookmarkService.GetAllBookmarks()
-	staticSystem := bh.SystemService.GetStaticInformation()
-	liveSystem := bh.SystemService.GetLiveInformation()
-	weather := bh.WeatherService.GetCurrentWeather()
+	bookmarks := bh.bookmarkService.GetAllBookmarks()
+	staticSystem := bh.systemService.GetStaticInformation()
+	liveSystem := bh.systemService.GetLiveInformation()
+	weather := bh.weatherService.GetCurrentWeather()
+	user := bh.authHandler.GetUserInfo()
 
 	titlePage := bh.env.Title
 
-	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)))
+	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, user, bookmarks, staticSystem, liveSystem, weather)))
 }
