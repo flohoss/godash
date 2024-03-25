@@ -5,6 +5,7 @@ import (
 
 	"github.com/caarlos0/env/v10"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type Config struct {
@@ -28,7 +29,9 @@ type Config struct {
 var errParse = errors.New("error parsing environment variables")
 
 func Parse() (*Config, error) {
-	cfg := &Config{}
+	cfg := &Config{
+		SessionKey: uuid.NewString(),
+	}
 	if err := env.Parse(cfg); err != nil {
 		return cfg, err
 	}

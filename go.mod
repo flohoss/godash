@@ -7,10 +7,11 @@ require (
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/dariubs/percent v1.0.0
 	github.com/go-playground/validator/v10 v10.19.0
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/sessions v1.2.2
 	github.com/labstack/echo-contrib v0.15.0
 	github.com/labstack/echo/v4 v4.11.4
-	github.com/logto-io/go/client v0.1.0
+	github.com/logto-io/go v1.0.4
 	github.com/quasoft/memstore v0.0.0-20191010062613-2bce066d2b0b
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
@@ -27,7 +28,6 @@ require (
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/logto-io/go/core v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/tklauser/go-sysconf v0.3.13 // indirect
