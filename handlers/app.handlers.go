@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/logto-io/go/client"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/home"
@@ -43,7 +44,12 @@ func (bh *AppHandler) appHandler(c echo.Context) error {
 	staticSystem := bh.systemService.GetStaticInformation()
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
-	user := bh.authHandler.GetUserInfo()
+
+	logtoClient := client.NewLogtoClient(
+		bh.authHandler.logtoConfig,
+		NewSessionStorage(c),
+	)
+	user, _ := logtoClient.FetchUserInfo()
 
 	titlePage := bh.env.Title
 

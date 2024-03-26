@@ -8,7 +8,7 @@ import (
 	"github.com/logto-io/go/core"
 )
 
-templ Home(title string, user *core.UserInfoResponse, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(title string, user core.UserInfoResponse, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
 		<div class="flex w-full justify-between items-center">
 			@components.Weather(weather)

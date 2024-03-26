@@ -6,7 +6,6 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/logto-io/go/client"
-	"github.com/logto-io/go/core"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 )
 
@@ -24,11 +23,6 @@ func NewAuthHandler(env *env.Config) *AuthHandler {
 type AuthHandler struct {
 	env         *env.Config
 	logtoConfig *client.LogtoConfig
-	userInfo    *core.UserInfoResponse
-}
-
-func (authHandler *AuthHandler) GetUserInfo() *core.UserInfoResponse {
-	return authHandler.userInfo
 }
 
 func (authHandler *AuthHandler) logtoMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -39,13 +33,6 @@ func (authHandler *AuthHandler) logtoMiddleware(next echo.HandlerFunc) echo.Hand
 		)
 		if !logtoClient.IsAuthenticated() {
 			return c.Redirect(http.StatusTemporaryRedirect, "/sign-in")
-		}
-		if authHandler.userInfo == nil {
-			info, err := logtoClient.FetchUserInfo()
-			if err != nil {
-				return echo.ErrInternalServerError
-			}
-			authHandler.userInfo = &info
 		}
 		return next(c)
 	}
