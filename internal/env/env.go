@@ -5,7 +5,6 @@ import (
 
 	"github.com/caarlos0/env/v10"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 )
 
 type Config struct {
@@ -20,18 +19,15 @@ type Config struct {
 	WeatherUnits      string  `env:"WEATHER_UNITS" envDefault:"metric"`
 	WeatherLanguage   string  `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
 	WeatherDigits     bool    `env:"WEATHER_DIGITS" envDefault:"false"`
-	LogtoEndpoint     string  `env:"LOGTO_ENDPOINT" default:"" validate:"omitempty,url"`
-	LogtoAppId        string  `env:"LOGTO_APP_ID,unset"`
-	LogtoAppSecret    string  `env:"LOGTO_APP_SECRET,unset"`
-	SessionKey        string  `env:"SESSION_KEY,unset"`
+	SSODomain         string  `env:"SSO_DOMAIN" default:"" validate:"omitempty,fqdn"`
+	SSOKey            string  `env:"SSO_KEY,unset"`
+	SSOClientId       string  `env:"SSO_CLIENT_ID,unset"`
 }
 
 var errParse = errors.New("error parsing environment variables")
 
 func Parse() (*Config, error) {
-	cfg := &Config{
-		SessionKey: uuid.NewString(),
-	}
+	cfg := &Config{}
 	if err := env.Parse(cfg); err != nil {
 		return cfg, err
 	}
