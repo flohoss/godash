@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/logto-io/go/client"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/home"
-
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
 )
 
 type BookmarkService interface {
@@ -47,10 +45,11 @@ func (bh *AppHandler) appHandler(c echo.Context) error {
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	var user *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]
-	if bh.authHandler.env.SSODomain != "" {
-		user = bh.authHandler.middleware.Context(c.Request().Context())
-	}
+	logtoClient := client.NewLogtoClient(
+		bh.authHandler.logtoConfig,
+		NewSessionStorage(c),
+	)
+	user, _ := logtoClient.FetchUserInfo()
 
 	titlePage := bh.env.Title
 

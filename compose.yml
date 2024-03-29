@@ -30,9 +30,10 @@ services:
       - TITLE=${TITLE}
       - APP_VERSION=${APP_VERSION}
       - WEATHER_KEY=${WEATHER_KEY}
-      - SSO_DOMAIN=${SSO_DOMAIN}
-      - SSO_KEY=${SSO_KEY}
-      - SSO_CLIENT_ID=${SSO_CLIENT_ID}
+      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
+      - LOGTO_APP_ID=${LOGTO_APP_ID}
+      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
+      - SESSION_KEY=${SESSION_KEY}
     volumes:
       - .:/app/
     ports:

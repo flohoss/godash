@@ -7,8 +7,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/quasoft/memstore"
 	"github.com/r3labs/sse/v2"
 	"gitlab.unjx.de/flohoss/godash/handlers"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
@@ -25,14 +27,16 @@ func main() {
 	e := echo.New()
 	e.HideBanner = true
 	e.HidePort = true
-	e.Debug = true
 
 	e.Use(middleware.Recover())
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			return strings.Contains(c.Path(), "sse") || strings.Contains(c.Path(), "auth")
+			return strings.Contains(c.Path(), "sse") || strings.Contains(c.Path(), "sign")
 		},
 	}))
+	if env.LogtoEndpoint != "" {
+		e.Use(session.Middleware(memstore.NewMemStore([]byte(env.SessionKey))))
+	}
 
 	sse := sse.New()
 	sse.AutoReplay = false

@@ -1,11 +1,10 @@
 package components
 
 import (
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
+	"github.com/logto-io/go/core"
 )
 
-templ User(user *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]) {
+templ User(user core.UserInfoResponse) {
 	<div
 		x-data="{
             open: false,
@@ -21,7 +20,9 @@ templ User(user *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]) {
 		class="relative"
 	>
 		<button x-on:click="toggle()" class="avatar" type="button">
-			<div class="w-10 h-10 rounded-xl bg-primary"></div>
+			<div class="w-10 h-10 rounded-xl">
+				<img src={ user.Picture }/>
+			</div>
 		</button>
 		<ul
 			x-show="open"
@@ -30,9 +31,9 @@ templ User(user *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]) {
 			style="display: none;"
 			class="z-50 absolute right-0 mt-2 menu bg-base-200 rounded-box"
 		>
-			<li class="menu-title whitespace-nowrap">{ user.UserInfo.GivenName }</li>
+			<li class="menu-title whitespace-nowrap">{ user.Name }</li>
 			<li>
-				<a href="/auth/logout"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
+				<a href="/sign-out"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
 			</li>
 		</ul>
 	</div>

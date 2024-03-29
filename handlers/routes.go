@@ -9,13 +9,15 @@ import (
 )
 
 func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
-	if authHandler.env.SSODomain != "" {
-		e.GET("/auth/", echo.WrapHandler(authHandler.authN))
+	if authHandler.env.LogtoEndpoint != "" {
+		e.GET("/sign-in", authHandler.signInHandler)
+		e.GET("/sign-in-callback", authHandler.signInCallbackHandler)
+		e.GET("/sign-out", authHandler.signOutCallbackHandler)
 	}
 
 	secure := e.Group("/")
-	if authHandler.env.SSODomain != "" {
-		secure = e.Group("/", echo.WrapMiddleware(authHandler.middleware.RequireAuthentication()))
+	if authHandler.env.LogtoEndpoint != "" {
+		secure = e.Group("/", authHandler.logtoMiddleware)
 	}
 
 	secure.GET("", appHandler.appHandler)

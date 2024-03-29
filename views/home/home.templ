@@ -1,23 +1,18 @@
 package home
 
 import (
-	"fmt"
-
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/layout"
+	"fmt"
 	"gitlab.unjx.de/flohoss/godash/components"
-
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
+	"github.com/logto-io/go/core"
 )
 
-templ Home(title string, user *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo], bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(title string, user core.UserInfoResponse, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
 		<div class="flex w-full justify-between items-center">
 			@components.Weather(weather)
-			if user != nil {
-				@components.User(user)
-			}
+			@components.User(user)
 		</div>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
 			@components.System("icon-[bi--cpu]",static.CPU.Name,"",static.CPU.Threads,"systemCpuPercentage","",live.CPU)
