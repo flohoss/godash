@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/logto-io/go/client"
+	"github.com/logto-io/go/core"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/home"
@@ -45,13 +46,16 @@ func (bh *AppHandler) appHandler(c echo.Context) error {
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	logtoClient := client.NewLogtoClient(
-		bh.authHandler.logtoConfig,
-		NewSessionStorage(c),
-	)
-	user, _ := logtoClient.FetchUserInfo()
+	claims := core.IdTokenClaims{}
+	if bh.authHandler.env.SSOEndpoint != "" {
+		logtoClient := client.NewLogtoClient(
+			bh.authHandler.logtoConfig,
+			NewSessionStorage(c),
+		)
+		claims, _ = logtoClient.GetIdTokenClaims()
+	}
 
 	titlePage := bh.env.Title
 
-	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, user, bookmarks, staticSystem, liveSystem, weather)))
+	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, claims, bookmarks, staticSystem, liveSystem, weather)))
 }

@@ -24,16 +24,8 @@ services:
       args:
         - V_GOLANG=${V_GOLANG}
     command: air -c .air.toml
-    environment:
-      - TZ=Europe/Berlin
-      - PUBLIC_URL=${PUBLIC_URL}
-      - TITLE=${TITLE}
-      - APP_VERSION=${APP_VERSION}
-      - WEATHER_KEY=${WEATHER_KEY}
-      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
-      - LOGTO_APP_ID=${LOGTO_APP_ID}
-      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
-      - SESSION_KEY=${SESSION_KEY}
+    env_file:
+      - .env
     volumes:
       - .:/app/
     ports:
@@ -59,15 +51,8 @@ services:
       args:
         - V_GOLANG=${V_GOLANG}
     command: /app/scripts/debug.sh
-    environment:
-      - TZ=Europe/Berlin
-      - PUBLIC_URL=${PUBLIC_URL}
-      - APP_VERSION=${APP_VERSION}
-      - WEATHER_KEY=${WEATHER_KEY}
-      - LOGTO_ENDPOINT=${LOGTO_ENDPOINT}
-      - LOGTO_APP_ID=${LOGTO_APP_ID}
-      - LOGTO_APP_SECRET=${LOGTO_APP_SECRET}
-      - SESSION_KEY=${SESSION_KEY}
+    env_file:
+      - .env
     volumes:
       - .:/app/
     ports:

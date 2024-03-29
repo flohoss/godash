@@ -8,11 +8,13 @@ import (
 	"github.com/logto-io/go/core"
 )
 
-templ Home(title string, user core.UserInfoResponse, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(title string, claims core.IdTokenClaims, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
 		<div class="flex w-full justify-between items-center">
 			@components.Weather(weather)
-			@components.User(user)
+			if claims.Sub != "" {
+				@components.User(claims)
+			}
 		</div>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
 			@components.System("icon-[bi--cpu]",static.CPU.Name,"",static.CPU.Threads,"systemCpuPercentage","",live.CPU)

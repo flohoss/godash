@@ -9,21 +9,22 @@ import (
 )
 
 type Config struct {
-	TimeZone          string  `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
-	PublicUrl         string  `env:"PUBLIC_URL" validate:"url"`
-	Title             string  `env:"TITLE" envDefault:"goDash"`
-	Port              int     `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
-	Version           string  `env:"APP_VERSION"`
-	LocationLatitude  float32 `env:"LOCATION_LATITUDE" envDefault:"48.780331609463815" validate:"latitude"`
-	LocationLongitude float32 `env:"LOCATION_LONGITUDE" envDefault:"9.177968320179422" validate:"longitude"`
-	WeatherKey        string  `env:"WEATHER_KEY"`
-	WeatherUnits      string  `env:"WEATHER_UNITS" envDefault:"metric"`
-	WeatherLanguage   string  `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
-	WeatherDigits     bool    `env:"WEATHER_DIGITS" envDefault:"false"`
-	LogtoEndpoint     string  `env:"LOGTO_ENDPOINT" default:"" validate:"omitempty,url"`
-	LogtoAppId        string  `env:"LOGTO_APP_ID,unset"`
-	LogtoAppSecret    string  `env:"LOGTO_APP_SECRET,unset"`
-	SessionKey        string  `env:"SESSION_KEY,unset"`
+	TimeZone          string   `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
+	PublicUrl         string   `env:"PUBLIC_URL" validate:"url"`
+	Title             string   `env:"TITLE" envDefault:"goDash"`
+	Port              int      `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
+	Version           string   `env:"APP_VERSION"`
+	LocationLatitude  float32  `env:"LOCATION_LATITUDE" envDefault:"48.780331609463815" validate:"latitude"`
+	LocationLongitude float32  `env:"LOCATION_LONGITUDE" envDefault:"9.177968320179422" validate:"longitude"`
+	WeatherKey        string   `env:"WEATHER_KEY"`
+	WeatherUnits      string   `env:"WEATHER_UNITS" envDefault:"metric"`
+	WeatherLanguage   string   `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
+	WeatherDigits     bool     `env:"WEATHER_DIGITS" envDefault:"false"`
+	SSOEndpoint       string   `env:"SSO_ENDPOINT" default:"" validate:"omitempty,url"`
+	SSOAppId          string   `env:"SSO_APP_ID,unset"`
+	SSOAppSecret      string   `env:"SSO_APP_SECRET,unset"`
+	SSOResources      []string `env:"SSO_RESOURCES,unset" envSeparator:","`
+	SessionKey        string   `env:"SESSION_KEY,unset"`
 }
 
 var errParse = errors.New("error parsing environment variables")

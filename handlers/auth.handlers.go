@@ -13,9 +13,10 @@ func NewAuthHandler(env *env.Config) *AuthHandler {
 	return &AuthHandler{
 		env: env,
 		logtoConfig: &client.LogtoConfig{
-			Endpoint:  env.LogtoEndpoint,
-			AppId:     env.LogtoAppId,
-			AppSecret: env.LogtoAppSecret,
+			Endpoint:  env.SSOEndpoint,
+			AppId:     env.SSOAppId,
+			AppSecret: env.SSOAppSecret,
+			Resources: env.SSOResources,
 		},
 	}
 }
@@ -25,7 +26,7 @@ type AuthHandler struct {
 	logtoConfig *client.LogtoConfig
 }
 
-func (authHandler *AuthHandler) logtoMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func (authHandler *AuthHandler) authMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		logtoClient := client.NewLogtoClient(
 			authHandler.logtoConfig,

@@ -9,15 +9,15 @@ import (
 )
 
 func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
-	if authHandler.env.LogtoEndpoint != "" {
+	if authHandler.env.SSOEndpoint != "" {
 		e.GET("/sign-in", authHandler.signInHandler)
 		e.GET("/sign-in-callback", authHandler.signInCallbackHandler)
 		e.GET("/sign-out", authHandler.signOutCallbackHandler)
 	}
 
 	secure := e.Group("/")
-	if authHandler.env.LogtoEndpoint != "" {
-		secure = e.Group("/", authHandler.logtoMiddleware)
+	if authHandler.env.SSOEndpoint != "" {
+		secure = e.Group("/", authHandler.authMiddleware)
 	}
 
 	secure.GET("", appHandler.appHandler)

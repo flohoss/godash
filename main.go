@@ -6,15 +6,20 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/quasoft/memstore"
 	"github.com/r3labs/sse/v2"
+
 	"gitlab.unjx.de/flohoss/godash/handlers"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
+
+	"github.com/glebarez/sqlite"
+	"github.com/wader/gormstore/v2"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -34,8 +39,16 @@ func main() {
 			return strings.Contains(c.Path(), "sse") || strings.Contains(c.Path(), "sign")
 		},
 	}))
-	if env.LogtoEndpoint != "" {
-		e.Use(session.Middleware(memstore.NewMemStore([]byte(env.SessionKey))))
+	if env.SSOEndpoint != "" {
+		db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+		if err != nil {
+			slog.Error("cannot connect to database", "err", err)
+			os.Exit(1)
+		}
+		store := gormstore.New(db, []byte(env.SessionKey))
+		quit := make(chan struct{})
+		go store.PeriodicCleanup(1*time.Hour, quit)
+		e.Use(session.Middleware(store))
 	}
 
 	sse := sse.New()
