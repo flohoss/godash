@@ -3,32 +3,20 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/a-h/templ"
-	"github.com/labstack/echo/v4"
 	"github.com/r3labs/sse/v2"
 )
 
-func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
-	if authHandler.env.SSOEndpoint != "" {
-		e.GET("/sign-in", authHandler.signInHandler)
-		e.GET("/sign-in-callback", authHandler.signInCallbackHandler)
-		e.GET("/sign-out", authHandler.signOutCallbackHandler)
+func SetupRoutes(router *http.ServeMux, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
+	if authHandler.oidc != nil {
+		router.Handle("/auth/", authHandler.oidc)
 	}
+	router.Handle("/sse", authHandler.mw.RequireAuthentication()(http.HandlerFunc(sse.ServeHTTP)))
 
-	secure := e.Group("/")
-	if authHandler.env.SSOEndpoint != "" {
-		secure = e.Group("/", authHandler.authMiddleware)
-	}
+	fsAssets := http.FileServer(http.Dir("assets"))
+	router.Handle("/assets/", http.StripPrefix("/assets/", fsAssets))
 
-	secure.GET("", appHandler.appHandler)
-	secure.GET("sse", echo.WrapHandler(http.HandlerFunc(sse.ServeHTTP)))
+	fsIcons := http.FileServer(http.Dir("storage/icons"))
+	router.Handle("/storage/icons/", http.StripPrefix("/storage/icons/", fsIcons))
 
-	secure.Static("", "assets")
-	secure.Static("storage/icons", "storage/icons")
-}
-
-func renderView(c echo.Context, cmp templ.Component) error {
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMETextHTML)
-
-	return cmp.Render(c.Request().Context(), c.Response().Writer)
+	router.Handle("/", authHandler.mw.RequireAuthentication()(http.HandlerFunc(appHandler.appHandler)))
 }

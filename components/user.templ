@@ -1,11 +1,13 @@
 package components
 
 import (
-	"github.com/logto-io/go/core"
 	"unicode"
+
+	"github.com/zitadel/oidc/v3/pkg/oidc"
+	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
 )
 
-templ User(claims core.IdTokenClaims) {
+templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]) {
 	<div
 		x-data="{
             open: false,
@@ -20,25 +22,26 @@ templ User(claims core.IdTokenClaims) {
         }"
 		class="relative"
 	>
-		<button x-on:click="toggle()" class="avatar" type="button">
-			<div class="w-10 h-10 rounded-xl bg-primary relative opacity-80 hover:opacity-100 transition-opacity">
-				if claims.Picture == "" {
-					<span class="font-xl text-primary-content absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">{ string(unicode.ToUpper(rune(claims.Name[0]))) }</span>
-				} else {
-					<img src={ claims.Picture }/>
-				}
+		<div x-on:click="toggle()" class="flex items-center gap-2 hover:cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
+			<div class="avatar">
+				<div class="w-10 h-10 rounded-xl bg-secondary relative">
+					<span class="font-xl text-secondary-content absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">{ string(unicode.ToUpper(rune(authCtx.UserInfo.Name[0]))) }</span>
+				</div>
 			</div>
-		</button>
+			<div>
+				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ authCtx.UserInfo.Name }</div>
+				<div class="text-gray-500 text-xs whitespace-nowrap">{ authCtx.UserInfo.Email }</div>
+			</div>
+		</div>
 		<ul
 			x-show="open"
-			x-transition.origin.top.right
+			x-transition.origin.top.left
 			x-on:click.outside="close($refs.button)"
 			style="display: none;"
 			class="z-50 absolute right-0 mt-2 menu bg-base-200 rounded-box"
 		>
-			<li class="menu-title whitespace-nowrap">{ claims.Name }</li>
 			<li>
-				<a href="/sign-out"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
+				<a href="/auth/logout"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
 			</li>
 		</ul>
 	</div>

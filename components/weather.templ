@@ -116,6 +116,7 @@ templ WeatherScript() {
 				if (className.startsWith('icon-')) {
 					weatherIcon.classList.remove(className);
 				}
+				break;
 			});
 			weatherIcon.classList.add(weatherClass(parsed.icon));
 			weatherTemp.innerText = parsed.temp;

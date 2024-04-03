@@ -1,9 +1,8 @@
 package handlers
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/logto-io/go/client"
-	"github.com/logto-io/go/core"
+	"net/http"
+
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/home"
@@ -40,22 +39,15 @@ type AppHandler struct {
 	bookmarkService BookmarkService
 }
 
-func (bh *AppHandler) appHandler(c echo.Context) error {
+func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
 	bookmarks := bh.bookmarkService.GetAllBookmarks()
 	staticSystem := bh.systemService.GetStaticInformation()
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	claims := core.IdTokenClaims{}
-	if bh.authHandler.env.SSOEndpoint != "" {
-		logtoClient := client.NewLogtoClient(
-			bh.authHandler.logtoConfig,
-			NewSessionStorage(c),
-		)
-		claims, _ = logtoClient.GetIdTokenClaims()
-	}
+	authCtx := bh.authHandler.mw.Context(r.Context())
 
 	titlePage := bh.env.Title
 
-	return renderView(c, home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, claims, bookmarks, staticSystem, liveSystem, weather)))
+	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, authCtx, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
 }
