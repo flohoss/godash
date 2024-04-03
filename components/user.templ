@@ -1,11 +1,23 @@
 package components
 
 import (
-	"unicode"
+	"crypto/md5"
+	"fmt"
+	"strings"
+	"html/template"
 
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
 )
+
+var GravatarTemplate = template.Must(template.New("gravatar").Parse("<div class=\"avatar rounded w-10 h-10 bg-contain bg-center bg-origin-content bg-no-repeat opacity-90\" style=\"background-image: url({{ . }})\"></div>"))
+
+func GetGravatarURL(email string, size uint) string {
+	email = strings.TrimSpace(strings.ToLower(email))
+	hash := md5.Sum([]byte(email))
+	gravatarURL := fmt.Sprintf("https://www.gravatar.com/avatar/%x?s=%d", hash, size)
+	return string(templ.URL(gravatarURL))
+}
 
 templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]) {
 	<div
@@ -27,11 +39,7 @@ templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo])
 				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ authCtx.UserInfo.Name }</div>
 				<div class="text-gray-500 text-xs whitespace-nowrap">{ authCtx.UserInfo.Email }</div>
 			</div>
-			<div class="avatar">
-				<div class="w-10 h-10 rounded-xl bg-secondary relative">
-					<span class="font-xl text-secondary-content absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">{ string(unicode.ToUpper(rune(authCtx.UserInfo.Name[0]))) }</span>
-				</div>
-			</div>
+			@templ.FromGoHTML(GravatarTemplate, GetGravatarURL(authCtx.UserInfo.Email, 100))
 		</div>
 		<ul
 			x-show="open"

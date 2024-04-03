@@ -11,7 +11,6 @@ import (
 
 type Config struct {
 	TimeZone          string  `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
-	PublicUrl         string  `env:"PUBLIC_URL" validate:"url"`
 	Title             string  `env:"TITLE" envDefault:"goDash"`
 	Port              int     `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
 	Version           string  `env:"APP_VERSION"`
