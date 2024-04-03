@@ -23,14 +23,14 @@ templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo])
 		class="relative"
 	>
 		<div x-on:click="toggle()" class="flex items-center gap-2 hover:cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
+			<div class="hidden md:flex flex-col items-end">
+				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ authCtx.UserInfo.Name }</div>
+				<div class="text-gray-500 text-xs whitespace-nowrap">{ authCtx.UserInfo.Email }</div>
+			</div>
 			<div class="avatar">
 				<div class="w-10 h-10 rounded-xl bg-secondary relative">
 					<span class="font-xl text-secondary-content absolute top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2">{ string(unicode.ToUpper(rune(authCtx.UserInfo.Name[0]))) }</span>
 				</div>
-			</div>
-			<div>
-				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ authCtx.UserInfo.Name }</div>
-				<div class="text-gray-500 text-xs whitespace-nowrap">{ authCtx.UserInfo.Email }</div>
 			</div>
 		</div>
 		<ul
@@ -40,6 +40,8 @@ templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo])
 			style="display: none;"
 			class="z-50 absolute right-0 mt-2 menu bg-base-200 rounded-box"
 		>
+			<li class="md:hidden menu-title whitespace-nowrap">{ authCtx.UserInfo.Name }</li>
+			<li class="md:hidden menu-title whitespace-nowrap">{ authCtx.UserInfo.Email }</li>
 			<li>
 				<a href="/auth/logout"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
 			</li>
