@@ -6,8 +6,7 @@ import (
 	"strings"
 	"html/template"
 
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
+	"github.com/logto-io/go/core"
 )
 
 var GravatarTemplate = template.Must(template.New("gravatar").Parse("<div class=\"avatar rounded w-10 h-10 bg-contain bg-center bg-origin-content bg-no-repeat opacity-90\" style=\"background-image: url({{ . }})\"></div>"))
@@ -19,7 +18,7 @@ func GetGravatarURL(email string, size uint) string {
 	return string(templ.URL(gravatarURL))
 }
 
-templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]) {
+templ User(claims *core.IdTokenClaims) {
 	<div
 		x-data="{
             open: false,
@@ -36,10 +35,10 @@ templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo])
 	>
 		<div x-on:click="toggle()" class="flex items-center gap-2 hover:cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
 			<div class="hidden md:flex flex-col items-end">
-				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ authCtx.UserInfo.Name }</div>
-				<div class="text-gray-500 text-xs whitespace-nowrap">{ authCtx.UserInfo.Email }</div>
+				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ claims.Name }</div>
+				<div class="text-gray-500 text-xs whitespace-nowrap">{ claims.Email }</div>
 			</div>
-			@templ.FromGoHTML(GravatarTemplate, GetGravatarURL(authCtx.UserInfo.Email, 100))
+			@templ.FromGoHTML(GravatarTemplate, GetGravatarURL(claims.Email, 100))
 		</div>
 		<ul
 			x-show="open"
@@ -48,10 +47,10 @@ templ User(authCtx *openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo])
 			style="display: none;"
 			class="z-50 absolute right-0 mt-2 menu bg-base-200 rounded-box"
 		>
-			<li class="md:hidden menu-title whitespace-nowrap">{ authCtx.UserInfo.Name }</li>
-			<li class="md:hidden menu-title whitespace-nowrap">{ authCtx.UserInfo.Email }</li>
+			<li class="md:hidden menu-title whitespace-nowrap">{ claims.Name }</li>
+			<li class="md:hidden menu-title whitespace-nowrap">{ claims.Email }</li>
 			<li>
-				<a href="/auth/logout"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
+				<a href="/sign-out"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
 			</li>
 		</ul>
 	</div>

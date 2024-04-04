@@ -1,41 +1,111 @@
 package handlers
 
 import (
-	"context"
-	"log/slog"
-	"os"
+	"net/http"
+
+	"github.com/alexedwards/scs/v2"
+	"github.com/logto-io/go/client"
+	"github.com/logto-io/go/core"
 
 	"gitlab.unjx.de/flohoss/godash/internal/env"
-
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-	"github.com/zitadel/zitadel-go/v3/pkg/authentication"
-	openid "github.com/zitadel/zitadel-go/v3/pkg/authentication/oidc"
-	"github.com/zitadel/zitadel-go/v3/pkg/zitadel"
 )
 
-func NewAuthHandler(env *env.Config) *AuthHandler {
-	ah := AuthHandler{
-		redirectUri: env.OIDCRedirectUri,
+func NewAuthHandler(env *env.Config, sessionManager *scs.SessionManager) *AuthHandler {
+	return &AuthHandler{
+		logtoConfig: &client.LogtoConfig{
+			Endpoint:  env.OIDCIssuerUrl,
+			AppId:     env.OIDCClientId,
+			AppSecret: env.OIDCClientSecret,
+			Scopes: []string{
+				core.UserScopeProfile,
+				core.UserScopeEmail,
+				core.UserScopeCustomData,
+				core.UserScopeIdentities,
+				core.UserScopeRoles,
+			},
+		},
+		sessionManager:         sessionManager,
+		redirectUri:            env.OIDCRedirectUri,
+		postSignOutRedirectUri: env.OIDCPostSignOutRedirectUri,
 	}
-
-	if env.OIDCIssuerUrl != "" {
-		ctx := context.Background()
-		var err error
-		ah.oidc, err = authentication.New(ctx, zitadel.New(env.OIDCIssuerUrl), env.OIDCKey,
-			openid.DefaultAuthentication(env.OIDCClientId, env.OIDCRedirectUri, env.OIDCKey),
-		)
-		if err != nil {
-			slog.Error("zitadel sdk could not initialize", "error", err)
-			os.Exit(1)
-		}
-		ah.mw = authentication.Middleware(ah.oidc)
-	}
-
-	return &ah
 }
 
 type AuthHandler struct {
-	oidc        *authentication.Authenticator[*openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]]
-	mw          *authentication.Interceptor[*openid.UserInfoContext[*oidc.IDTokenClaims, *oidc.UserInfo]]
-	redirectUri string
+	logtoConfig            *client.LogtoConfig
+	sessionManager         *scs.SessionManager
+	redirectUri            string
+	postSignOutRedirectUri string
+}
+
+func (ah *AuthHandler) authRequired(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if ah.sessionManager == nil {
+			handler.ServeHTTP(w, r)
+			return
+		}
+		logtoClient := client.NewLogtoClient(
+			ah.logtoConfig,
+			&SessionStorage{
+				sessionManager: ah.sessionManager,
+				write:          w,
+				request:        r,
+			},
+		)
+		if !logtoClient.IsAuthenticated() {
+			http.Redirect(w, r, "/sign-in", http.StatusTemporaryRedirect)
+			return
+		}
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func (ah *AuthHandler) signInHandler(w http.ResponseWriter, r *http.Request) {
+	logtoClient := client.NewLogtoClient(
+		ah.logtoConfig,
+		&SessionStorage{
+			sessionManager: ah.sessionManager,
+			write:          w,
+			request:        r,
+		},
+	)
+	signInUri, err := logtoClient.SignIn(ah.redirectUri)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, signInUri, http.StatusTemporaryRedirect)
+}
+
+func (ah *AuthHandler) signInCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	logtoClient := client.NewLogtoClient(
+		ah.logtoConfig,
+		&SessionStorage{
+			sessionManager: ah.sessionManager,
+			write:          w,
+			request:        r,
+		},
+	)
+	err := logtoClient.HandleSignInCallback(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+}
+
+func (ah *AuthHandler) signOutHandler(w http.ResponseWriter, r *http.Request) {
+	logtoClient := client.NewLogtoClient(
+		ah.logtoConfig,
+		&SessionStorage{
+			sessionManager: ah.sessionManager,
+			write:          w,
+			request:        r,
+		},
+	)
+	signOutUri, err := logtoClient.SignOut(ah.postSignOutRedirectUri)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, signOutUri, http.StatusTemporaryRedirect)
 }

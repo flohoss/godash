@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dariubs/percent"
 	"github.com/r3labs/sse/v2"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
@@ -15,6 +14,13 @@ import (
 	"github.com/shirou/gopsutil/mem"
 	"gitlab.unjx.de/flohoss/godash/internal/readable"
 )
+
+func calculatePercentage(used, total uint64) float64 {
+	if total == 0 {
+		return 0.0
+	}
+	return (float64(used) / float64(total)) * 100
+}
 
 func NewSystemService(sse *sse.Server) *SystemService {
 	s := SystemService{
@@ -98,7 +104,7 @@ func (s *SystemService) liveRam() {
 		return
 	}
 	s.Live.Ram.Value = readable.ReadableSize(r.Used)
-	s.Live.Ram.Percentage = math.RoundToEven(percent.PercentOfFloat(float64(r.Used), float64(r.Total)))
+	s.Live.Ram.Percentage = math.RoundToEven(calculatePercentage(r.Used, r.Total))
 }
 
 func staticDisk() Disk {
@@ -122,7 +128,7 @@ func (s *SystemService) liveDisk() {
 		return
 	}
 	s.Live.Disk.Value = readable.ReadableSize(d.Used)
-	s.Live.Disk.Percentage = math.RoundToEven(percent.PercentOfFloat(float64(d.Used), float64(d.Total)))
+	s.Live.Disk.Percentage = math.RoundToEven(calculatePercentage(d.Used, d.Total))
 }
 
 func (s *SystemService) uptime() {
