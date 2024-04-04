@@ -44,6 +44,10 @@ type AppHandler struct {
 }
 
 func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
 	bookmarks := bh.bookmarkService.GetAllBookmarks()
 	staticSystem := bh.systemService.GetStaticInformation()
 	liveSystem := bh.systemService.GetLiveInformation()
