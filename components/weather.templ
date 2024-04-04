@@ -59,9 +59,6 @@ templ Weather(weather *services.OpenWeather) {
 			</div>
 		</div>
 	</div>
-}
-
-templ WeatherScript() {
 	<script>
     	let weatherSSESource = null;
 		addEventListener('beforeunload', () => {
@@ -82,32 +79,39 @@ templ WeatherScript() {
 		const weatherSunrise = document.getElementById('weatherSunrise');
 		const weatherSunset = document.getElementById('weatherSunset');
 
-		function weatherClass(icon){
+		function weatherClass(icon) {
 			switch (icon) {
-			case "01d":
-				return "icon-[bi--sun-fill]"
-			case "01n":
-				return "icon-[bi--moon-fill]"
-			case "02d":
-				return "icon-[bi--cloud-sun-fill]"
-			case "02n":
-				return "icon-[bi--cloud-moon-fill]"
-			case "03d", "03n":
-				return "icon-[bi--cloud-fill]"
-			case "04d", "04n":
-				return "icon-[bi--clouds-fill]"
-			case "09d", "09n":
-				return "icon-[bi--cloud-rain-heavy-fill]"
-			case "10d", "10n":
-				return "icon-[bi--cloud-drizzle-fill]"
-			case "11d", "11n":
-				return "icon-[bi--cloud-lightning-rain-fill]"
-			case "13d", "13n":
-				return "icon-[bi--cloud-snow-fill]"
-			case "50d", "50n":
-				return "icon-[bi--cloud-fog2-fill]"
-			default:
-				return ""
+				case "01d":
+					return "icon-[bi--sun-fill]";
+				case "01n":
+					return "icon-[bi--moon-fill]";
+				case "02d":
+					return "icon-[bi--cloud-sun-fill]";
+				case "02n":
+					return "icon-[bi--cloud-moon-fill]";
+				case "03d":
+				case "03n":
+					return "icon-[bi--cloud-fill]";
+				case "04d":
+				case "04n":
+					return "icon-[bi--clouds-fill]";
+				case "09d":
+				case "09n":
+					return "icon-[bi--cloud-rain-heavy-fill]";
+				case "10d":
+				case "10n":
+					return "icon-[bi--cloud-drizzle-fill]";
+				case "11d":
+				case "11n":
+					return "icon-[bi--cloud-lightning-rain-fill]";
+				case "13d":
+				case "13n":
+					return "icon-[bi--cloud-snow-fill]";
+				case "50d":
+				case "50n":
+					return "icon-[bi--cloud-fog2-fill]";
+				default:
+					return "";
 			}
 		}
 
@@ -116,7 +120,6 @@ templ WeatherScript() {
 				if (className.startsWith('icon-')) {
 					weatherIcon.classList.remove(className);
 				}
-				break;
 			});
 			weatherIcon.classList.add(weatherClass(parsed.icon));
 			weatherTemp.innerText = parsed.temp;
