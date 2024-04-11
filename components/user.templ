@@ -9,7 +9,7 @@ import (
 	"github.com/logto-io/go/core"
 )
 
-var GravatarTemplate = template.Must(template.New("gravatar").Parse("<div class=\"avatar rounded w-10 h-10 bg-contain bg-center bg-origin-content bg-no-repeat opacity-90\" style=\"background-image: url({{ . }})\"></div>"))
+var GravatarTemplate = template.Must(template.New("gravatar").Parse("<div class=\"relative avatar rounded w-10 h-10 bg-contain bg-center bg-origin-content bg-no-repeat opacity-90\" style=\"background-image: url({{ . }})\"></div>"))
 
 func GetGravatarURL(email string, size uint) string {
 	email = strings.TrimSpace(strings.ToLower(email))
@@ -19,39 +19,13 @@ func GetGravatarURL(email string, size uint) string {
 }
 
 templ User(claims *core.IdTokenClaims) {
-	<div
-		x-data="{
-            open: false,
-            toggle() {
-                if (this.open) return this.close();
-                this.open = true;
-            },
-            close(focusAfter) {
-                if (! this.open) return;
-                this.open = false;
-            }
-        }"
-		class="relative"
-	>
-		<div x-on:click="toggle()" class="flex items-center gap-2 hover:cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
+	<a class="dropdown tooltip" data-tip="Logout" href="/sign-out">
+		<div tabindex="0" role="button" class="flex items-center gap-2 hover:cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
 			<div class="hidden md:flex flex-col items-end">
 				<div class="text-secondary text-sm font-bold whitespace-nowrap">{ claims.Name }</div>
 				<div class="text-gray-500 text-xs whitespace-nowrap">{ claims.Email }</div>
 			</div>
 			@templ.FromGoHTML(GravatarTemplate, GetGravatarURL(claims.Email, 100))
 		</div>
-		<ul
-			x-show="open"
-			x-transition.origin.top.left
-			x-on:click.outside="close($refs.button)"
-			style="display: none;"
-			class="z-50 absolute right-0 mt-2 menu bg-base-200 rounded-box"
-		>
-			<li class="md:hidden menu-title whitespace-nowrap">{ claims.Name }</li>
-			<li class="md:hidden menu-title whitespace-nowrap">{ claims.Email }</li>
-			<li>
-				<a href="/sign-out"><span class="icon-[bi--box-arrow-left]"></span> Logout</a>
-			</li>
-		</ul>
-	</div>
+	</a>
 }
