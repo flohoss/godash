@@ -3,14 +3,14 @@ package home
 import (
 	"fmt"
 
-	"github.com/logto-io/go/core"
+	"github.com/zitadel/oidc/v3/pkg/oidc"
 
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/layout"
 	"gitlab.unjx.de/flohoss/godash/components"
 )
 
-templ Home(title string, claims *core.IdTokenClaims, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(title string, claims *oidc.UserInfo, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
 		<div class="flex w-full justify-between items-center">
 			@components.Weather(weather)

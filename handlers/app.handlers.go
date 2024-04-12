@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"log/slog"
 	"net/http"
 
-	"github.com/logto-io/go/client"
-	"github.com/logto-io/go/core"
+	"github.com/zitadel/oidc/v3/pkg/oidc"
 
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
@@ -53,21 +51,10 @@ func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	var claims *core.IdTokenClaims
-	if bh.authHandler.sessionManager != nil {
-		logtoClient := client.NewLogtoClient(
-			bh.authHandler.logtoConfig,
-			&SessionStorage{
-				sessionManager: bh.authHandler.sessionManager,
-				write:          w,
-				request:        r,
-			},
-		)
-		c, err := logtoClient.GetIdTokenClaims()
-		if err != nil {
-			slog.Warn("cannot get id token claims", "err", err)
-		}
-		claims = &c
+	var claims *oidc.UserInfo
+	if bh.authHandler != nil {
+		authCtx := bh.authHandler.middleware.Context(r.Context())
+		claims = authCtx.UserInfo
 	}
 
 	titlePage := bh.env.Title
