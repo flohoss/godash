@@ -18,8 +18,8 @@ type Config struct {
 	WeatherUnits      string  `env:"WEATHER_UNITS" envDefault:"metric"`
 	WeatherLanguage   string  `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
 	WeatherDigits     bool    `env:"WEATHER_DIGITS" envDefault:"false"`
-	OIDCIssuerUrl     string  `env:"OIDC_ISSUER_URL" default:"" validate:"omitempty,fqdn"`
-	OIDCRedirectUri   string  `env:"OIDC_REDIRECT_URI" validate:"omitempty,url"`
+	OIDCIssuerUrl     string  `env:"OIDC_ISSUER_URL" default:"" validate:"omitempty,fqdn,startsnotwith=http,endsnotwith=/"`
+	OIDCRedirectUri   string  `env:"OIDC_REDIRECT_URI" validate:"omitempty,url,startswith=http"`
 	OIDCClientId      string  `env:"OIDC_CLIENT_ID,unset"`
 	OIDCClientSecret  string  `env:"OIDC_CLIENT_SECRET,unset"`
 }

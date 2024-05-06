@@ -16,7 +16,7 @@ import (
 func NewAuthHandler(env *env.Config) *AuthHandler {
 	ctx := context.Background()
 	authN, err := authentication.New(ctx, zitadel.New(env.OIDCIssuerUrl), env.OIDCClientSecret,
-		openid.DefaultAuthentication(env.OIDCClientId, env.OIDCRedirectUri, env.OIDCClientSecret),
+		openid.DefaultAuthentication(env.OIDCClientId, env.OIDCRedirectUri, env.OIDCClientSecret, oidc.ScopeOpenID, oidc.ScopeProfile, oidc.ScopeEmail, oidc.ScopeOfflineAccess),
 	)
 	if err != nil {
 		slog.Error("zitadel sdk could not initialize", "error", err)

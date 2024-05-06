@@ -3,12 +3,12 @@ module gitlab.unjx.de/flohoss/godash
 go 1.22
 
 require (
-	github.com/a-h/templ v0.2.663
+	github.com/a-h/templ v0.2.680
 	github.com/caarlos0/env/v10 v10.0.0
-	github.com/go-playground/validator/v10 v10.19.0
+	github.com/go-playground/validator/v10 v10.20.0
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	github.com/zitadel/oidc/v3 v3.22.1
+	github.com/zitadel/oidc/v3 v3.23.2
 	github.com/zitadel/zitadel-go/v3 v3.0.0-next.2
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -36,11 +36,11 @@ require (
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.26.0 // indirect
-	golang.org/x/crypto v0.22.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
-	golang.org/x/net v0.24.0 // indirect
-	golang.org/x/oauth2 v0.19.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/oauth2 v0.20.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 )
