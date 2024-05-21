@@ -3,8 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/zitadel/oidc/v3/pkg/oidc"
-
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/home"
@@ -23,10 +21,9 @@ type WeatherService interface {
 	GetCurrentWeather() *services.OpenWeather
 }
 
-func NewAppHandler(env *env.Config, authHandler *AuthHandler, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
+func NewAppHandler(env *env.Config, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
 	return &AppHandler{
 		env:             env,
-		authHandler:     authHandler,
 		systemService:   s,
 		weatherService:  w,
 		bookmarkService: b,
@@ -35,7 +32,6 @@ func NewAppHandler(env *env.Config, authHandler *AuthHandler, s SystemService, w
 
 type AppHandler struct {
 	env             *env.Config
-	authHandler     *AuthHandler
 	systemService   SystemService
 	weatherService  WeatherService
 	bookmarkService BookmarkService
@@ -51,13 +47,7 @@ func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	var claims *oidc.UserInfo
-	if bh.authHandler != nil {
-		authCtx := bh.authHandler.middleware.Context(r.Context())
-		claims = authCtx.UserInfo
-	}
-
 	titlePage := bh.env.Title
 
-	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, claims, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
+	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
 }

@@ -29,12 +29,8 @@ func main() {
 	w := services.NewWeatherService(sse, env)
 	b := services.NewBookmarkService()
 
-	var authHandler *handlers.AuthHandler
-	if env.OIDCIssuerUrl != "" {
-		authHandler = handlers.NewAuthHandler(env)
-	}
-	appHandler := handlers.NewAppHandler(env, authHandler, s, w, b)
-	handlers.SetupRoutes(router, sse, appHandler, authHandler)
+	appHandler := handlers.NewAppHandler(env, s, w, b)
+	handlers.SetupRoutes(router, sse, appHandler)
 
 	lis := fmt.Sprintf(":%d", env.Port)
 	slog.Info("server listening, press ctrl+c to stop", "addr", "http://localhost"+lis)
