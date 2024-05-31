@@ -28,8 +28,16 @@ build:
     - !reference [.auth_gitlab, before_script]
   script:
     - docker buildx create --use
-    - docker compose build godash
-    - docker tag $CURRENT_IMAGE $LATEST_IMAGE
+    - docker buildx build \
+      --provenance=false \
+      --platform=linux/amd64,linux/arm64 \
+      --build-arg APP_VERSION=${CI_COMMIT_TAG} \
+      --build-arg V_GOLANG=${V_GOLANG} \
+      --build-arg V_NODE=${V_NODE} \
+      --build-arg V_ALPINE=${V_ALPINE} \
+      --tag ${CURRENT_IMAGE} \
+      --tag ${LATEST_IMAGE} \
+      --pull --push
     - docker push $CURRENT_IMAGE
     - docker push $LATEST_IMAGE
   after_script:
