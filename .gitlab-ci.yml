@@ -27,6 +27,7 @@ build:
   before_script:
     - !reference [.auth_gitlab, before_script]
   script:
+    - docker buildx create --use
     - docker compose build godash
     - docker tag $CURRENT_IMAGE $LATEST_IMAGE
     - docker push $CURRENT_IMAGE

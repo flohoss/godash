@@ -90,6 +90,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      platforms:
+        - linux/amd64
+        - linux/arm64
       args:
         - V_GOLANG=${V_GOLANG}
         - V_NODE=${V_NODE}
