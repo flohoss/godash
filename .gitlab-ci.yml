@@ -1,6 +1,6 @@
 stages:
   - build
-  - deploy
+ # - deploy
 
 variables:
   LATEST_IMAGE: '$CI_REGISTRY_IMAGE:latest'
