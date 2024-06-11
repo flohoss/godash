@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"github.com/r3labs/sse/v2"
-	"github.com/shirou/gopsutil/cpu"
-	"github.com/shirou/gopsutil/disk"
-	"github.com/shirou/gopsutil/host"
-	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/v4/cpu"
+	"github.com/shirou/gopsutil/v4/disk"
+	"github.com/shirou/gopsutil/v4/host"
+	"github.com/shirou/gopsutil/v4/mem"
 	"gitlab.unjx.de/flohoss/godash/internal/readable"
 )
 
@@ -68,7 +68,11 @@ func staticCpu() CPU {
 	p.Threads = strconv.Itoa(runtime.NumCPU()) + " threads"
 	c, err := cpu.Info()
 	if err == nil {
-		p.Name = c[0].ModelName
+		if c[0].ModelName != "" {
+			p.Name = c[0].ModelName
+		} else {
+			p.Name = c[0].VendorID
+		}
 	} else {
 		p.Name = "none detected"
 	}

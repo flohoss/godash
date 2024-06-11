@@ -14,7 +14,7 @@ services:
             apk upgrade && \
             apk add tzdata
 
-        RUN go install github.com/cosmtrek/air@latest
+        RUN go install github.com/air-verse/air@latest
         COPY .air.toml .
 
         WORKDIR /app

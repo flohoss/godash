@@ -11,5 +11,8 @@
     "@iconify/tailwind": "^1.0.1",
     "daisyui": "^4.7.3",
     "tailwindcss": "^3.4.1"
+  },
+  "dependencies": {
+    "simple-icons": "^12.2.0"
   }
 }
