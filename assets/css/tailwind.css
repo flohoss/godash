@@ -25,7 +25,7 @@
     @apply text-xs truncate text-secondary;
   }
   .hover-effect {
-    @apply no-underline md:hover:underline underline-offset-2 decoration-primary text-sm text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50 transition-all ease-linear duration-150;
+    @apply no-underline md:hover:underline underline-offset-2 decoration-primary text-sm opacity-80 hover:opacity-100 transition-all ease-linear duration-150;
   }
   .heading {
     @apply text-lg text-secondary select-none truncate underline decoration-primary underline-offset-4;
