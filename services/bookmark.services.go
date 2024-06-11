@@ -105,12 +105,6 @@ func (bs *BookmarkService) replaceIconString() {
 					if !(bookmark.IgnoreColor || !ok || color == "") {
 						data = []byte(insertColor(string(data), color))
 					}
-				} else if strings.HasPrefix(bookmark.Icon, "di/") {
-					title := strings.Replace(bookmark.Icon, "di/", "", 1)
-					data, err = os.ReadFile(simpleIconsFolder + title)
-					if err != nil {
-						continue
-					}
 				} else {
 					data, err = os.ReadFile(iconsFolder + bookmark.Icon)
 					if err != nil {
@@ -118,6 +112,8 @@ func (bs *BookmarkService) replaceIconString() {
 					}
 				}
 				bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
+			} else {
+				bs.bookmarks.Applications[i].Entries[j].Icon = "<img title=\"" + bookmark.Name + "\" src=\"/icons/" + bookmark.Icon + "\"/>"
 			}
 		}
 	}

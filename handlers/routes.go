@@ -12,5 +12,8 @@ func SetupRoutes(router *http.ServeMux, sse *sse.Server, appHandler *AppHandler)
 	fsAssets := http.FileServer(http.Dir("assets"))
 	router.Handle("GET /assets/", http.StripPrefix("/assets/", fsAssets))
 
+	icons := http.FileServer(http.Dir("storage/icons"))
+	router.Handle("GET /icons/", http.StripPrefix("/icons/", icons))
+
 	router.HandleFunc("GET /", appHandler.appHandler)
 }
