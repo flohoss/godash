@@ -22,10 +22,11 @@ type Link struct {
 }
 
 type Application struct {
-	Name        string
-	Icon        string
-	IgnoreColor bool `yaml:"ignore_color"`
-	URL         string
+	Name           string
+	Icon           string
+	IgnoreColor    bool   `yaml:"ignore_color"`
+	OverwriteColor string `yaml:"overwrite_color"`
+	URL            string
 }
 
 type SimpleIcons struct {

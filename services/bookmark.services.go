@@ -102,6 +102,10 @@ func (bs *BookmarkService) replaceIconString() {
 						continue
 					}
 					color, ok := iconsByTitle[bookmark.Name]
+					if bookmark.OverwriteColor != "" {
+						ok = true
+						color = bookmark.OverwriteColor
+					}
 					if !(bookmark.IgnoreColor || !ok || color == "") {
 						data = []byte(insertColor(string(data), color))
 					}
