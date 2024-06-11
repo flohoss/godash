@@ -4,14 +4,16 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
-const storageDir = "storage/"
-const iconsDir = storageDir + "icons/"
-const bookmarkFile = storageDir + "bookmarks.yaml"
+const simpleIconsFolder = "node_modules/simple-icons/icons/"
+const storageFolder = "storage/"
+const iconsFolder = storageFolder + "icons/"
+const bookmarkFile = storageFolder + "bookmarks.yaml"
 const defaultConfig = `links:
   - category: "Code"
     entries:
@@ -22,11 +24,11 @@ applications:
   - category: "Code"
     entries:
       - name: "Github"
-        icon: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
+        icon: "si/github.svg"
         url: "https://github.com"`
 
 func init() {
-	folders := []string{storageDir, iconsDir}
+	folders := []string{storageFolder, iconsFolder}
 	for _, path := range folders {
 		err := os.MkdirAll(path, 0755)
 		if err != nil {
@@ -78,9 +80,21 @@ func (bs *BookmarkService) readBookmarksFile() []byte {
 func (bs *BookmarkService) replaceIconString() {
 	for _, v := range bs.bookmarks.Applications {
 		for i, bookmark := range v.Entries {
-			if !strings.Contains(bookmark.Icon, "http") {
-				v.Entries[i].Icon = "/" + iconsDir + bookmark.Icon
+			rawHTML := ""
+			var data []byte
+			var err error
+			if filepath.Ext(bookmark.Icon) == ".svg" {
+				if strings.HasPrefix(bookmark.Icon, "si/") {
+					data, err = os.ReadFile(simpleIconsFolder + strings.Replace(bookmark.Icon, "si/", "", 1))
+				} else {
+					data, err = os.ReadFile(iconsFolder + bookmark.Icon)
+				}
+				if err != nil {
+					continue
+				}
+				rawHTML = string(data)
 			}
+			v.Entries[i].Icon = rawHTML
 		}
 	}
 }
