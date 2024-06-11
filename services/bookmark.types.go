@@ -1,7 +1,8 @@
 package services
 
 type BookmarkService struct {
-	bookmarks Bookmarks
+	bookmarks   Bookmarks
+	SimpleIcons SimpleIcons
 }
 
 type Bookmarks struct {
@@ -21,8 +22,17 @@ type Link struct {
 }
 
 type Application struct {
-	Name       string
-	Icon       string
-	Background string
-	URL        string
+	Name        string
+	Icon        string
+	IgnoreColor bool `yaml:"ignore_color"`
+	URL         string
+}
+
+type SimpleIcons struct {
+	Icons []SimpleIcon `json:"icons"`
+}
+
+type SimpleIcon struct {
+	Title string `json:"title"`
+	Hex   string `json:"hex"`
 }

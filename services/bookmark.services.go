@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"io"
 	"log/slog"
 	"os"
@@ -11,6 +12,7 @@ import (
 )
 
 const simpleIconsFolder = "node_modules/simple-icons/icons/"
+const simpleIconsInfo = "node_modules/simple-icons/_data/simple-icons.json"
 const storageFolder = "storage/"
 const iconsFolder = storageFolder + "icons/"
 const bookmarkFile = storageFolder + "bookmarks.yaml"
@@ -23,9 +25,13 @@ const defaultConfig = `links:
 applications:
   - category: "Code"
     entries:
-      - name: "Github"
-        icon: "si/github.svg"
-        url: "https://github.com"`
+    - name: "GitHub"
+      icon: "si/github.svg"
+      ignore_color: true
+      url: "https://github.com"
+    - name: "Home Assistant"
+      icon: "si/homeassistant.svg"
+      url: "https://www.home-assistant.io/"`
 
 func init() {
 	folders := []string{storageFolder, iconsFolder}
@@ -42,6 +48,7 @@ func init() {
 func NewBookmarkService() *BookmarkService {
 	bs := BookmarkService{}
 	bs.parseBookmarks()
+	bs.parseIcons()
 	return &bs
 }
 
@@ -78,23 +85,40 @@ func (bs *BookmarkService) readBookmarksFile() []byte {
 }
 
 func (bs *BookmarkService) replaceIconString() {
-	for _, v := range bs.bookmarks.Applications {
-		for i, bookmark := range v.Entries {
-			rawHTML := ""
-			var data []byte
-			var err error
+	iconsByTitle := make(map[string]string)
+	for _, icon := range bs.SimpleIcons.Icons {
+		iconsByTitle[icon.Title] = icon.Hex
+	}
+
+	for i, v := range bs.bookmarks.Applications {
+		for j, bookmark := range v.Entries {
 			if filepath.Ext(bookmark.Icon) == ".svg" {
+				var data []byte
+				var err error
 				if strings.HasPrefix(bookmark.Icon, "si/") {
-					data, err = os.ReadFile(simpleIconsFolder + strings.Replace(bookmark.Icon, "si/", "", 1))
+					title := strings.Replace(bookmark.Icon, "si/", "", 1)
+					data, err = os.ReadFile(simpleIconsFolder + title)
+					if err != nil {
+						continue
+					}
+					color, ok := iconsByTitle[bookmark.Name]
+					if !(bookmark.IgnoreColor || !ok || color == "") {
+						data = []byte(insertColor(string(data), color))
+					}
+				} else if strings.HasPrefix(bookmark.Icon, "di/") {
+					title := strings.Replace(bookmark.Icon, "di/", "", 1)
+					data, err = os.ReadFile(simpleIconsFolder + title)
+					if err != nil {
+						continue
+					}
 				} else {
 					data, err = os.ReadFile(iconsFolder + bookmark.Icon)
+					if err != nil {
+						continue
+					}
 				}
-				if err != nil {
-					continue
-				}
-				rawHTML = string(data)
+				bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
 			}
-			v.Entries[i].Icon = rawHTML
 		}
 	}
 }
@@ -106,5 +130,30 @@ func (bs *BookmarkService) parseBookmarks() {
 		slog.Error(err.Error())
 		return
 	}
+}
+
+func (bs *BookmarkService) parseIcons() {
+	file, err := os.Open(simpleIconsInfo)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+	defer file.Close()
+	byteValue, err := io.ReadAll(file)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+	err = json.Unmarshal(byteValue, &bs.SimpleIcons)
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
 	bs.replaceIconString()
+}
+
+func insertColor(svg, color string) string {
+	parts := strings.SplitN(svg, "<svg", 2)
+	if len(parts) != 2 {
+		return svg
+	}
+	return parts[0] + "<svg " + `fill="#` + color + `" ` + parts[1]
 }

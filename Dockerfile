@@ -42,6 +42,7 @@ COPY assets/favicon ./assets/favicon
 COPY --from=logo /app/logo.txt .
 COPY --from=nodeBuilder /app/assets/css/style.css ./assets/css/style.css
 COPY --from=nodeBuilder /app/node_modules/simple-icons/icons ./node_modules/simple-icons/icons
+COPY --from=nodeBuilder /app/node_modules/simple-icons/_data ./node_modules/simple-icons/_data
 COPY --from=goBuilder /app/views ./views
 COPY --from=goBuilder /app/components ./components
 COPY --from=goBuilder /app/godash .
