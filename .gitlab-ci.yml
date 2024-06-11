@@ -1,6 +1,5 @@
 stages:
   - build
- # - deploy
 
 variables:
   LATEST_IMAGE: '$CI_REGISTRY_IMAGE:latest'
@@ -41,23 +40,3 @@ build:
       --push
   after_script:
     - !reference [.auth_gitlab, after_script]
-
-deploy:
-  rules: !reference [.rules:deploy, rules]
-  stage: deploy
-  image: debian:${V_DEBIAN}-slim
-  id_tokens:
-    TBOT_GITLAB_JWT:
-      aud: tp.unjx.de
-  script:
-    - apt-get update && apt-get install curl -y
-    - cp tbot.yaml /tmp
-    - cd /tmp
-    - 'curl -O https://cdn.teleport.dev/teleport-v${V_TELEPORT}-linux-amd64-bin.tar.gz'
-    - tar -xvf teleport-v${V_TELEPORT}-linux-amd64-bin.tar.gz
-    - ./teleport/install
-    - 'tbot start -c tbot.yaml'
-    - 'tsh -i /tmp/machine-id/identity --proxy tp.unjx.de:443 ssh gitlab@berg "docker compose -f /opt/docker/home/compose.yml up home -d --pull always && docker system prune --force"'
-  environment:
-    name: production
-    url: $PRODUCTION_URL
