@@ -115,7 +115,7 @@ func (bs *BookmarkService) replaceIconString() {
 						continue
 					}
 				}
-				bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
+				bs.bookmarks.Applications[i].Entries[j].Icon = insertWidthHeight(string(data))
 			} else {
 				bs.bookmarks.Applications[i].Entries[j].Icon = "<img title=\"" + bookmark.Name + "\" src=\"/icons/" + bookmark.Icon + "\"/>"
 			}
@@ -156,4 +156,12 @@ func insertColor(svg, color string) string {
 		return svg
 	}
 	return parts[0] + "<svg " + `fill="#` + color + `" ` + parts[1]
+}
+
+func insertWidthHeight(svg string) string {
+	parts := strings.SplitN(svg, "<svg", 2)
+	if len(parts) != 2 {
+		return svg
+	}
+	return parts[0] + "<svg width=\"2rem\" height=\"2rem\" " + parts[1]
 }
