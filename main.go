@@ -30,7 +30,8 @@ func main() {
 	b := services.NewBookmarkService()
 
 	appHandler := handlers.NewAppHandler(env, s, w, b)
-	handlers.SetupRoutes(router, sse, appHandler)
+	authHandler := handlers.NewAuthHandler(env)
+	handlers.SetupRoutes(router, sse, appHandler, authHandler)
 
 	lis := fmt.Sprintf(":%d", env.Port)
 	slog.Info("server listening, press ctrl+c to stop", "addr", "http://localhost"+lis)

@@ -8,16 +8,23 @@ import (
 )
 
 type Config struct {
-	TimeZone          string  `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
-	Title             string  `env:"TITLE" envDefault:"goDash"`
-	Port              int     `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
-	Version           string  `env:"APP_VERSION"`
-	LocationLatitude  float32 `env:"LOCATION_LATITUDE" envDefault:"48.780331609463815" validate:"latitude"`
-	LocationLongitude float32 `env:"LOCATION_LONGITUDE" envDefault:"9.177968320179422" validate:"longitude"`
-	WeatherKey        string  `env:"WEATHER_KEY"`
-	WeatherUnits      string  `env:"WEATHER_UNITS" envDefault:"metric"`
-	WeatherLanguage   string  `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
-	WeatherDigits     bool    `env:"WEATHER_DIGITS" envDefault:"false"`
+	TimeZone          string   `env:"TZ" envDefault:"Etc/UTC" validate:"timezone"`
+	Title             string   `env:"TITLE" envDefault:"goDash"`
+	Port              int      `env:"PORT" envDefault:"4000" validate:"min=1024,max=49151"`
+	Version           string   `env:"APP_VERSION"`
+	LocationLatitude  float32  `env:"LOCATION_LATITUDE" envDefault:"48.780331609463815" validate:"latitude"`
+	LocationLongitude float32  `env:"LOCATION_LONGITUDE" envDefault:"9.177968320179422" validate:"longitude"`
+	WeatherKey        string   `env:"WEATHER_KEY"`
+	WeatherUnits      string   `env:"WEATHER_UNITS" envDefault:"metric"`
+	WeatherLanguage   string   `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
+	WeatherDigits     bool     `env:"WEATHER_DIGITS" envDefault:"false"`
+	OIDCClientID      string   `env:"OIDC_CLIENT_ID"`
+	OIDCClientSecret  string   `env:"OIDC_CLIENT_SECRET"`
+	OIDCRedirectURI   string   `env:"OIDC_REDIRECT_URI"`
+	OIDCScopes        []string `env:"OIDC_SCOPES" envSeparator:"," envDefault:"openid,email,profile"`
+	OIDCIssuer        string   `env:"OIDC_ISSUER"`
+	OIDCResponseMode  string   `env:"OIDC_RESPONSE_MODE"`
+	SessionKey        string   `env:"SESSION_KEY,unset"`
 }
 
 var errParse = errors.New("error parsing environment variables")
