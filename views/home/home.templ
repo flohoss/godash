@@ -2,22 +2,22 @@ package home
 
 import (
 	"fmt"
-
+	"gitlab.unjx.de/flohoss/godash/components"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/layout"
-	"gitlab.unjx.de/flohoss/godash/components"
 )
 
-templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(title string, user services.User, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
 		<div class="flex w-full justify-between items-center">
 			@components.Weather(weather)
+			@components.User(user)
 		</div>
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
-			@components.System("icon-[bi--cpu]",static.CPU.Name,"",static.CPU.Threads,"systemCpuPercentage","",live.CPU)
-			@components.System("icon-[bi--nvme]",live.Disk.Value,fmt.Sprintf(" | %s", static.Disk.Total),static.Disk.Partitions,"systemDiskPercentage","systemDiskValue",live.Disk.Percentage)
-			@components.System("icon-[bi--memory]",live.Ram.Value,fmt.Sprintf(" | %s", static.Ram.Total),static.Ram.Swap,"systemRamPercentage","systemRamValue",live.Ram.Percentage)
-			@components.Uptime(static.Host.Architecture,"systemUptimePercentage",live.Uptime)
+			@components.System("icon-[bi--cpu]", static.CPU.Name, "", static.CPU.Threads, "systemCpuPercentage", "", live.CPU)
+			@components.System("icon-[bi--nvme]", live.Disk.Value, fmt.Sprintf(" | %s", static.Disk.Total), static.Disk.Partitions, "systemDiskPercentage", "systemDiskValue", live.Disk.Percentage)
+			@components.System("icon-[bi--memory]", live.Ram.Value, fmt.Sprintf(" | %s", static.Ram.Total), static.Ram.Swap, "systemRamPercentage", "systemRamValue", live.Ram.Percentage)
+			@components.Uptime(static.Host.Architecture, "systemUptimePercentage", live.Uptime)
 		</div>
 		<div class="grid gap-4">
 			for _, a := range bookmarks.Applications {

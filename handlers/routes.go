@@ -6,14 +6,17 @@ import (
 	"github.com/r3labs/sse/v2"
 )
 
-func SetupRoutes(router *http.ServeMux, sse *sse.Server, appHandler *AppHandler) {
-	router.HandleFunc("GET /sse", sse.ServeHTTP)
+func SetupRoutes(router *http.ServeMux, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
+	router.Handle("GET /sse", authHandler.AuthMiddleware(http.HandlerFunc(sse.ServeHTTP)))
 
 	fsAssets := http.FileServer(http.Dir("assets"))
-	router.Handle("GET /assets/", http.StripPrefix("/assets/", fsAssets))
+	router.Handle("GET /assets/", authHandler.AuthMiddleware((http.StripPrefix("/assets/", fsAssets))))
 
 	icons := http.FileServer(http.Dir("storage/icons"))
-	router.Handle("GET /icons/", http.StripPrefix("/icons/", icons))
+	router.Handle("GET /icons/", authHandler.AuthMiddleware(http.StripPrefix("/icons/", icons)))
 
-	router.HandleFunc("GET /", appHandler.appHandler)
+	router.HandleFunc("GET /auth/logout", http.HandlerFunc(authHandler.handleLogout))
+	router.HandleFunc("GET /auth/callback", authHandler.handleCallback)
+
+	router.Handle("GET /", authHandler.AuthMiddleware(http.HandlerFunc(appHandler.appHandler)))
 }

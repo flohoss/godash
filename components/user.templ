@@ -1,0 +1,11 @@
+package components
+
+import "gitlab.unjx.de/flohoss/godash/services"
+
+templ User(user services.User) {
+	<div class="avatar">
+		<div class="ring-primary ring-offset-base-100 w-16 rounded-full ring-2 ring-offset-2">
+			<img src={ string(templ.SafeURL(user.Gravatar)) }/>
+		</div>
+	</div>
+}
