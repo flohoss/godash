@@ -5,7 +5,7 @@ variables:
   LATEST_IMAGE: '$CI_REGISTRY_IMAGE:latest'
   PRODUCTION_URL: 'https://home.unjx.de'
 
-image: docker:$V_DOCKER-git
+image: docker:$V_DOCKER
 
 .auth_gitlab:
   before_script:

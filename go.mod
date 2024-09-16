@@ -1,6 +1,6 @@
 module gitlab.unjx.de/flohoss/godash
 
-go 1.22
+go 1.23
 
 require (
 	github.com/a-h/templ v0.2.778
