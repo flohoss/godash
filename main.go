@@ -35,7 +35,7 @@ func main() {
 
 	lis := fmt.Sprintf(":%d", env.Port)
 	slog.Info("server listening, press ctrl+c to stop", "addr", "http://localhost"+lis)
-	err = http.ListenAndServe(lis, router)
+	err = http.ListenAndServe(lis, authHandler.SessionManager.LoadAndSave(router))
 	if !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("server terminated", "error", err)
 		os.Exit(1)

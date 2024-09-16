@@ -38,10 +38,6 @@ type AppHandler struct {
 }
 
 func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
 	bookmarks := bh.bookmarkService.GetAllBookmarks()
 	staticSystem := bh.systemService.GetStaticInformation()
 	liveSystem := bh.systemService.GetLiveInformation()
@@ -49,5 +45,12 @@ func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
 
 	titlePage := bh.env.Title
 
-	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
+	user := services.User{
+		Name:  w.Header().Get("X-User-Name"),
+		Email: w.Header().Get("X-User-Email"),
+	}
+	gravatar := services.NewGravatarFromEmail(user.Email)
+	user.Gravatar = gravatar.GetURL()
+
+	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, user, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
 }

@@ -7,16 +7,16 @@ import (
 )
 
 func SetupRoutes(router *http.ServeMux, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
-	router.HandleFunc("GET /sse", sse.ServeHTTP)
+	router.Handle("GET /sse", authHandler.AuthMiddleware(http.HandlerFunc(sse.ServeHTTP)))
 
 	fsAssets := http.FileServer(http.Dir("assets"))
-	router.Handle("GET /assets/", http.StripPrefix("/assets/", fsAssets))
+	router.Handle("GET /assets/", authHandler.AuthMiddleware((http.StripPrefix("/assets/", fsAssets))))
 
 	icons := http.FileServer(http.Dir("storage/icons"))
-	router.Handle("GET /icons/", http.StripPrefix("/icons/", icons))
+	router.Handle("GET /icons/", authHandler.AuthMiddleware(http.StripPrefix("/icons/", icons)))
 
-	router.HandleFunc("GET /login", authHandler.handleAuth)
-	router.HandleFunc("GET /auch/callback", authHandler.handleCallback)
+	router.HandleFunc("GET /auth/logout", http.HandlerFunc(authHandler.handleLogout))
+	router.HandleFunc("GET /auth/callback", authHandler.handleCallback)
 
 	router.Handle("GET /", authHandler.AuthMiddleware(http.HandlerFunc(appHandler.appHandler)))
 }

@@ -4,11 +4,13 @@ go 1.22
 
 require (
 	github.com/a-h/templ v0.2.778
+	github.com/alexedwards/scs/v2 v2.8.0
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/shirou/gopsutil/v4 v4.24.8
+	github.com/thanhpk/randstr v1.0.6
 	golang.org/x/oauth2 v0.23.0
 	gopkg.in/yaml.v3 v3.0.1
 )

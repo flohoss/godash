@@ -1,9 +1,9 @@
 package components
 
 import (
-	"html/template"
-	"gitlab.unjx.de/flohoss/godash/services"
 	"fmt"
+	"gitlab.unjx.de/flohoss/godash/services"
+	"html/template"
 )
 
 var BarTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
@@ -20,7 +20,7 @@ templ System(icon string, infoPre string, infoPost string, extraInfo string, per
 			<div class="extra-info">{ extraInfo }</div>
 			<div class="truncate"><span id={ valueId }>{ infoPre }</span>{ infoPost }</div>
 			<div class="progress-bar-wrapper">
-				@templ.FromGoHTML(BarTemplate, Bar{Id:percentageId, Percentage:percentage})
+				@templ.FromGoHTML(BarTemplate, Bar{Id: percentageId, Percentage: percentage})
 			</div>
 		</div>
 	</div>
@@ -42,18 +42,18 @@ templ Uptime(extraInfo string, id string, uptime services.Uptime) {
 				<div class="truncate">
 					<span><span id="uptimeDays">{ fmt.Sprintf("%d",uptime.Days) }</span> days</span>
 					<span class="countdown">
-						@templ.FromGoHTML(countDownTemplate, Countdown{Id:"uptimeHours", Value:uptime.Hours})
+						@templ.FromGoHTML(countDownTemplate, Countdown{Id: "uptimeHours", Value: uptime.Hours})
 					</span> hours
 					<span class="countdown">
-						@templ.FromGoHTML(countDownTemplate, Countdown{Id:"uptimeMinutes", Value:uptime.Minutes})
+						@templ.FromGoHTML(countDownTemplate, Countdown{Id: "uptimeMinutes", Value: uptime.Minutes})
 					</span> min
 					<span class="countdown">
-						@templ.FromGoHTML(countDownTemplate, Countdown{Id:"uptimeSeconds", Value:uptime.Seconds})
+						@templ.FromGoHTML(countDownTemplate, Countdown{Id: "uptimeSeconds", Value: uptime.Seconds})
 					</span> sec
 				</div>
 			</div>
 			<div class="progress-bar-wrapper">
-				@templ.FromGoHTML(BarTemplate, Bar{Id:id, Percentage:float64(uptime.Percentage)})
+				@templ.FromGoHTML(BarTemplate, Bar{Id: id, Percentage: float64(uptime.Percentage)})
 			</div>
 		</div>
 	</div>

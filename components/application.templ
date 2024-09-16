@@ -1,8 +1,6 @@
 package components
 
-import (
-	"gitlab.unjx.de/flohoss/godash/services"
-)
+import "gitlab.unjx.de/flohoss/godash/services"
 
 templ Application(application services.Application) {
 	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">

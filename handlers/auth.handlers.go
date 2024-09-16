@@ -5,27 +5,20 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/thanhpk/randstr"
 	"golang.org/x/oauth2"
 
 	"gitlab.unjx.de/flohoss/godash/internal/env"
+	"gitlab.unjx.de/flohoss/godash/services"
 )
-
-func randString(nByte int) (string, error) {
-	b := make([]byte, nByte)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
-		return "", err
-	}
-	return base64.RawURLEncoding.EncodeToString(b), nil
-}
 
 func setCallbackCookie(w http.ResponseWriter, r *http.Request, name, value string) {
 	c := &http.Cookie{
@@ -80,15 +73,21 @@ func NewAuthHandler(env *env.Config) *AuthHandler {
 	}
 	codeChallenge := generateCodeChallenge(codeVerifier)
 	authCodeOptions := []oauth2.AuthCodeOption{
+		oauth2.SetAuthURLParam("redirect_uri", env.OIDCRedirectURI),
 		oauth2.SetAuthURLParam("code_challenge", codeChallenge),
 		oauth2.SetAuthURLParam("code_challenge_method", "S256"),
+		oauth2.SetAuthURLParam("code_verifier", codeVerifier),
 	}
+
+	sessionManager := scs.New()
+	sessionManager.Lifetime = 24 * time.Hour
 
 	return &AuthHandler{
 		ctx:             ctx,
 		oidcProvider:    oidcProvider,
 		oauth2Config:    oauth2Config,
 		authCodeOptions: authCodeOptions,
+		SessionManager:  sessionManager,
 	}
 }
 
@@ -97,17 +96,7 @@ type AuthHandler struct {
 	oidcProvider    *oidc.Provider
 	oauth2Config    *oauth2.Config
 	authCodeOptions []oauth2.AuthCodeOption
-}
-
-func (ah *AuthHandler) handleAuth(w http.ResponseWriter, r *http.Request) {
-	state, err := randString(16)
-	if err != nil {
-		http.Error(w, "Internal error", http.StatusInternalServerError)
-		return
-	}
-	setCallbackCookie(w, r, "state", state)
-
-	http.Redirect(w, r, ah.oauth2Config.AuthCodeURL(state, ah.authCodeOptions...), http.StatusFound)
+	SessionManager  *scs.SessionManager
 }
 
 func (ah *AuthHandler) handleCallback(w http.ResponseWriter, r *http.Request) {
@@ -121,49 +110,46 @@ func (ah *AuthHandler) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	oauth2Token, err := ah.oauth2Config.Exchange(ah.ctx, r.URL.Query().Get("code"))
+	oauth2Token, err := ah.oauth2Config.Exchange(ah.ctx, r.URL.Query().Get("code"), ah.authCodeOptions...)
 	if err != nil {
 		http.Error(w, "failed to exchange token: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	userInfo, err := ah.oidcProvider.UserInfo(ah.ctx, oauth2.StaticTokenSource(oauth2Token))
-	if err != nil {
-		http.Error(w, "failed to get userinfo: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
+	ah.SessionManager.Put(r.Context(), "access_token", oauth2Token.AccessToken)
 
-	resp := struct {
-		OAuth2Token *oauth2.Token
-		UserInfo    *oidc.UserInfo
-	}{oauth2Token, userInfo}
-	data, err := json.MarshalIndent(resp, "", "    ")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Write(data)
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (ah *AuthHandler) handleLogout(w http.ResponseWriter, r *http.Request) {
+	ah.SessionManager.Clear(r.Context())
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+func (ah *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
+	state := randstr.String(16)
+	setCallbackCookie(w, r, "state", state)
+	http.Redirect(w, r, ah.oauth2Config.AuthCodeURL(state, ah.authCodeOptions...), http.StatusFound)
 }
 
 func (ah *AuthHandler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		state, err := r.Cookie("state")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-		oauth2Token, err := ah.oauth2Config.Exchange(ah.ctx, r.URL.Query().Get("code"))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		accessToken := ah.SessionManager.GetString(r.Context(), "access_token")
+		if accessToken == "" {
+			ah.handleLogin(w, r)
 			return
 		}
 
-		userInfo, err := ah.oidcProvider.UserInfo(ah.ctx, oauth2.StaticTokenSource(oauth2Token))
+		userInfo, err := ah.oidcProvider.UserInfo(ah.ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: accessToken}))
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
+			ah.handleLogin(w, r)
 			return
 		}
-		fmt.Println(userInfo)
+		var userClaims services.User
+		userInfo.Claims(&userClaims)
+		w.Header().Set("X-User-Name", userClaims.Name)
+		w.Header().Set("X-User-Email", userClaims.Email)
+
 		next.ServeHTTP(w, r)
 	})
 }
