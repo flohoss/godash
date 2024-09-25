@@ -2,10 +2,12 @@ package components
 
 import "gitlab.unjx.de/flohoss/godash/services"
 
-templ User(user services.User) {
-	<div class="avatar">
-		<div class="ring-primary ring-offset-base-100 w-16 rounded-full ring-2 ring-offset-2">
-			<img src={ string(templ.SafeURL(user.Gravatar)) }/>
-		</div>
+templ User(user *services.User) {
+	<div class="tooltip tooltip-left" data-tip="Logout">
+		<a class="avatar" href="/logout">
+			<div class="ring-primary ring-offset-base-100 w-12 rounded-full ring-2 ring-offset-2">
+				<img src={ string(templ.SafeURL(user.Gravatar)) }/>
+			</div>
+		</a>
 	</div>
 }

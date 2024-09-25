@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
 	"github.com/r3labs/sse/v2"
 
 	"gitlab.unjx.de/flohoss/godash/handlers"
@@ -29,13 +32,23 @@ func main() {
 	w := services.NewWeatherService(sse, env)
 	b := services.NewBookmarkService()
 
-	appHandler := handlers.NewAppHandler(env, s, w, b)
-	authHandler := handlers.NewAuthHandler(env)
+	parsedUrl, _ := url.Parse(env.PublicUrl)
+	store := sessions.NewCookieStore(securecookie.GenerateRandomKey(32))
+	store.Options = &sessions.Options{
+		Domain:      parsedUrl.Hostname(),
+		MaxAge:      86400 * 30,
+		Secure:      parsedUrl.Scheme == "https",
+		HttpOnly:    true,
+		Partitioned: true,
+		SameSite:    http.SameSiteLaxMode,
+	}
+
+	authHandler := handlers.NewAuthHandler(env, store)
+	appHandler := handlers.NewAppHandler(env, store, s, w, b)
 	handlers.SetupRoutes(router, sse, appHandler, authHandler)
 
-	lis := fmt.Sprintf(":%d", env.Port)
-	slog.Info("server listening, press ctrl+c to stop", "addr", "http://localhost"+lis)
-	err = http.ListenAndServe(lis, authHandler.SessionManager.LoadAndSave(router))
+	slog.Info("server listening, press ctrl+c to stop", "addr", env.PublicUrl)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", env.Port), router)
 	if !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("server terminated", "error", err)
 		os.Exit(1)
