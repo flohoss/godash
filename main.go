@@ -33,7 +33,11 @@ func main() {
 	b := services.NewBookmarkService()
 
 	parsedUrl, _ := url.Parse(env.PublicUrl)
-	store := sessions.NewCookieStore(securecookie.GenerateRandomKey(32))
+	secret := []byte(env.SessionKey)
+	if len(secret) == 0 {
+		secret = securecookie.GenerateRandomKey(32)
+	}
+	store := sessions.NewCookieStore(secret)
 	store.Options = &sessions.Options{
 		Domain:      parsedUrl.Hostname(),
 		MaxAge:      86400 * 30,

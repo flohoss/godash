@@ -19,10 +19,11 @@ type Config struct {
 	WeatherUnits      string   `env:"WEATHER_UNITS" envDefault:"metric"`
 	WeatherLanguage   string   `env:"WEATHER_LANG" envDefault:"en" validate:"bcp47_language_tag"`
 	WeatherDigits     bool     `env:"WEATHER_DIGITS" envDefault:"false"`
-	AuthClientID      string   `env:"AUTH_CLIENT_ID"`
-	AuthClientSecret  string   `env:"AUTH_CLIENT_SECRET"`
+	AuthClientID      string   `env:"AUTH_CLIENT_ID" validate:"required"`
+	AuthClientSecret  string   `env:"AUTH_CLIENT_SECRET" validate:"required"`
 	AuthScopes        []string `env:"AUTH_SCOPES" envSeparator:"," envDefault:"openid,email,profile"`
-	AuthIssuer        string   `env:"AUTH_ISSUER"`
+	AuthIssuer        string   `env:"AUTH_ISSUER" validate:"required,url,endsnotwith=/.well-known/openid-configuration"`
+	SessionKey        string   `env:"SESSION_KEY,unset"`
 }
 
 var errParse = errors.New("error parsing environment variables")
