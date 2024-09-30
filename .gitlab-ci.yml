@@ -1,11 +1,13 @@
 stages:
   - build
+  - cleanup
+  - publish
 
 variables:
   LATEST_IMAGE: '$CI_REGISTRY_IMAGE:latest'
   PRODUCTION_URL: 'https://home.unjx.de'
 
-image: docker:$V_DOCKER
+image: docker:${V_DOCKER}-dind
 
 .auth_gitlab:
   before_script:
@@ -40,3 +42,19 @@ build:
       --push
   after_script:
     - !reference [.auth_gitlab, after_script]
+
+cleanup:
+  rules: !reference [.rules:deploy, rules]
+  stage: cleanup
+  script:
+    - docker system prune -a -f
+    - docker volume prune -a -f
+
+publish:
+  rules: !reference [.rules:deploy, rules]
+  stage: publish
+  script:
+    - cp "$SSH_PRIVATE_KEY" ~/.ssh/bot
+    - chmod 600 ~/.ssh/bot
+    - ssh-keyscan -H ${SERVER} >> ~/.ssh/known_hosts
+    - ssh -i ~/.ssh/bot flohoss@${SERVER} "cd /opt/docker/home && docker compose pull && docker compose up -d"
