@@ -1,9 +1,10 @@
 package services
 
 import (
-	"encoding/json"
 	"io"
+	"io/fs"
 	"log/slog"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -11,8 +12,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const simpleIconsFolder = "node_modules/simple-icons/icons/"
-const simpleIconsInfo = "node_modules/simple-icons/_data/simple-icons.json"
 const storageFolder = "storage/"
 const iconsFolder = storageFolder + "icons/"
 const bookmarkFile = storageFolder + "bookmarks.yaml"
@@ -26,11 +25,11 @@ applications:
   - category: "Code"
     entries:
     - name: "GitHub"
-      icon: "si/github.svg"
+      icon: "shi/github.svg"
       ignore_color: true
       url: "https://github.com"
     - name: "Home Assistant"
-      icon: "si/homeassistant.svg"
+      icon: "shi/homeassistant.svg"
       url: "https://www.home-assistant.io/"`
 
 func init() {
@@ -48,7 +47,7 @@ func init() {
 func NewBookmarkService() *BookmarkService {
 	bs := BookmarkService{}
 	bs.parseBookmarks()
-	bs.parseIcons()
+	bs.replaceIconStrings()
 	return &bs
 }
 
@@ -84,41 +83,51 @@ func (bs *BookmarkService) readBookmarksFile() []byte {
 	return byteValue
 }
 
-func (bs *BookmarkService) replaceIconString() {
-	iconsByTitle := make(map[string]string)
-	for _, icon := range bs.SimpleIcons.Icons {
-		iconsByTitle[icon.Title] = icon.Hex
-	}
-
+func (bs *BookmarkService) replaceIconStrings() {
 	for i, v := range bs.bookmarks.Applications {
 		for j, bookmark := range v.Entries {
-			if filepath.Ext(bookmark.Icon) == ".svg" {
-				var data []byte
-				var err error
-				if strings.HasPrefix(bookmark.Icon, "si/") {
-					title := strings.Replace(bookmark.Icon, "si/", "", 1)
-					data, err = os.ReadFile(simpleIconsFolder + title)
+			ext := filepath.Ext(bookmark.Icon)
+			if ext != ".svg" {
+				slog.Error("icon must be an svg file")
+				continue
+			}
+			if strings.HasPrefix(bookmark.Icon, "shi/") {
+				title := strings.Replace(bookmark.Icon, "shi/", "", 1)
+				if title == "" {
+					slog.Error("icon title is empty")
+					continue
+				}
+				data, err := os.ReadFile(iconsFolder + title)
+				if os.IsNotExist(err) {
+					slog.Debug("icon not found, downloading...", "title", title)
+					resp, err := http.Get("https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + title)
 					if err != nil {
+						slog.Error("failed to get icon", "err", err.Error())
 						continue
 					}
-					color, ok := iconsByTitle[bookmark.Name]
-					if bookmark.OverwriteColor != "" {
-						ok = true
-						color = bookmark.OverwriteColor
+					defer resp.Body.Close()
+					if resp.StatusCode != http.StatusOK {
+						slog.Error("failed to get icon", "status", resp.Status)
+						continue
 					}
-					if !(bookmark.IgnoreColor || !ok || color == "") {
-						data = []byte(insertColor(string(data), color))
-					}
-				} else {
-					data, err = os.ReadFile(iconsFolder + bookmark.Icon)
+					data, err = io.ReadAll(resp.Body)
 					if err != nil {
+						slog.Error("failed to read icon", "err", err.Error())
+						continue
+					}
+					err = os.WriteFile(iconsFolder+title, data, fs.FileMode(0640))
+					if err != nil {
+						slog.Error("failed to write icon", "err", err.Error())
 						continue
 					}
 				}
+				if data == nil {
+					slog.Error("icon data is null")
+					continue
+				}
 				bs.bookmarks.Applications[i].Entries[j].Icon = insertWidthHeight(string(data))
-			} else {
-				bs.bookmarks.Applications[i].Entries[j].Icon = "<img title=\"" + bookmark.Name + "\" src=\"/icons/" + bookmark.Icon + "\"/>"
 			}
+
 		}
 	}
 }
@@ -130,32 +139,6 @@ func (bs *BookmarkService) parseBookmarks() {
 		slog.Error(err.Error())
 		return
 	}
-}
-
-func (bs *BookmarkService) parseIcons() {
-	file, err := os.Open(simpleIconsInfo)
-	if err != nil {
-		slog.Error(err.Error())
-	}
-	defer file.Close()
-	byteValue, err := io.ReadAll(file)
-	if err != nil {
-		slog.Error(err.Error())
-	}
-	err = json.Unmarshal(byteValue, &bs.SimpleIcons)
-	if err != nil {
-		slog.Error(err.Error())
-		return
-	}
-	bs.replaceIconString()
-}
-
-func insertColor(svg, color string) string {
-	parts := strings.SplitN(svg, "<svg", 2)
-	if len(parts) != 2 {
-		return svg
-	}
-	return parts[0] + "<svg " + `fill="#` + color + `" ` + parts[1]
 }
 
 func insertWidthHeight(svg string) string {

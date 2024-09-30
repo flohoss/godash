@@ -9,6 +9,7 @@ require (
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/gorilla/securecookie v1.1.2
 	github.com/gorilla/sessions v1.4.0
+	github.com/lmittmann/tint v1.0.5
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/shirou/gopsutil/v4 v4.24.8
 	github.com/thanhpk/randstr v1.0.6

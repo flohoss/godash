@@ -1,7 +1,7 @@
-ARG V_GOLANG
-ARG V_NODE
-ARG V_ALPINE
-FROM golang:${V_GOLANG}-alpine AS goBuilder
+ARG V_GOLANG=1.23
+ARG V_NODE=20
+ARG V_ALPINE=3
+FROM golang:${V_GOLANG}-alpine AS golang
 WORKDIR /app
 
 RUN go install github.com/a-h/templ/cmd/templ@latest
@@ -14,7 +14,7 @@ COPY . .
 RUN templ generate
 RUN go build -ldflags="-s -w" -o godash main.go
 
-FROM node:${V_NODE}-alpine AS nodeBuilder
+FROM node:${V_NODE}-alpine AS node
 WORKDIR /app
 
 COPY package.json yarn.lock ./
@@ -32,22 +32,25 @@ RUN apk add figlet
 RUN figlet GoDash > logo.txt
 
 FROM alpine:${V_ALPINE} AS final
+RUN apk --no-cache add tzdata ca-certificates dumb-init && \
+    rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
+
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
 WORKDIR /app
-
-RUN apk add tzdata
-
-COPY scripts/entrypoint.sh .
 
 COPY assets/favicon ./assets/favicon
 COPY --from=logo /app/logo.txt .
-COPY --from=nodeBuilder /app/assets/css/style.css ./assets/css/style.css
-COPY --from=nodeBuilder /app/node_modules/simple-icons/icons ./node_modules/simple-icons/icons
-COPY --from=nodeBuilder /app/node_modules/simple-icons/_data ./node_modules/simple-icons/_data
-COPY --from=goBuilder /app/views ./views
-COPY --from=goBuilder /app/components ./components
-COPY --from=goBuilder /app/godash .
+COPY --from=node /app/assets/css/style.css ./assets/css/style.css
+COPY --from=golang /app/views ./views
+COPY --from=golang /app/components ./components
+COPY --from=golang /app/godash .
 
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+RUN chown -R appuser:appgroup /app
+
+ENTRYPOINT ["dumb-init", "--"]
+USER appuser
+CMD ["/app/godash"]
