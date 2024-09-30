@@ -99,9 +99,14 @@ func (bs *BookmarkService) replaceIconStrings() {
 					continue
 				}
 
-			}
-			if strings.HasPrefix(bookmark.Icon, "si/") {
+			} else if strings.HasPrefix(bookmark.Icon, "si/") {
 				data, lightData, err = downloadIcons(handleSimpleIcons(bookmark.Icon, ext))
+				if err != nil {
+					slog.Error(err.Error())
+					continue
+				}
+			} else {
+				data, lightData, err = handleLocalIcons(bookmark.Icon, ext)
 				if err != nil {
 					slog.Error(err.Error())
 					continue
@@ -138,7 +143,7 @@ func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
 	ext = strings.TrimPrefix(ext, ".")
 	title := strings.Replace(icon, "shi/", "", 1)
 	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + title
-	lightTitle := strings.Replace(title, ".svg", "-light.svg", 1)
+	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
 	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + lightTitle
 	return title, url, lightTitle, lightUrl
 }
@@ -146,9 +151,19 @@ func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
 func handleSimpleIcons(icon, ext string) (string, string, string, string) {
 	title := strings.Replace(icon, "si/", "", 1)
 	url := "https://cdn.simpleicons.org/" + strings.TrimSuffix(title, ext)
-	lightTitle := strings.Replace(title, ".svg", "-light.svg", 1)
+	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
 	lightUrl := "https://cdn.simpleicons.org/" + strings.TrimSuffix(title, ext) + "/white"
 	return title, url, lightTitle, lightUrl
+}
+
+func handleLocalIcons(title, ext string) ([]byte, []byte, error) {
+	data, err := os.ReadFile(iconsFolder + title)
+	if err != nil {
+		return nil, nil, err
+	}
+	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
+	lightData, _ := os.ReadFile(iconsFolder + lightTitle)
+	return data, lightData, err
 }
 
 func (bs *BookmarkService) parseBookmarks() {
