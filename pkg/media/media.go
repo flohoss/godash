@@ -10,21 +10,21 @@ import (
 	"strings"
 )
 
-func DownloadSelfHostedIcon(ext, title, filePath string) ([]byte, error) {
-	resp, err := http.Get("https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title)
+func DownloadSelfHostedIcon(url, title, filePath string) ([]byte, error) {
+	resp, err := http.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get icon: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to get icon, status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("failed to get icon, status: %d, url: %s", resp.StatusCode, url)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read icon: %w", err)
 	}
-	data = replaceClassNames(data, strings.TrimSuffix(title, ext))
-	data = insertWidthHeight(data)
+	data = replaceClassNames(data, title)
+	// data = insertWidthHeight(data)
 	err = os.WriteFile(filePath, data, fs.FileMode(0640))
 	if err != nil {
 		return nil, fmt.Errorf("failed to write icon: %w", err)
@@ -51,6 +51,7 @@ func insertWidthHeight(svgContent []byte) []byte {
 func replaceClassNames(svgContent []byte, title string) []byte {
 	// Regular expression to match either class="st0" or .st0
 	classRegex := regexp.MustCompile(`(class="|\.)([a-z]{2}\d)`)
+	title = strings.TrimSuffix(title, ".svg")
 
 	newSVGContent := classRegex.ReplaceAllFunc(svgContent, func(match []byte) []byte {
 		groups := classRegex.FindSubmatch(match)

@@ -90,39 +90,65 @@ func (bs *BookmarkService) replaceIconStrings() {
 				slog.Error("icon must be an svg file")
 				continue
 			}
+			var data, lightData []byte
+			var err error
 			if strings.HasPrefix(bookmark.Icon, "shi/") {
-				title := strings.Replace(bookmark.Icon, "shi/", "", 1)
-				if title == "" {
-					slog.Error("icon title is empty")
+				data, lightData, err = downloadIcons(handleSelfHostedIcons(bookmark.Icon, ext))
+				if err != nil {
+					slog.Error(err.Error())
 					continue
 				}
-				data, err := os.ReadFile(iconsFolder + title)
-				if err != nil {
-					slog.Debug("icon not found, downloading...", "title", title)
-					data, err = media.DownloadSelfHostedIcon(ext, title, iconsFolder+title)
-					if err != nil {
-						slog.Error(err.Error())
-						continue
-					}
-				}
-				lightTitle := strings.Replace(title, ".svg", "-light.svg", 1)
-				lightData, err := os.ReadFile(iconsFolder + lightTitle)
-				if err != nil {
-					slog.Debug("light-icon not found, downloading...", "title", title)
-					lightData, err = media.DownloadSelfHostedIcon(ext, lightTitle, iconsFolder+lightTitle)
-					if err != nil {
-						slog.Warn(err.Error())
-					}
-				}
-				if data == nil {
-					slog.Error("icon data is null")
-					continue
-				}
-				bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
-				bs.bookmarks.Applications[i].Entries[j].IconLight = string(lightData)
+
 			}
+			if strings.HasPrefix(bookmark.Icon, "si/") {
+				data, lightData, err = downloadIcons(handleSimpleIcons(bookmark.Icon, ext))
+				if err != nil {
+					slog.Error(err.Error())
+					continue
+				}
+			}
+			bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
+			bs.bookmarks.Applications[i].Entries[j].IconLight = string(lightData)
 		}
 	}
+}
+
+func downloadIcons(title, url, lightTitle, lightUrl string) ([]byte, []byte, error) {
+	data, err := downloadIcon(title, url)
+	if err != nil {
+		return nil, nil, err
+	}
+	lightData, _ := downloadIcon(lightTitle, lightUrl)
+	return data, lightData, nil
+}
+
+func downloadIcon(title, url string) ([]byte, error) {
+	filePath := iconsFolder + title
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		data, err = media.DownloadSelfHostedIcon(url, title, filePath)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return data, nil
+}
+
+func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
+	ext = strings.TrimPrefix(ext, ".")
+	title := strings.Replace(icon, "shi/", "", 1)
+	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + title
+	lightTitle := strings.Replace(title, ".svg", "-light.svg", 1)
+	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + lightTitle
+	return title, url, lightTitle, lightUrl
+}
+
+func handleSimpleIcons(icon, ext string) (string, string, string, string) {
+	title := strings.Replace(icon, "si/", "", 1)
+	url := "https://cdn.simpleicons.org/" + strings.TrimSuffix(title, ext)
+	lightTitle := strings.Replace(title, ".svg", "-light.svg", 1)
+	lightUrl := "https://cdn.simpleicons.org/" + strings.TrimSuffix(title, ext) + "/white"
+	return title, url, lightTitle, lightUrl
 }
 
 func (bs *BookmarkService) parseBookmarks() {

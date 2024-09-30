@@ -21,8 +21,9 @@ type Link struct {
 }
 
 type Application struct {
-	Name      string
-	Icon      string
-	URL       string
-	IconLight string
+	Name       string
+	Icon       string
+	URL        string
+	IconLight  string
+	IgnoreDark bool `yaml:"ignore_dark"`
 }
