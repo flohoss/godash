@@ -29,7 +29,7 @@ applications:
       ignore_color: true
       url: "https://github.com"
     - name: "Home Assistant"
-      icon: "shi/homeassistant.svg"
+      icon: "shi/home-assistant.svg"
       url: "https://www.home-assistant.io/"`
 
 func init() {
@@ -100,14 +100,14 @@ func (bs *BookmarkService) replaceIconStrings() {
 				data, err := os.ReadFile(iconsFolder + title)
 				if os.IsNotExist(err) {
 					slog.Debug("icon not found, downloading...", "title", title)
-					resp, err := http.Get("https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + title)
+					resp, err := http.Get("https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title)
 					if err != nil {
 						slog.Error("failed to get icon", "err", err.Error())
 						continue
 					}
 					defer resp.Body.Close()
 					if resp.StatusCode != http.StatusOK {
-						slog.Error("failed to get icon", "status", resp.Status)
+						slog.Error("failed to get icon", "status", resp.Status, "url", resp.Request.URL.String())
 						continue
 					}
 					data, err = io.ReadAll(resp.Body)
@@ -127,7 +127,6 @@ func (bs *BookmarkService) replaceIconStrings() {
 				}
 				bs.bookmarks.Applications[i].Entries[j].Icon = insertWidthHeight(string(data))
 			}
-
 		}
 	}
 }
