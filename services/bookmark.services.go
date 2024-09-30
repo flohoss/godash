@@ -140,11 +140,10 @@ func downloadIcon(title, url string) ([]byte, error) {
 }
 
 func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
-	ext = strings.TrimPrefix(ext, ".")
 	title := strings.Replace(icon, "shi/", "", 1)
-	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + title
+	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title
 	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
-	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + ext + "/" + lightTitle
+	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + lightTitle
 	return title, url, lightTitle, lightUrl
 }
 
