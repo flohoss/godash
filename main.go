@@ -14,7 +14,7 @@ import (
 
 	"gitlab.unjx.de/flohoss/godash/handlers"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
-	"gitlab.unjx.de/flohoss/godash/internal/logger"
+	"gitlab.unjx.de/flohoss/godash/pkg/logger"
 	"gitlab.unjx.de/flohoss/godash/services"
 )
 

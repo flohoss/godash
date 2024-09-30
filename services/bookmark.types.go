@@ -21,8 +21,8 @@ type Link struct {
 }
 
 type Application struct {
-	Name  string
-	Icon  string
-	URL   string
-	Light bool
+	Name      string
+	Icon      string
+	URL       string
+	IconLight string
 }

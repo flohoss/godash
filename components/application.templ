@@ -4,9 +4,14 @@ import "gitlab.unjx.de/flohoss/godash/services"
 
 templ Application(application services.Application) {
 	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">
-		<div class="w-8 h-8 flex items-center">
+		<div class={ "w-8", "h-8", "flex", templ.KV("dark:hidden", application.IconLight != ""), "items-center" }>
 			@templ.Raw(application.Icon)
 		</div>
+		if application.IconLight != "" {
+			<div class={ "w-8", "h-8", "hidden", "dark:flex", "items-center" }>
+				@templ.Raw(application.IconLight)
+			</div>
+		}
 		<div class="uppercase truncate ml-2">{ application.Name }</div>
 	</a>
 }

@@ -2,13 +2,12 @@ package services
 
 import (
 	"io"
-	"io/fs"
 	"log/slog"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"gitlab.unjx.de/flohoss/godash/pkg/media"
 	"gopkg.in/yaml.v3"
 )
 
@@ -98,34 +97,29 @@ func (bs *BookmarkService) replaceIconStrings() {
 					continue
 				}
 				data, err := os.ReadFile(iconsFolder + title)
-				if os.IsNotExist(err) {
+				if err != nil {
 					slog.Debug("icon not found, downloading...", "title", title)
-					resp, err := http.Get("https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title)
+					data, err = media.DownloadSelfHostedIcon(ext, title, iconsFolder+title)
 					if err != nil {
-						slog.Error("failed to get icon", "err", err.Error())
+						slog.Error(err.Error())
 						continue
 					}
-					defer resp.Body.Close()
-					if resp.StatusCode != http.StatusOK {
-						slog.Error("failed to get icon", "status", resp.Status, "url", resp.Request.URL.String())
-						continue
-					}
-					data, err = io.ReadAll(resp.Body)
+				}
+				lightTitle := strings.Replace(title, ".svg", "-light.svg", 1)
+				lightData, err := os.ReadFile(iconsFolder + lightTitle)
+				if err != nil {
+					slog.Debug("light-icon not found, downloading...", "title", title)
+					lightData, err = media.DownloadSelfHostedIcon(ext, lightTitle, iconsFolder+lightTitle)
 					if err != nil {
-						slog.Error("failed to read icon", "err", err.Error())
-						continue
-					}
-					err = os.WriteFile(iconsFolder+title, data, fs.FileMode(0640))
-					if err != nil {
-						slog.Error("failed to write icon", "err", err.Error())
-						continue
+						slog.Warn(err.Error())
 					}
 				}
 				if data == nil {
 					slog.Error("icon data is null")
 					continue
 				}
-				bs.bookmarks.Applications[i].Entries[j].Icon = insertWidthHeight(string(data))
+				bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
+				bs.bookmarks.Applications[i].Entries[j].IconLight = string(lightData)
 			}
 		}
 	}
@@ -138,12 +132,4 @@ func (bs *BookmarkService) parseBookmarks() {
 		slog.Error(err.Error())
 		return
 	}
-}
-
-func insertWidthHeight(svg string) string {
-	parts := strings.SplitN(svg, "<svg", 2)
-	if len(parts) != 2 {
-		return svg
-	}
-	return parts[0] + "<svg width=\"2rem\" height=\"2rem\" " + parts[1]
 }
