@@ -35,7 +35,8 @@ FROM alpine:${V_ALPINE} AS final
 RUN apk --no-cache add tzdata ca-certificates dumb-init && \
     rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -g 1000 appgroup && \
+    adduser -u 1000 -G appgroup -s /bin/bash -D appuser
 
 WORKDIR /app
 
