@@ -54,6 +54,7 @@ publish:
   rules: !reference [.rules:deploy, rules]
   stage: publish
   script:
+    - mkdir -p ~/.ssh
     - cp "$SSH_PRIVATE_KEY" ~/.ssh/bot
     - chmod 600 ~/.ssh/bot
     - ssh-keyscan -H ${SERVER} >> ~/.ssh/known_hosts
