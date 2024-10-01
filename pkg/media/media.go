@@ -24,7 +24,7 @@ func DownloadSelfHostedIcon(url, title, filePath string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read icon: %w", err)
 	}
 	data = replaceClassNames(data, title)
-	// data = insertWidthHeight(data)
+	data = insertWidthHeight(data)
 	err = os.WriteFile(filePath, data, fs.FileMode(0640))
 	if err != nil {
 		return nil, fmt.Errorf("failed to write icon: %w", err)
