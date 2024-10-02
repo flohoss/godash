@@ -55,7 +55,7 @@ publish:
   stage: publish
   script:
     - mkdir -p ~/.ssh
-    - cp "$SSH_PRIVATE_KEY" ~/.ssh/bot
+    - cp $SSH_PRIVATE_KEY ~/.ssh/bot
     - chmod 600 ~/.ssh/bot
-    - ssh-keyscan -H ${SERVER} >> ~/.ssh/known_hosts
-    - ssh -i ~/.ssh/bot flohoss@${SERVER} "cd /opt/docker/home && docker compose pull && docker compose up -d"
+    - ssh-keyscan -H $SERVER >> ~/.ssh/known_hosts
+    - ssh -i ~/.ssh/bot ${SSH_USER}@${SERVER} $SSH_COMMAND
