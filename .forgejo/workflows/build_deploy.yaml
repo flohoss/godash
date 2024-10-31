@@ -19,8 +19,10 @@ jobs:
           tags: |
             type=raw,value=latest
           labels: |
+            maintainer=${{ github.actor }}
             org.opencontainers.image.title=GoDash
-            org.opencontainers.image.description=Blasing fast start page for your services
+            org.opencontainers.image.licenses=Apache-2.0
+            org.opencontainers.image.description=Blazing fast start page for your services
             org.opencontainers.image.vendor=Unjx
       - name: Login to Forgejo Container Registry
         uses: docker/login-action@v3
@@ -37,5 +39,7 @@ jobs:
             V_GOLANG=${{ vars.V_GOLANG }}
             V_NODE=${{ vars.V_NODE }}
             V_ALPINE=${{ vars.V_ALPINE }}
+            APP_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+            BUILD_TIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
           secrets: |
             GIT_AUTH_TOKEN=${{ secrets.CI_TOKEN }}
