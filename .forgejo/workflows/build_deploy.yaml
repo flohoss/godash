@@ -23,14 +23,13 @@ jobs:
           registry: git.unjx.de
           username: ${{ github.actor }}
           password: ${{ github.token }}
-      - name: Build and push
+      - name: Build
         uses: docker/build-push-action@v6
         with:
-          push: true
           tags: ${{ env.LATEST_IMAGE }}
           build-args: |
             V_GOLANG=${{ vars.V_GOLANG }}
             V_NODE=${{ vars.V_NODE }}
             V_ALPINE=${{ vars.V_ALPINE }}
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.token }}
+      - name: Push
+        run: docker push ${{ env.LATEST_IMAGE }}
