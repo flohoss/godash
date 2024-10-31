@@ -9,8 +9,6 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Docker meta
@@ -39,5 +37,3 @@ jobs:
             V_GOLANG=${{ vars.V_GOLANG }}
             V_NODE=${{ vars.V_NODE }}
             V_ALPINE=${{ vars.V_ALPINE }}
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_TOKEN }}
