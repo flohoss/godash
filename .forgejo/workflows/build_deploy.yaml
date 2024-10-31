@@ -1,0 +1,28 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  LATEST_IMAGE: ${{ github.GITHUB_SERVER_URL }}/${{ github.GITHUB_REPOSITORY }}:latest
+
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - run: |
+          docker build \
+            --build-arg V_GOLANG=${{ vars.V_GOLANG }} \
+            --build-arg V_NODE=${{ vars.V_NODE }} \
+            --build-arg V_ALPINE=${{ vars.V_ALPINE }} \
+            --tag ${{ env.LATEST_IMAGE }} \
+            --push .
+
+  cleanup:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - run: |
+          docker system prune -a -f
