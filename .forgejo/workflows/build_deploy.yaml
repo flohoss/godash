@@ -6,12 +6,14 @@ on:
       - main
 
 env:
-  LATEST_IMAGE: ${{ github.server_url }}/${{ github.repository }}:latest
+  REGISTRY: git.unjx.de
+  LATEST_IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}:latest
 
 jobs:
   build:
     runs-on: self-hosted
     steps:
+      - run: echo $${{ github.token }} | docker login --username flohoss --password-stdin ${{ env.REGISTRY }}
       - run: |
           docker build \
             --build-arg V_GOLANG=${{ vars.V_GOLANG }} \
