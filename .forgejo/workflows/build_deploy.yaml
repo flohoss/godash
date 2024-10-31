@@ -32,3 +32,5 @@ jobs:
             V_GOLANG=${{ vars.V_GOLANG }}
             V_NODE=${{ vars.V_NODE }}
             V_ALPINE=${{ vars.V_ALPINE }}
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.token }}
