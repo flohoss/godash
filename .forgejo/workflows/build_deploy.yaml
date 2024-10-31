@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  LATEST_IMAGE: ${{ github.GITHUB_SERVER_URL }}/${{ github.GITHUB_REPOSITORY }}:latest
+  LATEST_IMAGE: ${{ github.server_url }}/${{ github.repository }}:latest
 
 jobs:
   build:
