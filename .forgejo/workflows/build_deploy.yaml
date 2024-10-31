@@ -40,4 +40,4 @@ jobs:
             V_NODE=${{ vars.V_NODE }}
             V_ALPINE=${{ vars.V_ALPINE }}
           secrets: |
-            GIT_AUTH_TOKEN=${{ github.token }}
+            GIT_AUTH_TOKEN=${{ secrets.PACKAGE_TOKEN }}
