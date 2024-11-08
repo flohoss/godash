@@ -50,6 +50,8 @@ COPY --from=golang /app/godash .
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 
+EXPOSE 4000
+
 RUN chown -R appuser:appgroup /app
 
 ENTRYPOINT ["dumb-init", "--"]
