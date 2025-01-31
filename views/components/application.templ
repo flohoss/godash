@@ -1,0 +1,55 @@
+package components
+
+import (
+	"gitlab.unjx.de/flohoss/godash/services"
+	"html/template"
+	"strings"
+)
+
+func placeHolder(app services.Application) string {
+	return strings.ToUpper(app.Name[:1])
+}
+
+func displayLight(app services.Application) bool {
+	return app.Icon != ""
+}
+
+func displayDark(app services.Application) bool {
+	return !app.IgnoreDark && app.IconLight != ""
+}
+
+var bgTemplate = template.Must(template.New("bgTemplate").Parse(
+	`<div class="w-8 h-8 dark:hidden bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
+))
+
+var bgTemplateDark = template.Must(template.New("bgTemplate").Parse(
+	`<div class="w-8 h-8 hidden dark:block bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
+))
+
+type Icon struct {
+	Path string
+}
+
+templ Application(application services.Application) {
+	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">
+		if displayLight(application) {
+			@templ.FromGoHTML(bgTemplate, Icon{Path: application.Icon})
+		} else {
+			<div class="avatar placeholder">
+				<div class="bg-primary text-primary-content w-8 rounded-full">
+					<span class="text-xl">{ placeHolder(application) }</span>
+				</div>
+			</div>
+		}
+		if displayDark(application) {
+			@templ.FromGoHTML(bgTemplateDark, Icon{Path: application.IconLight})
+		}
+		<div class="uppercase truncate ml-2">{ application.Name }</div>
+	</a>
+}
+
+templ Link(link services.Link) {
+	<a href={ templ.URL(link.URL) } class="hover-effect">
+		<div class="truncate">{ link.Name }</div>
+	</a>
+}

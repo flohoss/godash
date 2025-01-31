@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/gorilla/sessions"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/home"
@@ -22,10 +21,9 @@ type WeatherService interface {
 	GetCurrentWeather() *services.OpenWeather
 }
 
-func NewAppHandler(env *env.Config, store *sessions.CookieStore, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
+func NewAppHandler(env *env.Config, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
 	return &AppHandler{
 		env:             env,
-		store:           store,
 		systemService:   s,
 		weatherService:  w,
 		bookmarkService: b,
@@ -34,7 +32,6 @@ func NewAppHandler(env *env.Config, store *sessions.CookieStore, s SystemService
 
 type AppHandler struct {
 	env             *env.Config
-	store           *sessions.CookieStore
 	systemService   SystemService
 	weatherService  WeatherService
 	bookmarkService BookmarkService
@@ -48,12 +45,5 @@ func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
 
 	titlePage := bh.env.Title
 
-	session, _ := bh.store.Get(r, StoreSessionKey)
-	user := &services.User{
-		Name:     session.Values[string(NameKey)].(string),
-		Email:    session.Values[string(EmailKey)].(string),
-		Gravatar: session.Values[string(GravatarKey)].(string),
-	}
-
-	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, user, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
+	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
 }

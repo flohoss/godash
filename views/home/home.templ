@@ -2,17 +2,14 @@ package home
 
 import (
 	"fmt"
-	"gitlab.unjx.de/flohoss/godash/components"
 	"gitlab.unjx.de/flohoss/godash/services"
+	"gitlab.unjx.de/flohoss/godash/views/components"
 	"gitlab.unjx.de/flohoss/godash/views/layout"
 )
 
-templ Home(title string, user *services.User, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
-		<div class="flex w-full justify-between items-center">
-			@components.Weather(weather)
-			@components.User(user)
-		</div>
+		@components.Weather(weather)
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
 			@components.System("icon-[bi--cpu]", static.CPU.Name, "", static.CPU.Threads, "systemCpuPercentage", "", live.CPU)
 			@components.System("icon-[bi--nvme]", live.Disk.Value, fmt.Sprintf(" | %s", static.Disk.Total), static.Disk.Partitions, "systemDiskPercentage", "systemDiskValue", live.Disk.Percentage)

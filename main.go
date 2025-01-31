@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"net/url"
 	"os"
 
-	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
 	"github.com/r3labs/sse/v2"
 
 	"gitlab.unjx.de/flohoss/godash/handlers"
@@ -35,24 +32,8 @@ func main() {
 	w := services.NewWeatherService(sse, env)
 	b := services.NewBookmarkService()
 
-	parsedUrl, _ := url.Parse(env.PublicUrl)
-	secret := []byte(env.SessionKey)
-	if len(secret) == 0 {
-		secret = securecookie.GenerateRandomKey(32)
-	}
-	store := sessions.NewCookieStore(secret)
-	store.Options = &sessions.Options{
-		Domain:      parsedUrl.Hostname(),
-		MaxAge:      86400 * 30,
-		Secure:      parsedUrl.Scheme == "https",
-		HttpOnly:    true,
-		Partitioned: true,
-		SameSite:    http.SameSiteLaxMode,
-	}
-
-	authHandler := handlers.NewAuthHandler(env, store)
-	appHandler := handlers.NewAppHandler(env, store, s, w, b)
-	handlers.SetupRoutes(router, sse, appHandler, authHandler)
+	appHandler := handlers.NewAppHandler(env, s, w, b)
+	handlers.SetupRoutes(router, sse, appHandler)
 
 	slog.Info("server listening, press ctrl+c to stop", "addr", env.PublicUrl)
 	err = http.ListenAndServe(fmt.Sprintf(":%d", env.Port), router)

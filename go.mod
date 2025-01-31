@@ -3,24 +3,18 @@ module gitlab.unjx.de/flohoss/godash
 go 1.23
 
 require (
-	github.com/a-h/templ v0.2.793
+	github.com/a-h/templ v0.3.819
 	github.com/caarlos0/env/v10 v10.0.0
-	github.com/coreos/go-oidc/v3 v3.11.0
-	github.com/go-playground/validator/v10 v10.22.1
-	github.com/gorilla/securecookie v1.1.2
-	github.com/gorilla/sessions v1.4.0
-	github.com/lmittmann/tint v1.0.5
+	github.com/go-playground/validator/v10 v10.24.0
+	github.com/lmittmann/tint v1.0.7
 	github.com/r3labs/sse/v2 v2.10.0
-	github.com/shirou/gopsutil/v4 v4.24.9
-	github.com/thanhpk/randstr v1.0.6
-	golang.org/x/oauth2 v0.23.0
+	github.com/shirou/gopsutil/v4 v4.24.12
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/ebitengine/purego v0.8.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.6 // indirect
-	github.com/go-jose/go-jose/v4 v4.0.4 // indirect
+	github.com/ebitengine/purego v0.8.2 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
@@ -32,10 +26,10 @@ require (
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.9.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
+	golang.org/x/crypto v0.32.0 // indirect
+	golang.org/x/net v0.34.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 )

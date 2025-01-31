@@ -24,11 +24,11 @@ applications:
   - category: "Code"
     entries:
     - name: "GitHub"
-      icon: "shi/github.svg"
+      icon: "sh/github"
       ignore_color: true
       url: "https://github.com"
     - name: "Home Assistant"
-      icon: "shi/home-assistant.svg"
+      icon: "sh/home-assistant"
       url: "https://www.home-assistant.io/"`
 
 func init() {
@@ -85,84 +85,69 @@ func (bs *BookmarkService) readBookmarksFile() []byte {
 func (bs *BookmarkService) replaceIconStrings() {
 	for i, v := range bs.bookmarks.Applications {
 		for j, bookmark := range v.Entries {
-			ext := filepath.Ext(bookmark.Icon)
-			if ext != ".svg" {
-				slog.Error("icon must be an svg file")
-				continue
-			}
-			var data, lightData []byte
+			var filePath, filePathLight string
 			var err error
-			if strings.HasPrefix(bookmark.Icon, "shi/") {
-				data, lightData, err = downloadIcons(handleSelfHostedIcons(bookmark.Icon, ext))
+			if strings.HasPrefix(bookmark.Icon, "sh/") {
+				filePath, filePathLight, err = downloadIcons(handleSelfHostedIcons(bookmark.Icon, ".webp"))
 				if err != nil {
 					slog.Error(err.Error())
 					continue
 				}
 
-			} else if strings.HasPrefix(bookmark.Icon, "si/") {
-				data, lightData, err = downloadIcons(handleSimpleIcons(bookmark.Icon, ext))
-				if err != nil {
-					slog.Error(err.Error())
-					continue
-				}
 			} else {
-				data, lightData, err = handleLocalIcons(bookmark.Icon, ext)
-				if err != nil {
-					slog.Error(err.Error())
-					continue
+				ext := filepath.Ext(bookmark.Icon)
+				filePath, filePathLight = handleLocalIcons(bookmark.Icon, ext)
+				if filePath == "" {
+					slog.Warn("could not find local icon", "path", bookmark.Icon)
 				}
 			}
-			bs.bookmarks.Applications[i].Entries[j].Icon = string(data)
-			bs.bookmarks.Applications[i].Entries[j].IconLight = string(lightData)
+			bs.bookmarks.Applications[i].Entries[j].Icon = filePath
+			bs.bookmarks.Applications[i].Entries[j].IconLight = filePathLight
 		}
 	}
 }
 
-func downloadIcons(title, url, lightTitle, lightUrl string) ([]byte, []byte, error) {
-	data, err := downloadIcon(title, url)
+func downloadIcons(title, url, lightTitle, lightUrl string) (string, string, error) {
+	path, err := downloadIcon(title, url)
 	if err != nil {
-		return nil, nil, err
+		return "", "", err
 	}
-	lightData, _ := downloadIcon(lightTitle, lightUrl)
-	return data, lightData, nil
+	lightPath, _ := downloadIcon(lightTitle, lightUrl)
+	return path, lightPath, nil
 }
 
-func downloadIcon(title, url string) ([]byte, error) {
+func downloadIcon(title, url string) (string, error) {
 	filePath := iconsFolder + title
-	data, err := os.ReadFile(filePath)
-	if err != nil {
-		data, err = media.DownloadSelfHostedIcon(url, title, filePath)
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		filePath, err = media.DownloadSelfHostedIcon(url, title, filePath)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 	}
-	return data, nil
+	return "/" + strings.TrimPrefix(filePath, storageFolder), nil
 }
 
 func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
-	title := strings.Replace(icon, "shi/", "", 1)
+	title := strings.Replace(icon, "sh/", "", 1) + ext
 	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title
-	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
+	lightTitle := strings.Replace(title, ext, "-light"+ext, 1)
 	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + lightTitle
 	return title, url, lightTitle, lightUrl
 }
 
-func handleSimpleIcons(icon, ext string) (string, string, string, string) {
-	title := strings.Replace(icon, "si/", "", 1)
-	url := "https://cdn.simpleicons.org/" + strings.TrimSuffix(title, ext)
-	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
-	lightUrl := "https://cdn.simpleicons.org/" + strings.TrimSuffix(title, ext) + "/white"
-	return title, url, lightTitle, lightUrl
-}
-
-func handleLocalIcons(title, ext string) ([]byte, []byte, error) {
-	data, err := os.ReadFile(iconsFolder + title)
-	if err != nil {
-		return nil, nil, err
+func handleLocalIcons(title, ext string) (string, string) {
+	filePath := iconsFolder + title
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return "", ""
 	}
-	lightTitle := strings.Replace(title, ext, "-light.svg", 1)
-	lightData, _ := os.ReadFile(iconsFolder + lightTitle)
-	return data, lightData, err
+	filePathLight := strings.Replace(title, ext, "-light"+ext, 1)
+	_, err = os.Stat(filePathLight)
+	if os.IsNotExist(err) {
+		return filePath, ""
+	}
+	return "/" + filePath, "/" + filePathLight
 }
 
 func (bs *BookmarkService) parseBookmarks() {
