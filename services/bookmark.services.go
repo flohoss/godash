@@ -142,7 +142,7 @@ func handleLocalIcons(title, ext string) (string, string) {
 	if os.IsNotExist(err) {
 		return "", ""
 	}
-	filePathLight := strings.Replace(title, ext, "-light"+ext, 1)
+	filePathLight := strings.Replace(filePath, ext, "-light"+ext, 1)
 	_, err = os.Stat(filePathLight)
 	if os.IsNotExist(err) {
 		return "/" + strings.TrimPrefix(filePath, storageFolder), ""
