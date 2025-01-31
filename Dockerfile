@@ -21,7 +21,6 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile --network-timeout 30000
 
 COPY assets/css ./assets/css
-COPY components ./components
 COPY views ./views
 COPY tailwind.config.js .
 RUN yarn run tw:build
@@ -44,7 +43,6 @@ COPY assets/favicon ./assets/favicon
 COPY --from=logo /app/logo.txt .
 COPY --from=node /app/assets/css/style.css ./assets/css/style.css
 COPY --from=golang /app/views ./views
-COPY --from=golang /app/components ./components
 COPY --from=golang /app/godash .
 
 ARG APP_VERSION
