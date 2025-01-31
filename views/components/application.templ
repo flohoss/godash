@@ -10,8 +10,8 @@ func placeHolder(app services.Application) string {
 	return strings.ToUpper(app.Name[:1])
 }
 
-func displayLight(app services.Application) bool {
-	return app.Icon != ""
+func noIcon(app services.Application) bool {
+	return app.Icon == ""
 }
 
 func displayDark(app services.Application) bool {
@@ -19,6 +19,10 @@ func displayDark(app services.Application) bool {
 }
 
 var bgTemplate = template.Must(template.New("bgTemplate").Parse(
+	`<div class="w-8 h-8 bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
+))
+
+var bgTemplateLight = template.Must(template.New("bgTemplate").Parse(
 	`<div class="w-8 h-8 dark:hidden bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
 ))
 
@@ -32,17 +36,17 @@ type Icon struct {
 
 templ Application(application services.Application) {
 	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">
-		if displayLight(application) {
-			@templ.FromGoHTML(bgTemplate, Icon{Path: application.Icon})
-		} else {
+		if displayDark(application) {
+			@templ.FromGoHTML(bgTemplateLight, Icon{Path: application.Icon})
+			@templ.FromGoHTML(bgTemplateDark, Icon{Path: application.IconLight})
+		} else if noIcon(application) {
 			<div class="avatar placeholder">
 				<div class="bg-primary text-primary-content w-8 rounded-full">
 					<span class="text-xl">{ placeHolder(application) }</span>
 				</div>
 			</div>
-		}
-		if displayDark(application) {
-			@templ.FromGoHTML(bgTemplateDark, Icon{Path: application.IconLight})
+		} else {
+			@templ.FromGoHTML(bgTemplate, Icon{Path: application.Icon})
 		}
 		<div class="uppercase truncate ml-2">{ application.Name }</div>
 	</a>

@@ -145,9 +145,9 @@ func handleLocalIcons(title, ext string) (string, string) {
 	filePathLight := strings.Replace(title, ext, "-light"+ext, 1)
 	_, err = os.Stat(filePathLight)
 	if os.IsNotExist(err) {
-		return filePath, ""
+		return "/" + strings.TrimPrefix(filePath, storageFolder), ""
 	}
-	return "/" + filePath, "/" + filePathLight
+	return "/" + strings.TrimPrefix(filePath, storageFolder), "/" + strings.TrimPrefix(filePathLight, storageFolder)
 }
 
 func (bs *BookmarkService) parseBookmarks() {
