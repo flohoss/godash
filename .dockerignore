@@ -209,6 +209,6 @@ dist
 *.vsix
 
 storage/
-**/*_templ.*
+**/*_templ.txt
 assets/css/style.css
 tmp/
