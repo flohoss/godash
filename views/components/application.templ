@@ -40,7 +40,7 @@ templ Application(application services.Application) {
 			@templ.FromGoHTML(bgTemplateLight, Icon{Path: application.Icon})
 			@templ.FromGoHTML(bgTemplateDark, Icon{Path: application.IconLight})
 		} else if noIcon(application) {
-			<div class="avatar placeholder">
+			<div class="avatar avatar-placeholder">
 				<div class="bg-primary text-primary-content w-8 rounded-full">
 					<span class="text-xl">{ placeHolder(application) }</span>
 				</div>
