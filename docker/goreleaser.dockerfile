@@ -14,7 +14,6 @@ RUN yarn install --frozen-lockfile --network-timeout 30000
 
 COPY ./views/ ./views/
 COPY ./assets/ ./assets/
-COPY ./tailwind.config.js ./
 RUN yarn run tw:build
 
 FROM alpine:${V_ALPINE} AS final

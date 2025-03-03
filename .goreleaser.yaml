@@ -3,6 +3,11 @@ version: 2
 env:
   - IMAGE_NAME=ghcr.io/flohoss/godash
 
+before:
+  hooks:
+    - go install github.com/a-h/templ/cmd/templ@latest
+    - templ generate
+
 builds:
   - env:
       - CGO_ENABLED=0
@@ -29,7 +34,6 @@ dockers:
       - views/
       - package.json
       - yarn.lock
-      - tailwind.config.js
       - docker/entrypoint.sh
       - assets/
   - use: buildx
@@ -48,7 +52,6 @@ dockers:
       - views/
       - package.json
       - yarn.lock
-      - tailwind.config.js
       - docker/entrypoint.sh
       - assets/
 
