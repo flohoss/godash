@@ -1,99 +1,22 @@
-networks:
-  net:
-    external: false
-
 services:
   backend:
-    profiles: [dev]
     build:
       context: .
-      dockerfile_inline: |
-        ARG V_GOLANG
-        FROM golang:${V_GOLANG}-alpine
-        RUN apk update && \
-            apk upgrade && \
-            apk add tzdata
-
-        RUN go install github.com/air-verse/air@latest
-        COPY .air.toml .
-
-        WORKDIR /app
-        COPY go.mod .
-        COPY go.sum .
-        RUN go mod download
-      args:
-        - V_GOLANG=${V_GOLANG}
-    command: air -c .air.toml
+      dockerfile: docker/dev.dockerfile
+    working_dir: /app
+    command: templ generate --watch --proxybind="0.0.0.0" --proxy="http://localhost:4000" --cmd="go run ." --open-browser=false
     env_file:
       - .env
     volumes:
       - .:/app/
     ports:
       - 4000:4000
-
-  backend-debug:
-    profiles: [debug]
-    build:
-      context: .
-      dockerfile_inline: |
-        ARG V_GOLANG
-        FROM golang:${V_GOLANG}-alpine
-        RUN apk update && \
-            apk upgrade && \
-            apk add tzdata
-
-        RUN go install github.com/go-delve/delve/cmd/dlv@latest
-
-        WORKDIR /app
-        COPY go.mod .
-        COPY go.sum .
-        RUN go mod download
-      args:
-        - V_GOLANG=${V_GOLANG}
-    command: /app/scripts/debug.sh
-    env_file:
-      - .env
-    volumes:
-      - .:/app/
-    ports:
-      - 4000:4000
-      - 4001:4001
-
-  templ:
-    profiles: [dev]
-    build:
-      context: .
-      dockerfile_inline: |
-        ARG V_GOLANG
-        FROM golang:${V_GOLANG}-alpine
-
-        RUN go install github.com/a-h/templ/cmd/templ@latest
-      args:
-        - V_GOLANG=${V_GOLANG}
-    working_dir: /app
-    command: templ generate --watch
-    volumes:
-      - .:/app/
-
-  tailwind:
-    profiles: [dev]
-    image: node:${V_NODE}-alpine
-    working_dir: /app
-    command: yarn tw:dev
-    tty: true
-    volumes:
-      - .:/app/
-
-  golang:
-    profiles: [install]
-    image: golang:${V_GOLANG}-alpine
-    working_dir: /app
-    volumes:
-      - .:/app/
+      - 7331:7331
 
   node:
-    profiles: [install]
-    image: node:${V_NODE}-alpine
+    image: node:lts-alpine
     working_dir: /app
+    entrypoint: sh -c "yarn install && yarn tw:dev"
+    tty: true
     volumes:
       - .:/app/

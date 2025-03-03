@@ -11,13 +11,10 @@ import (
 
 	"gitlab.unjx.de/flohoss/godash/handlers"
 	"gitlab.unjx.de/flohoss/godash/internal/env"
-	"gitlab.unjx.de/flohoss/godash/pkg/logger"
 	"gitlab.unjx.de/flohoss/godash/services"
 )
 
 func main() {
-	slog.SetDefault(logger.NewLogger())
-
 	env, err := env.Parse()
 	if err != nil {
 		slog.Error("cannot parse environment variables", "err", err)
