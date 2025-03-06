@@ -91,6 +91,29 @@ services:
       - ./storage:/app/storage
 ```
 
+## Example bookmarks.yaml
+
+The page is configured by a simple file. Icons can be stored in a folder called icons or downloaded from [https://selfh.st/icons/](https://selfh.st/icons/) with the prefix `sh/`.
+
+```yml
+links:
+  - category: "Code"
+    entries:
+      - name: "Github"
+        url: "https://github.com"
+
+applications:
+  - category: "Code"
+    entries:
+    - name: "GitHub"
+      icon: "sh/github"
+      ignore_color: true
+      url: "https://github.com"
+    - name: "Home Assistant"
+      icon: "sh/home-assistant"
+      url: "https://www.home-assistant.io/"`
+```
+
 ## ✨ Star History
 
 <picture>
