@@ -1,4 +1,0 @@
-[build]
-bin = "tmp/app"
-cmd = "go build -o tmp/app main.go"
-exclude_dir = [".gitlab", "node_modules", "assets", "storage", "tmp"]

@@ -20,11 +20,13 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
   - [Docker](#docker)
     - [run command](#run-command)
     - [compose file](#compose-file)
+  - [Example bookmarks.yaml](#example-bookmarksyaml)
   - [✨ Star History](#-star-history)
   - [License](#license)
   - [Contributing](#contributing)
 
 ## Features
+
 - Displays current weather information
 - Shows system status and resource usage
 - Provides quick access to bookmarks with icons and links
@@ -54,6 +56,7 @@ WEATHER_DIGITS=false
 ```
 
 ### Legend
+
 - `TZ` - Time zone (e.g., `Europe/Berlin`)
 - `TITLE` - Title of the dashboard
 - `PUBLIC_URL` - Publicly accessible URL
@@ -123,7 +126,9 @@ applications:
 </picture>
 
 ## License
+
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/flohoss/godash/blob/main/LICENSE) file for details.
 
 ## Contributing
+
 Feel free to open issues or submit pull requests to improve goDash!
