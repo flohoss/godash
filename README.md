@@ -11,20 +11,30 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
 
 # Table of Contents
 
-- [Features](#features)
-- [Configuration](#configuration)
-  - [Legend](#legend)
-- [Docker](#docker)
-  - [run command](#run-command)
-  - [compose file](#compose-file)
-- [✨ Star History](#-star-history)
-- [License](#license)
+- [GoDash](#godash)
+- [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Screenshots](#screenshots)
+  - [Configuration](#configuration)
+    - [Legend](#legend)
+  - [Docker](#docker)
+    - [run command](#run-command)
+    - [compose file](#compose-file)
+  - [✨ Star History](#-star-history)
+  - [License](#license)
+  - [Contributing](#contributing)
 
 ## Features
 - Displays current weather information
 - Shows system status and resource usage
 - Provides quick access to bookmarks with icons and links
 - Lightweight and easy to deploy with Docker
+
+## Screenshots
+
+<img src="img/dark.webp" width="500px">
+
+<img src="img/light.webp" width="500px">
 
 ## Configuration
 
