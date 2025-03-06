@@ -110,7 +110,7 @@ applications:
     entries:
     - name: "GitHub"
       icon: "sh/github"
-      ignore_color: true
+      ignore_dark: true # does not use the light icon even though it exists in dark mode
       url: "https://github.com"
     - name: "Home Assistant"
       icon: "sh/home-assistant"
