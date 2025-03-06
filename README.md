@@ -2,10 +2,10 @@
 
 <div align="center">
 
-goDash is a simple, customizable dashboard written in Go. It provides an overview of weather information, system status, and bookmarks with icons and links.
-
 [![goreleaser](https://github.com/flohoss/godash/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/flohoss/godash/actions/workflows/release.yaml)
 [![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/gomods/athens.svg)](https://github.com/flohoss/godash)
+
+goDash is a simple, customizable dashboard written in Go. It provides an overview of weather information, system status, and bookmarks with icons and links.
 
 </div>
 
