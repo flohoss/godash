@@ -32,9 +32,9 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
 
 ## Screenshots
 
-<img src="img/dark.webp" width="500px">
+<img src="img/dark.png" width="500px">
 
-<img src="img/light.webp" width="500px">
+<img src="img/light.png" width="500px">
 
 ## Configuration
 
