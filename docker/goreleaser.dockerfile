@@ -17,7 +17,7 @@ COPY ./assets/ ./assets/
 RUN yarn run tw:build
 
 FROM alpine:${V_ALPINE} AS final
-RUN apk add --update --no-cache tzdata ca-certificates dumb-init && \
+RUN apk add --update --no-cache tzdata ca-certificates dumb-init inotify-tools su-exec && \
     rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
 
 WORKDIR /app

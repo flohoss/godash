@@ -1,11 +1,13 @@
 package main
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/r3labs/sse/v2"
 
@@ -32,10 +34,17 @@ func main() {
 	appHandler := handlers.NewAppHandler(env, s, w, b)
 	handlers.SetupRoutes(router, sse, appHandler)
 
-	slog.Info("server listening, press ctrl+c to stop", "addr", env.PublicUrl)
-	err = http.ListenAndServe(fmt.Sprintf(":%d", env.Port), router)
-	if !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("server terminated", "error", err)
-		os.Exit(1)
-	}
+	slog.Info("server starting", "addr", env.PublicUrl)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		if err := http.ListenAndServe(fmt.Sprintf(":%d", env.Port), router); err != nil && err != http.ErrServerClosed {
+			slog.Error("shutting down the server")
+			os.Exit(1)
+		}
+	}()
+
+	<-ctx.Done()
+	slog.Info("Received shutdown signal. Exiting immediately.")
 }
