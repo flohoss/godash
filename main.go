@@ -1,50 +1,75 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
+	"sync"
+	"time"
 
-	"github.com/r3labs/sse/v2"
+	"github.com/fsnotify/fsnotify"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/spf13/viper"
 
-	"gitlab.unjx.de/flohoss/godash/handlers"
-	"gitlab.unjx.de/flohoss/godash/internal/env"
-	"gitlab.unjx.de/flohoss/godash/services"
+	"gitlab.unjx.de/flohoss/godash/config"
 )
 
-func main() {
-	env, err := env.Parse()
-	if err != nil {
-		slog.Error("cannot parse environment variables", "err", err)
-		os.Exit(1)
+func setupRouter() *echo.Echo {
+	e := echo.New()
+
+	e.HideBanner = true
+	e.HidePort = true
+
+	e.Use(middleware.Recover())
+	e.Use(middleware.Gzip())
+
+	return e
+}
+
+func setLogger() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: config.GetLogLevel(),
+	}))
+	slog.SetDefault(logger)
+	slog.Debug("logger set", "level", config.GetLogLevel())
+}
+
+func setupViperWatcher() {
+	var (
+		mu    sync.Mutex
+		timer *time.Timer
+	)
+
+	debounce := func(d time.Duration, fn func()) {
+		mu.Lock()
+		defer mu.Unlock()
+
+		if timer != nil {
+			timer.Stop()
+		}
+		timer = time.AfterFunc(d, fn)
 	}
 
-	router := http.NewServeMux()
-	sse := sse.New()
-	sse.AutoReplay = false
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		debounce(2*time.Second, func() {
+			config.ValidateAndLoadConfig()
+			setLogger()
+			slog.Debug("config changed", "file", e.Name)
+		})
+	})
 
-	s := services.NewSystemService(sse)
-	w := services.NewWeatherService(sse, env)
-	b := services.NewBookmarkService()
+	viper.WatchConfig()
+}
 
-	appHandler := handlers.NewAppHandler(env, s, w, b)
-	handlers.SetupRoutes(router, sse, appHandler)
+func main() {
+	config.New()
+	setLogger()
 
-	slog.Info("server starting", "addr", env.PublicUrl)
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	e := setupRouter()
 
-	go func() {
-		if err := http.ListenAndServe(fmt.Sprintf(":%d", env.Port), router); err != nil && err != http.ErrServerClosed {
-			slog.Error("shutting down the server")
-			os.Exit(1)
-		}
-	}()
+	setupViperWatcher()
 
-	<-ctx.Done()
-	slog.Info("Received shutdown signal. Exiting immediately.")
+	slog.Info("Starting server", "url", fmt.Sprintf("http://%s", config.GetServer()))
+	slog.Error(e.Start(config.GetServer()).Error())
 }
