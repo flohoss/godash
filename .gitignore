@@ -208,6 +208,7 @@ dist
 # Built Visual Studio Code Extensions
 *.vsix
 
+config/config.yaml
 storage/
 **/*_templ.txt
 assets/css/style.css
