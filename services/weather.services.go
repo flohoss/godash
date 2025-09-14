@@ -29,28 +29,28 @@ func (w *WeatherService) copyWeatherValues(weatherResp *OpenWeatherApiResponse) 
 	myTime = time.Unix(weatherResp.Sys.Sunset, 0)
 	w.CurrentWeather.Sunset = myTime.Format("15:04")
 	w.CurrentWeather.Icon = weatherResp.Weather[0].Icon
-	w.CurrentWeather.Temp = math.Round(weatherResp.Main.Temp)
+	w.CurrentWeather.Temp = int(math.Round(weatherResp.Main.Temp))
 	w.CurrentWeather.Description = weatherResp.Weather[0].Description
 	w.CurrentWeather.Humidity = weatherResp.Main.Humidity
 }
 
 func (w *WeatherService) updateWeather(interval time.Duration) {
-	settings := config.GetWeatherSettings()
-	if settings.Key == "" {
-		return
-	}
-
 	w.sse.CreateStream("weather")
-	var weatherResponse OpenWeatherApiResponse
-	location := config.GetLocation()
-
-	if settings.Units == "imperial" {
-		w.CurrentWeather.Units = "°F"
-	} else {
-		w.CurrentWeather.Units = "°C"
-	}
 
 	for {
+		settings := config.GetWeatherSettings()
+		if settings.Key == "" {
+			return
+		}
+
+		if settings.Units == "imperial" {
+			w.CurrentWeather.Units = "°F"
+		} else {
+			w.CurrentWeather.Units = "°C"
+		}
+
+		location := config.GetLocation()
+
 		resp, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s&units=%s&lang=%s",
 			location.Latitude,
 			location.Longitude,
@@ -61,6 +61,7 @@ func (w *WeatherService) updateWeather(interval time.Duration) {
 			slog.Error("weather cannot be updated, please check WEATHER_KEY")
 		} else {
 			body, _ := io.ReadAll(resp.Body)
+			var weatherResponse OpenWeatherApiResponse
 			err = json.Unmarshal(body, &weatherResponse)
 			if err != nil {
 				slog.Error("weather cannot be processed")

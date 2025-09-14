@@ -10,13 +10,13 @@ type WeatherService struct {
 }
 
 type OpenWeather struct {
-	Icon        string  `json:"icon"`
-	Temp        float64 `json:"temp"`
-	Description string  `json:"description"`
-	Humidity    uint8   `json:"humidity"`
-	Sunrise     string  `json:"sunrise"`
-	Sunset      string  `json:"sunset"`
-	Units       string  `json:"units"`
+	Icon        string `json:"icon"`
+	Temp        int    `json:"temp"`
+	Description string `json:"description"`
+	Humidity    uint8  `json:"humidity"`
+	Sunrise     string `json:"sunrise"`
+	Sunset      string `json:"sunset"`
+	Units       string `json:"units"`
 }
 
 type OpenWeatherApiResponse struct {
