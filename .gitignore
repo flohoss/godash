@@ -6,6 +6,7 @@
 # Icon must end with two \r
 Icon
 
+
 # Thumbnails
 ._*
 
@@ -208,8 +209,11 @@ dist
 # Built Visual Studio Code Extensions
 *.vsix
 
-config/config.yaml
-storage/
-**/*_templ.txt
-assets/css/style.css
+views/**/*_templ.go
 tmp/
+assets/**/style.css
+__debug*
+config/downloads/
+config/config.yaml
+
+storage/

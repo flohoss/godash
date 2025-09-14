@@ -4,19 +4,16 @@ services:
       context: .
       dockerfile: docker/dev.dockerfile
     working_dir: /app
-    command: templ generate --watch --proxybind="0.0.0.0" --proxy="http://localhost:4000" --cmd="go run ." --open-browser=false
-    env_file:
-      - .env
+    command: templ generate --watch --proxybind="0.0.0.0" --proxy="http://localhost:8156" --cmd="go run ." --open-browser=false
     volumes:
       - .:/app/
     ports:
-      - 4000:4000
       - 7331:7331
 
   node:
     image: node:lts-alpine
     working_dir: /app
-    entrypoint: sh -c "yarn install && yarn tw:dev"
+    command: sh -c "yarn install && yarn tw:dev"
     tty: true
     volumes:
       - .:/app/
