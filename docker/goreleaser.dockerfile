@@ -25,10 +25,10 @@ WORKDIR /app
 # goreleaser
 COPY godash ./godash
 
-ARG APP_VERSION
-ENV APP_VERSION=$APP_VERSION
-ARG BUILD_TIME
-ENV BUILD_TIME=$BUILD_TIME
+ARG VERSION
+ENV VERSION=$VERSION
+ARG DATE
+ENV DATE=$DATE
 
 COPY --from=logo /app/logo.txt .
 COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/

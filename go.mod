@@ -4,7 +4,6 @@ go 1.24.0
 
 require (
 	github.com/a-h/templ v0.3.943
-	github.com/caarlos0/env/v10 v10.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-playground/validator/v10 v10.27.0
 	github.com/labstack/echo/v4 v4.13.4

@@ -6,7 +6,7 @@ import (
 )
 
 func appendVersionQuery(url string) string {
-	version := os.Getenv("APP_VERSION")
+	version := os.Getenv("VERSION")
 	if version == "" {
 		version = time.Now().Format("20060102150405")
 	}
