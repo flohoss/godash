@@ -35,6 +35,6 @@ COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
 COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
 COPY ./docker/entrypoint.sh .
 
-EXPOSE 4000
+EXPOSE 8156
 
 ENTRYPOINT ["dumb-init", "--", "/app/entrypoint.sh"]
