@@ -1,10 +1,19 @@
-package layout
+package views
 
-func getStyleSheet(version string) string {
-	return "/assets/css/style.css?v=" + version
+import (
+	"os"
+	"time"
+)
+
+func appendVersionQuery(url string) string {
+	version := os.Getenv("APP_VERSION")
+	if version == "" {
+		version = time.Now().Format("20060102150405")
+	}
+	return url + "?v=" + version
 }
 
-templ Base(title, version string) {
+templ Base(title string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -18,7 +27,7 @@ templ Base(title, version string) {
 			<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png"/>
 			<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
 			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
-			<link rel="stylesheet" href={ getStyleSheet(version) }/>
+			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
 		</head>
 		<body>
 			<main class="p-4 sm:p-6 lg:p-8 xl:container xl:py-12">

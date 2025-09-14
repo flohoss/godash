@@ -1,16 +1,11 @@
 package handlers
 
 import (
-	"net/http"
-
-	"gitlab.unjx.de/flohoss/godash/internal/env"
+	"github.com/labstack/echo/v4"
+	"gitlab.unjx.de/flohoss/godash/config"
 	"gitlab.unjx.de/flohoss/godash/services"
-	"gitlab.unjx.de/flohoss/godash/views/home"
+	"gitlab.unjx.de/flohoss/godash/views"
 )
-
-type BookmarkService interface {
-	GetAllBookmarks() *services.Bookmarks
-}
 
 type SystemService interface {
 	GetLiveInformation() *services.LiveInformation
@@ -21,29 +16,22 @@ type WeatherService interface {
 	GetCurrentWeather() *services.OpenWeather
 }
 
-func NewAppHandler(env *env.Config, s SystemService, w WeatherService, b BookmarkService) *AppHandler {
+func NewAppHandler(s SystemService, w WeatherService) *AppHandler {
 	return &AppHandler{
-		env:             env,
-		systemService:   s,
-		weatherService:  w,
-		bookmarkService: b,
+		systemService:  s,
+		weatherService: w,
 	}
 }
 
 type AppHandler struct {
-	env             *env.Config
-	systemService   SystemService
-	weatherService  WeatherService
-	bookmarkService BookmarkService
+	systemService  SystemService
+	weatherService WeatherService
 }
 
-func (bh *AppHandler) appHandler(w http.ResponseWriter, r *http.Request) {
-	bookmarks := bh.bookmarkService.GetAllBookmarks()
+func (bh *AppHandler) handleIndex(ctx echo.Context) error {
 	staticSystem := bh.systemService.GetStaticInformation()
 	liveSystem := bh.systemService.GetLiveInformation()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	titlePage := bh.env.Title
-
-	home.HomeIndex(titlePage, bh.env.Version, home.Home(titlePage, bookmarks, staticSystem, liveSystem, weather)).Render(r.Context(), w)
+	return render(ctx, views.HomeIndex(config.GetTitle(), views.Home(config.GetApplications(), config.GetLinks(), staticSystem, liveSystem, weather)))
 }

@@ -10,29 +10,17 @@ import (
 	"time"
 
 	"github.com/r3labs/sse/v2"
-	"gitlab.unjx.de/flohoss/godash/internal/env"
+	"gitlab.unjx.de/flohoss/godash/config"
 )
 
-func NewWeatherService(sse *sse.Server, env *env.Config) *WeatherService {
-	var w = WeatherService{sse: sse, env: env}
-	w.setWeatherUnits()
-	sse.CreateStream("weather")
-	if env.WeatherKey != "" {
-		go w.updateWeather(time.Second * 90)
-	}
+func NewWeatherService(sse *sse.Server) *WeatherService {
+	var w = WeatherService{sse: sse}
+	go w.updateWeather(time.Second * 90)
 	return &w
 }
 
 func (w *WeatherService) GetCurrentWeather() *OpenWeather {
 	return &w.CurrentWeather
-}
-
-func (w *WeatherService) setWeatherUnits() {
-	if w.env.WeatherUnits == "imperial" {
-		w.CurrentWeather.Units = "°F"
-	} else {
-		w.CurrentWeather.Units = "°C"
-	}
 }
 
 func (w *WeatherService) copyWeatherValues(weatherResp *OpenWeatherApiResponse) {
@@ -41,24 +29,34 @@ func (w *WeatherService) copyWeatherValues(weatherResp *OpenWeatherApiResponse) 
 	myTime = time.Unix(weatherResp.Sys.Sunset, 0)
 	w.CurrentWeather.Sunset = myTime.Format("15:04")
 	w.CurrentWeather.Icon = weatherResp.Weather[0].Icon
-	if w.env.WeatherDigits {
-		w.CurrentWeather.Temp = weatherResp.Main.Temp
-	} else {
-		w.CurrentWeather.Temp = math.Round(weatherResp.Main.Temp)
-	}
+	w.CurrentWeather.Temp = math.Round(weatherResp.Main.Temp)
 	w.CurrentWeather.Description = weatherResp.Weather[0].Description
 	w.CurrentWeather.Humidity = weatherResp.Main.Humidity
 }
 
 func (w *WeatherService) updateWeather(interval time.Duration) {
+	settings := config.GetWeatherSettings()
+	if settings.Key == "" {
+		return
+	}
+
+	w.sse.CreateStream("weather")
 	var weatherResponse OpenWeatherApiResponse
+	location := config.GetLocation()
+
+	if settings.Units == "imperial" {
+		w.CurrentWeather.Units = "°F"
+	} else {
+		w.CurrentWeather.Units = "°C"
+	}
+
 	for {
 		resp, err := http.Get(fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%f&lon=%f&appid=%s&units=%s&lang=%s",
-			w.env.LocationLatitude,
-			w.env.LocationLongitude,
-			w.env.WeatherKey,
-			w.env.WeatherUnits,
-			w.env.WeatherLanguage))
+			location.Latitude,
+			location.Longitude,
+			settings.Key,
+			settings.Units,
+			settings.Language))
 		if err != nil || resp.StatusCode != 200 {
 			slog.Error("weather cannot be updated, please check WEATHER_KEY")
 		} else {

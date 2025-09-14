@@ -2,13 +2,11 @@ package services
 
 import (
 	"github.com/r3labs/sse/v2"
-	"gitlab.unjx.de/flohoss/godash/internal/env"
 )
 
 type WeatherService struct {
 	CurrentWeather OpenWeather
 	sse            *sse.Server
-	env            *env.Config
 }
 
 type OpenWeather struct {

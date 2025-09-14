@@ -1,20 +1,20 @@
 package components
 
 import (
-	"gitlab.unjx.de/flohoss/godash/services"
+	"gitlab.unjx.de/flohoss/godash/config"
 	"html/template"
 	"strings"
 )
 
-func placeHolder(app services.Application) string {
+func placeHolder(app config.App) string {
 	return strings.ToUpper(app.Name[:1])
 }
 
-func noIcon(app services.Application) bool {
+func noIcon(app config.App) bool {
 	return app.Icon == ""
 }
 
-func displayDark(app services.Application) bool {
+func displayDark(app config.App) bool {
 	return !app.IgnoreDark && app.IconLight != ""
 }
 
@@ -34,7 +34,7 @@ type Icon struct {
 	Path string
 }
 
-templ Application(application services.Application) {
+templ Application(application config.App) {
 	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">
 		if displayDark(application) {
 			@templ.FromGoHTML(bgTemplateLight, Icon{Path: application.Icon})
@@ -52,7 +52,7 @@ templ Application(application services.Application) {
 	</a>
 }
 
-templ Link(link services.Link) {
+templ Link(link config.App) {
 	<a href={ templ.URL(link.URL) } class="hover-effect">
 		<div class="truncate">{ link.Name }</div>
 	</a>

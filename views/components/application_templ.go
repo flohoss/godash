@@ -9,20 +9,20 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"gitlab.unjx.de/flohoss/godash/services"
+	"gitlab.unjx.de/flohoss/godash/config"
 	"html/template"
 	"strings"
 )
 
-func placeHolder(app services.Application) string {
+func placeHolder(app config.App) string {
 	return strings.ToUpper(app.Name[:1])
 }
 
-func noIcon(app services.Application) bool {
+func noIcon(app config.App) bool {
 	return app.Icon == ""
 }
 
-func displayDark(app services.Application) bool {
+func displayDark(app config.App) bool {
 	return !app.IgnoreDark && app.IconLight != ""
 }
 
@@ -42,7 +42,7 @@ type Icon struct {
 	Path string
 }
 
-func Application(application services.Application) templ.Component {
+func Application(application config.App) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -138,7 +138,7 @@ func Application(application services.Application) templ.Component {
 	})
 }
 
-func Link(link services.Link) templ.Component {
+func Link(link config.App) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {

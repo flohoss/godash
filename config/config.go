@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
+	"gitlab.unjx.de/flohoss/godash/pkg/media"
 )
 
 const (
 	ConfigFolder = "./config/"
+	iconsFolder  = ConfigFolder + "icons/"
 )
 
 var cfg GlobalConfig
@@ -28,6 +31,7 @@ type GlobalConfig struct {
 	Location     Location       `mapstructure:"location"`
 	Weather      Weather        `mapstructure:"weather"`
 	Applications []Category     `mapstructure:"applications"`
+	Links        []Category     `mapstructure:"links"`
 }
 
 type ServerSettings struct {
@@ -54,12 +58,14 @@ type Category struct {
 type App struct {
 	Name       string `mapstructure:"name"`
 	Icon       string `mapstructure:"icon"`
+	IconLight  string `mapstructure:"-"`
 	URL        string `mapstructure:"url" validate:"omitempty,url"`
 	IgnoreDark bool   `mapstructure:"ignore_dark"`
 }
 
 func init() {
 	os.Mkdir(ConfigFolder, os.ModePerm)
+	os.Mkdir(iconsFolder, os.ModePerm)
 	validate = validator.New()
 }
 
@@ -106,12 +112,86 @@ func ValidateAndLoadConfig() error {
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
+	replaceIconStrings(tempCfg.Applications)
+	replaceIconStrings(tempCfg.Links)
+
 	mu.Lock()
 	cfg = tempCfg
 	mu.Unlock()
 
 	os.Setenv("TZ", cfg.TimeZone)
 	return nil
+}
+
+func replaceIconStrings(applications []Category) {
+	for i := range applications {
+		for j := range applications[i].Entries {
+			bookmark := &applications[i].Entries[j]
+
+			var filePath, filePathLight string
+			var err error
+
+			if strings.HasPrefix(bookmark.Icon, "sh/") {
+				filePath, filePathLight, err = downloadIcons(handleSelfHostedIcons(bookmark.Icon, ".webp"))
+				if err != nil {
+					slog.Error(err.Error())
+					continue
+				}
+			} else {
+				ext := filepath.Ext(bookmark.Icon)
+				filePath, filePathLight = handleLocalIcons(bookmark.Icon, ext)
+				if filePath == "" {
+					slog.Warn("could not find local icon", "path", bookmark.Icon)
+				}
+			}
+
+			bookmark.Icon = filePath
+			bookmark.IconLight = filePathLight
+		}
+	}
+}
+
+func downloadIcons(title, url, lightTitle, lightUrl string) (string, string, error) {
+	path, err := downloadIcon(title, url)
+	if err != nil {
+		return "", "", err
+	}
+	lightPath, _ := downloadIcon(lightTitle, lightUrl)
+	return path, lightPath, nil
+}
+
+func downloadIcon(title, url string) (string, error) {
+	filePath := iconsFolder + title
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		filePath, err = media.DownloadSelfHostedIcon(url, title, filePath)
+		if err != nil {
+			return "", err
+		}
+	}
+	return "/" + strings.TrimPrefix(filePath, ConfigFolder), nil
+}
+
+func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
+	title := strings.Replace(icon, "sh/", "", 1) + ext
+	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title
+	lightTitle := strings.Replace(title, ext, "-light"+ext, 1)
+	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + lightTitle
+	return title, url, lightTitle, lightUrl
+}
+
+func handleLocalIcons(title, ext string) (string, string) {
+	filePath := iconsFolder + title
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		return "", ""
+	}
+	filePathLight := strings.Replace(filePath, ext, "-light"+ext, 1)
+	_, err = os.Stat(filePathLight)
+	if os.IsNotExist(err) {
+		return "/" + strings.TrimPrefix(filePath, ConfigFolder), ""
+	}
+	return "/" + strings.TrimPrefix(filePath, ConfigFolder), "/" + strings.TrimPrefix(filePathLight, ConfigFolder)
 }
 
 func ConfigLoaded() bool {
@@ -137,4 +217,34 @@ func GetServer() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return fmt.Sprintf("%s:%d", cfg.Server.Address, cfg.Server.Port)
+}
+
+func GetApplications() []Category {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Applications
+}
+
+func GetLinks() []Category {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Links
+}
+
+func GetWeatherSettings() Weather {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Weather
+}
+
+func GetLocation() Location {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Location
+}
+
+func GetTitle() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Title
 }

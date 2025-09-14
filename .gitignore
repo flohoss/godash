@@ -215,5 +215,4 @@ assets/**/style.css
 __debug*
 config/downloads/
 config/config.yaml
-
-storage/
+config/icons/

@@ -1,13 +1,13 @@
-package home
+package views
 
 import (
 	"fmt"
+	"gitlab.unjx.de/flohoss/godash/config"
 	"gitlab.unjx.de/flohoss/godash/services"
 	"gitlab.unjx.de/flohoss/godash/views/components"
-	"gitlab.unjx.de/flohoss/godash/views/layout"
 )
 
-templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
+templ Home(bookmarks []config.Category, links []config.Category, static *services.StaticInformation, live *services.LiveInformation, weather *services.OpenWeather) {
 	<section class="grid gap-10">
 		@components.Weather(weather)
 		<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 select-none">
@@ -17,7 +17,7 @@ templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticI
 			@components.Uptime(static.Host.Architecture, "systemUptimePercentage", live.Uptime)
 		</div>
 		<div class="grid gap-4">
-			for _, a := range bookmarks.Applications {
+			for _, a := range bookmarks {
 				<div class="grid gap-2">
 					if a.Category != "" {
 						<div class="heading">{ a.Category }</div>
@@ -31,7 +31,7 @@ templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticI
 			}
 		</div>
 		<div class="grid-apps">
-			for _, l := range bookmarks.Links {
+			for _, l := range links {
 				<div class="flex flex-col gap-2">
 					if l.Category != "" {
 						<div class="heading">{ l.Category }</div>
@@ -48,11 +48,10 @@ templ Home(title string, bookmarks *services.Bookmarks, static *services.StaticI
 }
 
 templ HomeIndex(
-	title,
-	version string,
+	title string,
 	cmp templ.Component,
 ) {
-	@layout.Base(title, version) {
+	@Base(title) {
 		@cmp
 	}
 }

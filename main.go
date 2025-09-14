@@ -4,15 +4,19 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/r3labs/sse/v2"
 	"github.com/spf13/viper"
 
 	"gitlab.unjx.de/flohoss/godash/config"
+	"gitlab.unjx.de/flohoss/godash/handlers"
+	"gitlab.unjx.de/flohoss/godash/services"
 )
 
 func setupRouter() *echo.Echo {
@@ -22,7 +26,11 @@ func setupRouter() *echo.Echo {
 	e.HidePort = true
 
 	e.Use(middleware.Recover())
-	e.Use(middleware.Gzip())
+	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Skipper: func(c echo.Context) bool {
+			return strings.Contains(c.Path(), "sse")
+		},
+	}))
 
 	return e
 }
@@ -69,6 +77,15 @@ func main() {
 	e := setupRouter()
 
 	setupViperWatcher()
+
+	sse := sse.New()
+	sse.AutoReplay = false
+
+	s := services.NewSystemService(sse)
+	w := services.NewWeatherService(sse)
+
+	appHandler := handlers.NewAppHandler(s, w)
+	handlers.SetupRoutes(e, sse, appHandler)
 
 	slog.Info("Starting server", "url", fmt.Sprintf("http://%s", config.GetServer()))
 	slog.Error(e.Start(config.GetServer()).Error())
