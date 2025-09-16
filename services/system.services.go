@@ -10,7 +10,6 @@ import (
 	"github.com/r3labs/sse/v2"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
-	"github.com/shirou/gopsutil/v4/host"
 	"github.com/shirou/gopsutil/v4/mem"
 	"gitlab.unjx.de/flohoss/godash/internal/readable"
 )
@@ -29,7 +28,6 @@ func NewSystemService(sse *sse.Server) *SystemService {
 			CPU:  staticCpu(),
 			Ram:  staticRam(),
 			Disk: staticDisk(),
-			Host: staticHost(),
 		},
 	}
 	sse.CreateStream("system")
@@ -50,17 +48,10 @@ func (s *SystemService) UpdateLiveInformation() {
 		s.liveCpu()
 		s.liveRam()
 		s.liveDisk()
-		s.uptime()
 		json, _ := json.Marshal(s.Live)
 		s.sse.Publish("system", &sse.Event{Data: json})
 		time.Sleep(1 * time.Second)
 	}
-}
-
-func staticHost() Host {
-	var h Host
-	h.Architecture = runtime.GOARCH
-	return h
 }
 
 func staticCpu() CPU {
@@ -133,16 +124,4 @@ func (s *SystemService) liveDisk() {
 	}
 	s.Live.Disk.Value = readable.ReadableSize(d.Used)
 	s.Live.Disk.Percentage = math.RoundToEven(calculatePercentage(d.Used, d.Total))
-}
-
-func (s *SystemService) uptime() {
-	i, err := host.Info()
-	if err != nil {
-		return
-	}
-	s.Live.Uptime.Days = i.Uptime / 84600
-	s.Live.Uptime.Hours = uint16((i.Uptime % 86400) / 3600)
-	s.Live.Uptime.Minutes = uint16(((i.Uptime % 86400) % 3600) / 60)
-	s.Live.Uptime.Seconds = uint16(((i.Uptime % 86400) % 3600) % 60)
-	s.Live.Uptime.Percentage = float32((s.Live.Uptime.Minutes*100)+s.Live.Uptime.Seconds) / 60
 }

@@ -5,128 +5,84 @@ import (
 	"gitlab.unjx.de/flohoss/godash/services"
 )
 
-func getIcon(icon string) string {
-	switch icon {
-	case "01d":
-		return "icon-[bi--sun-fill]"
-	case "01n":
-		return "icon-[bi--moon-fill]"
-	case "02d":
-		return "icon-[bi--cloud-sun-fill]"
-	case "02n":
-		return "icon-[bi--cloud-moon-fill]"
-	case "03d", "03n":
-		return "icon-[bi--cloud-fill]"
-	case "04d", "04n":
-		return "icon-[bi--clouds-fill]"
-	case "09d", "09n":
-		return "icon-[bi--cloud-rain-heavy-fill]"
-	case "10d", "10n":
-		return "icon-[bi--cloud-drizzle-fill]"
-	case "11d", "11n":
-		return "icon-[bi--cloud-lightning-rain-fill]"
-	case "13d", "13n":
-		return "icon-[bi--cloud-snow-fill]"
-	case "50d", "50n":
-		return "icon-[bi--cloud-fog2-fill]"
-	default:
-		return ""
-	}
-}
-
-templ Weather(weather *services.OpenWeather) {
-	<div class="flex items-center select-none">
-		<span id="weatherIcon" class={ "extra-icon h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14", getIcon(weather.Icon) }></span>
-		<div>
-			<div class="text-4xl md:text-4xl"><span id="weatherTemp">{ weather.Temp }</span> { weather.Units }</div>
-			<div class="flex items-center gap-5 text-xs">
-				<div class="flex items-center">
-					<span class="extra-icon icon-[bi--chat-quote]"></span>
-					<div id="weatherDescription" class="extra-info">{ weather.Description }</div>
-				</div>
-				<div class="flex items-center">
-					<span class="extra-icon icon-[bi--droplet]"></span>
-					<div id="weatherHumidity" class="extra-info">{ fmt.Sprintf("%d %%",weather.Humidity) }</div>
-				</div>
-				<div class="hidden sm:flex items-center">
-					<span class="extra-icon icon-[bi--sunrise]"></span>
-					<div id="weatherSunrise" class="extra-info">{ weather.Sunrise }</div>
-				</div>
-				<div class="hidden sm:flex items-center">
-					<span class="extra-icon icon-[bi--sunset]"></span>
-					<div id="weatherSunset" class="extra-info">{ weather.Sunset }</div>
+templ Weather(weather *services.Weather) {
+	<div class="flex items-center justify-between select-none gap-5">
+		<div class="hover-box flex items-center justify-between gap-2 min-w-[20rem] w-full lg:w-auto">
+			<span id="weatherIcon" class={ "flex-shrink-0 size-30", weather.Current.Icon }></span>
+			<div class="grid justify-items-end">
+				<div class="font-semibold text-primary text-4xl" id="weatherTemp">{ weather.Current.Temperature }</div>
+				<div class="grid justify-items-end gap-1 text-xs">
+					<div class="flex items-center gap-1">
+						<span class="flex-shrink-0 icon-[bi--thermometer-half]"></span>
+						<div id="weatherDescription" class="extra-info">{ weather.Current.Apparent }</div>
+					</div>
+					<div class="flex items-center gap-1">
+						<span class="flex-shrink-0 icon-[bi--droplet-fill]"></span>
+						<div id="weatherHumidity" class="extra-info">{ weather.Current.Humidity }</div>
+					</div>
+					<div class="flex items-center gap-4">
+						<div class="hidden sm:flex items-center gap-1">
+							<span class="flex-shrink-0 size-4 icon-[bi--sunrise-fill]"></span>
+							<div id="weatherSunrise" class="extra-info">{ weather.Current.Sunrise }</div>
+						</div>
+						<div class="hidden sm:flex items-center gap-1">
+							<span class="flex-shrink-0 size-4 icon-[bi--sunset-fill]"></span>
+							<div id="weatherSunset" class="extra-info">{ weather.Current.Sunset }</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
+		<div class="hidden lg:flex items-center gap-4">
+			for id, day := range weather.Forecast {
+				<div class="hover-box grid justify-items-end gap-2 min-w-[6rem]">
+					<span id={ fmt.Sprintf("icon-day-%d", id+1) } class={ "flex-shrink-0 size-14", day.Icon }></span>
+					<div class="grid justify-items-end">
+						<div class="text-xs">{ day.Day }</div>
+						<div id={ fmt.Sprintf("max-day-%d", id+1) } class="font-semibold text-primary">{ day.TemperatureMax }</div>
+						<div id={ fmt.Sprintf("min-day-%d", id+1) } class="text-xs">{ day.TemperatureMin }</div>
+					</div>
+				</div>
+			}
+		</div>
 	</div>
 	<script>
-    	let weatherSSESource = null;
+		let weatherSSESource = null;
 		addEventListener('beforeunload', () => {
-      		weatherSSESource && weatherSSESource.close();
+	  		weatherSSESource && weatherSSESource.close();
 		});
 		weatherSSESource = new EventSource('/sse?stream=weather');
 		weatherSSESource.onmessage = (e) => {
 			const parsed = JSON.parse(e.data);
+			console.log(parsed);
 			replaceWeather(parsed);
 		};
 
-
-		// weather elements
-		const weatherIcon = document.getElementById('weatherIcon');
-		const weatherTemp = document.getElementById('weatherTemp');
-		const weatherDescription = document.getElementById('weatherDescription');
-		const weatherHumidity = document.getElementById('weatherHumidity');
-		const weatherSunrise = document.getElementById('weatherSunrise');
-		const weatherSunset = document.getElementById('weatherSunset');
-
-		function weatherClass(icon) {
-			switch (icon) {
-				case "01d":
-					return "icon-[bi--sun-fill]";
-				case "01n":
-					return "icon-[bi--moon-fill]";
-				case "02d":
-					return "icon-[bi--cloud-sun-fill]";
-				case "02n":
-					return "icon-[bi--cloud-moon-fill]";
-				case "03d":
-				case "03n":
-					return "icon-[bi--cloud-fill]";
-				case "04d":
-				case "04n":
-					return "icon-[bi--clouds-fill]";
-				case "09d":
-				case "09n":
-					return "icon-[bi--cloud-rain-heavy-fill]";
-				case "10d":
-				case "10n":
-					return "icon-[bi--cloud-drizzle-fill]";
-				case "11d":
-				case "11n":
-					return "icon-[bi--cloud-lightning-rain-fill]";
-				case "13d":
-				case "13n":
-					return "icon-[bi--cloud-snow-fill]";
-				case "50d":
-				case "50n":
-					return "icon-[bi--cloud-fog2-fill]";
-				default:
-					return "";
-			}
-		}
-
 		function replaceWeather(parsed) {
+		const weatherIcon = document.getElementById('weatherIcon');
 			weatherIcon.className.split(' ').forEach(function(className) {
 				if (className.startsWith('icon-')) {
 					weatherIcon.classList.remove(className);
 				}
 			});
-			weatherIcon.classList.add(weatherClass(parsed.icon));
-			weatherTemp.innerText = parsed.temp;
-			weatherDescription.innerText = parsed.description;
-			weatherHumidity.innerText = parsed.humidity + '%';
-			weatherSunrise.innerText = parsed.sunrise;
-			weatherSunset.innerText = parsed.sunset;
+			weatherIcon.classList.add(parsed.current.icon);
+			document.getElementById('weatherTemp').innerText = parsed.current.temperature;
+			document.getElementById('weatherDescription').innerText = parsed.current.apparent;
+			document.getElementById('weatherHumidity').innerText = parsed.current.humidity;
+			document.getElementById('weatherSunrise').innerText = parsed.current.sunrise;
+			document.getElementById('weatherSunset').innerText = parsed.current.sunset;
+
+			parsed.forecast.forEach(function(day, index) {
+				const icon = document.getElementById('icon-day-' + (index + 1));
+				icon.className.split(' ').forEach(function(className) {
+					if (className.startsWith('icon-')) {
+						icon.classList.remove(className);
+					}
+				});
+				icon.classList.add(day.icon);
+				document.getElementById('max-day-' + (index + 1)).innerText = day.temperature_max;
+				document.getElementById('min-day-' + (index + 1)).innerText = day.temperature_min;
+			})
 		}
-  	</script>
+	</script>
 }

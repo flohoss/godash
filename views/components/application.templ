@@ -35,7 +35,7 @@ type Icon struct {
 }
 
 templ Application(application config.App) {
-	<a href={ templ.URL(application.URL) } class="flex items-center hover-effect">
+	<a href={ templ.URL(application.URL) } class="hover-box flex items-center hover-effect">
 		if displayDark(application) {
 			@templ.FromGoHTML(bgTemplateLight, Icon{Path: application.Icon})
 			@templ.FromGoHTML(bgTemplateDark, Icon{Path: application.IconLight})
@@ -53,7 +53,7 @@ templ Application(application config.App) {
 }
 
 templ Link(link config.App) {
-	<a href={ templ.URL(link.URL) } class="hover-effect">
+	<a href={ templ.URL(link.URL) } class="hover-box hover-effect">
 		<div class="truncate">{ link.Name }</div>
 	</a>
 }

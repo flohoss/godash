@@ -1,10 +1,6 @@
 package components
 
-import (
-	"fmt"
-	"gitlab.unjx.de/flohoss/godash/services"
-	"html/template"
-)
+import "html/template"
 
 var BarTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
 
@@ -14,49 +10,21 @@ type Bar struct {
 }
 
 templ System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage float64) {
-	<div class="flex items-center">
-		<span class={ "system-icon", icon }></span>
-		<div class="w-full truncate">
-			<div class="extra-info">{ extraInfo }</div>
-			<div class="truncate"><span id={ valueId }>{ infoPre }</span>{ infoPost }</div>
-			<div class="progress-bar-wrapper">
-				@templ.FromGoHTML(BarTemplate, Bar{Id: percentageId, Percentage: percentage})
+	<div class="hover-box w-full truncate grid gap-2">
+		<div class="flex justify-start gap-3 items-center">
+			<span class={ "size-8 shrink-0", icon }></span>
+			<div>
+				<div class="stat-title">{ extraInfo }</div>
+				<div class="text-xl truncate"><span id={ valueId }>{ infoPre }</span>{ infoPost }</div>
 			</div>
+		</div>
+		<div class="progress-bar-wrapper">
+			@templ.FromGoHTML(BarTemplate, Bar{Id: percentageId, Percentage: percentage})
 		</div>
 	</div>
 }
 
-var countDownTemplate = template.Must(template.New("countdown").Parse("<span id=\"{{ .Id }}\" style=\"--value: {{ .Value }};\"></span>"))
-
-type Countdown struct {
-	Id    string
-	Value uint16
-}
-
-templ Uptime(extraInfo string, id string, uptime services.Uptime) {
-	<div class="flex items-center">
-		<span class="system-icon icon-[bi--motherboard]"></span>
-		<div class="w-full truncate">
-			<div class="extra-info">{ extraInfo }</div>
-			<div class="flex items-center gap-2 truncate">
-				<div class="truncate">
-					<span><span id="uptimeDays">{ fmt.Sprintf("%d",uptime.Days) }</span> days</span>
-					<span class="countdown">
-						@templ.FromGoHTML(countDownTemplate, Countdown{Id: "uptimeHours", Value: uptime.Hours})
-					</span> hours
-					<span class="countdown">
-						@templ.FromGoHTML(countDownTemplate, Countdown{Id: "uptimeMinutes", Value: uptime.Minutes})
-					</span> min
-					<span class="countdown">
-						@templ.FromGoHTML(countDownTemplate, Countdown{Id: "uptimeSeconds", Value: uptime.Seconds})
-					</span> sec
-				</div>
-			</div>
-			<div class="progress-bar-wrapper">
-				@templ.FromGoHTML(BarTemplate, Bar{Id: id, Percentage: float64(uptime.Percentage)})
-			</div>
-		</div>
-	</div>
+templ SystemScript() {
 	<script>
 		let systemSSESource = null;
 		addEventListener('beforeunload', () => {
@@ -74,11 +42,6 @@ templ Uptime(extraInfo string, id string, uptime services.Uptime) {
 		const systemRamValue = document.getElementById('systemRamValue');
 		const systemDiskPercentage = document.getElementById('systemDiskPercentage');
 		const systemDiskValue = document.getElementById('systemDiskValue');
-		const systemUptimePercentage = document.getElementById('systemUptimePercentage');
-		const uptimeDays = document.getElementById('uptimeDays');
-		const uptimeHours = document.getElementById('uptimeHours');
-		const uptimeMinutes = document.getElementById('uptimeMinutes');
-		const uptimeSeconds = document.getElementById('uptimeSeconds');
 
 		function replaceSystem(parsed) {
 			systemCpuPercentage.style = 'width:' + parsed.cpu + '%';
@@ -86,11 +49,6 @@ templ Uptime(extraInfo string, id string, uptime services.Uptime) {
 			systemRamValue.innerText = parsed.ram.value;
 			systemDiskPercentage.style = 'width:' + parsed.disk.percentage + '%';
 			systemDiskValue.innerText = parsed.disk.value;
-			systemUptimePercentage.style = 'width:' + parsed.uptime.percentage + '%';
-			uptimeDays.style = '--value:' + parsed.uptime.days;
-			uptimeHours.style = '--value:' + parsed.uptime.hours;
-			uptimeMinutes.style = '--value:' + parsed.uptime.minutes;
-			uptimeSeconds.style = '--value:' + parsed.uptime.seconds;
 		}
   	</script>
 }

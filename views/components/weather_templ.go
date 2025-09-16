@@ -13,36 +13,7 @@ import (
 	"gitlab.unjx.de/flohoss/godash/services"
 )
 
-func getIcon(icon string) string {
-	switch icon {
-	case "01d":
-		return "icon-[bi--sun-fill]"
-	case "01n":
-		return "icon-[bi--moon-fill]"
-	case "02d":
-		return "icon-[bi--cloud-sun-fill]"
-	case "02n":
-		return "icon-[bi--cloud-moon-fill]"
-	case "03d", "03n":
-		return "icon-[bi--cloud-fill]"
-	case "04d", "04n":
-		return "icon-[bi--clouds-fill]"
-	case "09d", "09n":
-		return "icon-[bi--cloud-rain-heavy-fill]"
-	case "10d", "10n":
-		return "icon-[bi--cloud-drizzle-fill]"
-	case "11d", "11n":
-		return "icon-[bi--cloud-lightning-rain-fill]"
-	case "13d", "13n":
-		return "icon-[bi--cloud-snow-fill]"
-	case "50d", "50n":
-		return "icon-[bi--cloud-fog2-fill]"
-	default:
-		return ""
-	}
-}
-
-func Weather(weather *services.OpenWeather) templ.Component {
+func Weather(weather *services.Weather) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -63,11 +34,11 @@ func Weather(weather *services.OpenWeather) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex items-center select-none\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex items-center justify-between select-none gap-5\"><div class=\"hover-box flex items-center justify-between gap-2 min-w-[20rem] w-full lg:w-auto\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 = []any{"extra-icon h-12 w-12 shrink-0 mr-4 md:w-14 md:h-14", getIcon(weather.Icon)}
+		var templ_7745c5c3_Var2 = []any{"flex-shrink-0 size-30", weather.Current.Icon}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var2...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -85,85 +56,182 @@ func Weather(weather *services.OpenWeather) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"></span><div><div class=\"text-4xl md:text-4xl\"><span id=\"weatherTemp\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"></span><div class=\"grid justify-items-end\"><div class=\"font-semibold text-primary text-4xl\" id=\"weatherTemp\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
-		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Temp)
+		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Current.Temperature)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 41, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 13, Col: 99}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</span> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><div class=\"grid justify-items-end gap-1 text-xs\"><div class=\"flex items-center gap-1\"><span class=\"flex-shrink-0 icon-[bi--thermometer-half]\"></span><div id=\"weatherDescription\" class=\"extra-info\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Units)
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Current.Apparent)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 41, Col: 99}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 17, Col: 80}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div><div class=\"flex items-center gap-5 text-xs\"><div class=\"flex items-center\"><span class=\"extra-icon icon-[bi--chat-quote]\"></span><div id=\"weatherDescription\" class=\"extra-info\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div><div class=\"flex items-center gap-1\"><span class=\"flex-shrink-0 icon-[bi--droplet-fill]\"></span><div id=\"weatherHumidity\" class=\"extra-info\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Description)
+		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Current.Humidity)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 45, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 21, Col: 77}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></div><div class=\"flex items-center\"><span class=\"extra-icon icon-[bi--droplet]\"></span><div id=\"weatherHumidity\" class=\"extra-info\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></div><div class=\"flex items-center gap-4\"><div class=\"hidden sm:flex items-center gap-1\"><span class=\"flex-shrink-0 size-4 icon-[bi--sunrise-fill]\"></span><div id=\"weatherSunrise\" class=\"extra-info\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d %%", weather.Humidity))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Current.Sunrise)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 49, Col: 89}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 26, Col: 76}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div><div class=\"hidden sm:flex items-center\"><span class=\"extra-icon icon-[bi--sunrise]\"></span><div id=\"weatherSunrise\" class=\"extra-info\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div><div class=\"hidden sm:flex items-center gap-1\"><span class=\"flex-shrink-0 size-4 icon-[bi--sunset-fill]\"></span><div id=\"weatherSunset\" class=\"extra-info\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Sunrise)
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Current.Sunset)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 53, Col: 66}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 30, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div><div class=\"hidden sm:flex items-center\"><span class=\"extra-icon icon-[bi--sunset]\"></span><div id=\"weatherSunset\" class=\"extra-info\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div></div></div></div></div><div class=\"hidden lg:flex items-center gap-4\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(weather.Sunset)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 57, Col: 64}
+		for id, day := range weather.Forecast {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<div class=\"hover-box grid justify-items-end gap-2 min-w-[6rem]\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var9 = []any{"flex-shrink-0 size-14", day.Icon}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<span id=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var10 string
+			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("icon-day-%d", id+1))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 39, Col: 48}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var11 string
+			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(templ.CSSClasses(templ_7745c5c3_Var9).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\"></span><div class=\"grid justify-items-end\"><div class=\"text-xs\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(day.Day)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 41, Col: 36}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</div><div id=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 string
+			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("max-day-%d", id+1))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 42, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"font-semibold text-primary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(day.TemperatureMax)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 42, Col: 105}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div><div id=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var15 string
+			templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("min-day-%d", id+1))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 43, Col: 47}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "\" class=\"text-xs\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var16 string
+			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(day.TemperatureMin)
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 43, Col: 86}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</div></div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div></div></div></div></div><script>\n    \tlet weatherSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n      \t\tweatherSSESource && weatherSSESource.close();\n\t\t});\n\t\tweatherSSESource = new EventSource('/sse?stream=weather');\n\t\tweatherSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\treplaceWeather(parsed);\n\t\t};\n\n\n\t\t// weather elements\n\t\tconst weatherIcon = document.getElementById('weatherIcon');\n\t\tconst weatherTemp = document.getElementById('weatherTemp');\n\t\tconst weatherDescription = document.getElementById('weatherDescription');\n\t\tconst weatherHumidity = document.getElementById('weatherHumidity');\n\t\tconst weatherSunrise = document.getElementById('weatherSunrise');\n\t\tconst weatherSunset = document.getElementById('weatherSunset');\n\n\t\tfunction weatherClass(icon) {\n\t\t\tswitch (icon) {\n\t\t\t\tcase \"01d\":\n\t\t\t\t\treturn \"icon-[bi--sun-fill]\";\n\t\t\t\tcase \"01n\":\n\t\t\t\t\treturn \"icon-[bi--moon-fill]\";\n\t\t\t\tcase \"02d\":\n\t\t\t\t\treturn \"icon-[bi--cloud-sun-fill]\";\n\t\t\t\tcase \"02n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-moon-fill]\";\n\t\t\t\tcase \"03d\":\n\t\t\t\tcase \"03n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-fill]\";\n\t\t\t\tcase \"04d\":\n\t\t\t\tcase \"04n\":\n\t\t\t\t\treturn \"icon-[bi--clouds-fill]\";\n\t\t\t\tcase \"09d\":\n\t\t\t\tcase \"09n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-rain-heavy-fill]\";\n\t\t\t\tcase \"10d\":\n\t\t\t\tcase \"10n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-drizzle-fill]\";\n\t\t\t\tcase \"11d\":\n\t\t\t\tcase \"11n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-lightning-rain-fill]\";\n\t\t\t\tcase \"13d\":\n\t\t\t\tcase \"13n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-snow-fill]\";\n\t\t\t\tcase \"50d\":\n\t\t\t\tcase \"50n\":\n\t\t\t\t\treturn \"icon-[bi--cloud-fog2-fill]\";\n\t\t\t\tdefault:\n\t\t\t\t\treturn \"\";\n\t\t\t}\n\t\t}\n\n\t\tfunction replaceWeather(parsed) {\n\t\t\tweatherIcon.className.split(' ').forEach(function(className) {\n\t\t\t\tif (className.startsWith('icon-')) {\n\t\t\t\t\tweatherIcon.classList.remove(className);\n\t\t\t\t}\n\t\t\t});\n\t\t\tweatherIcon.classList.add(weatherClass(parsed.icon));\n\t\t\tweatherTemp.innerText = parsed.temp;\n\t\t\tweatherDescription.innerText = parsed.description;\n\t\t\tweatherHumidity.innerText = parsed.humidity + '%';\n\t\t\tweatherSunrise.innerText = parsed.sunrise;\n\t\t\tweatherSunset.innerText = parsed.sunset;\n\t\t}\n  \t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</div></div><script>\n\t\tlet weatherSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t  \t\tweatherSSESource && weatherSSESource.close();\n\t\t});\n\t\tweatherSSESource = new EventSource('/sse?stream=weather');\n\t\tweatherSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\tconsole.log(parsed);\n\t\t\treplaceWeather(parsed);\n\t\t};\n\n\t\tfunction replaceWeather(parsed) {\n\t\tconst weatherIcon = document.getElementById('weatherIcon');\n\t\t\tweatherIcon.className.split(' ').forEach(function(className) {\n\t\t\t\tif (className.startsWith('icon-')) {\n\t\t\t\t\tweatherIcon.classList.remove(className);\n\t\t\t\t}\n\t\t\t});\n\t\t\tweatherIcon.classList.add(parsed.current.icon);\n\t\t\tdocument.getElementById('weatherTemp').innerText = parsed.current.temperature;\n\t\t\tdocument.getElementById('weatherDescription').innerText = parsed.current.apparent;\n\t\t\tdocument.getElementById('weatherHumidity').innerText = parsed.current.humidity;\n\t\t\tdocument.getElementById('weatherSunrise').innerText = parsed.current.sunrise;\n\t\t\tdocument.getElementById('weatherSunset').innerText = parsed.current.sunset;\n\n\t\t\tparsed.forecast.forEach(function(day, index) {\n\t\t\t\tconst icon = document.getElementById('icon-day-' + (index + 1));\n\t\t\t\ticon.className.split(' ').forEach(function(className) {\n\t\t\t\t\tif (className.startsWith('icon-')) {\n\t\t\t\t\t\ticon.classList.remove(className);\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\ticon.classList.add(day.icon);\n\t\t\t\tdocument.getElementById('max-day-' + (index + 1)).innerText = day.temperature_max;\n\t\t\t\tdocument.getElementById('min-day-' + (index + 1)).innerText = day.temperature_min;\n\t\t\t})\n\t\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

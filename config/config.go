@@ -28,7 +28,6 @@ type GlobalConfig struct {
 	TimeZone     string         `mapstructure:"time_zone" validate:"omitempty,timezone"`
 	Title        string         `mapstructure:"title"`
 	Server       ServerSettings `mapstructure:"server"`
-	Location     Location       `mapstructure:"location"`
 	Weather      Weather        `mapstructure:"weather"`
 	Applications []Category     `mapstructure:"applications"`
 	Links        []Category     `mapstructure:"links"`
@@ -39,15 +38,10 @@ type ServerSettings struct {
 	Port    int    `mapstructure:"port" validate:"omitempty,gte=1024,lte=65535"`
 }
 
-type Location struct {
-	Latitude  float32 `mapstructure:"latitude" validate:"omitempty,latitude"`
-	Longitude float32 `mapstructure:"longitude" validate:"omitempty,longitude"`
-}
-
 type Weather struct {
-	Key      string `mapstructure:"key"`
-	Units    string `mapstructure:"units" validate:"omitempty,oneof=metric imperial"`
-	Language string `mapstructure:"language" validate:"omitempty,bcp47_language_tag"`
+	Units     string  `mapstructure:"units" validate:"omitempty,oneof=celsius fahrenheit"`
+	Latitude  float64 `mapstructure:"latitude" validate:"omitempty,latitude"`
+	Longitude float64 `mapstructure:"longitude" validate:"omitempty,longitude"`
 }
 
 type Category struct {
@@ -237,14 +231,14 @@ func GetWeatherSettings() Weather {
 	return cfg.Weather
 }
 
-func GetLocation() Location {
-	mu.RLock()
-	defer mu.RUnlock()
-	return cfg.Location
-}
-
 func GetTitle() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.Title
+}
+
+func GetTimeZone() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.TimeZone
 }
