@@ -27,15 +27,15 @@ func displayDark(app config.App) bool {
 }
 
 var bgTemplate = template.Must(template.New("bgTemplate").Parse(
-	`<div class="w-8 h-8 bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
+	`<div class="size-8 bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
 ))
 
 var bgTemplateLight = template.Must(template.New("bgTemplate").Parse(
-	`<div class="w-8 h-8 dark:hidden bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
+	`<div class="size-8 dark:hidden bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
 ))
 
 var bgTemplateDark = template.Must(template.New("bgTemplate").Parse(
-	`<div class="w-8 h-8 hidden dark:block bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
+	`<div class="size-8 hidden dark:block bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
 ))
 
 type Icon struct {
@@ -172,7 +172,7 @@ func Link(link config.App) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" class=\"hover-box hover-effect\"><div class=\"truncate\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" class=\"hover-effect\"><div class=\"truncate\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

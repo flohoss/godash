@@ -5,46 +5,54 @@ import (
 	"gitlab.unjx.de/flohoss/godash/services"
 )
 
-templ Weather(weather *services.Weather) {
-	<div class="flex items-center justify-between select-none gap-5">
-		<div class="hover-box flex items-center justify-between gap-2 min-w-[20rem] w-full lg:w-auto">
-			<span id="weatherIcon" class={ "flex-shrink-0 size-30", weather.Current.Icon }></span>
-			<div class="grid justify-items-end">
-				<div class="font-semibold text-primary text-4xl" id="weatherTemp">{ weather.Current.Temperature }</div>
-				<div class="grid justify-items-end gap-1 text-xs">
-					<div class="flex items-center gap-1">
-						<span class="flex-shrink-0 icon-[bi--thermometer-half]"></span>
-						<div id="weatherDescription" class="extra-info">{ weather.Current.Apparent }</div>
-					</div>
-					<div class="flex items-center gap-1">
-						<span class="flex-shrink-0 icon-[bi--droplet-fill]"></span>
-						<div id="weatherHumidity" class="extra-info">{ weather.Current.Humidity }</div>
-					</div>
-					<div class="flex items-center gap-4">
-						<div class="hidden sm:flex items-center gap-1">
-							<span class="flex-shrink-0 size-4 icon-[bi--sunrise-fill]"></span>
-							<div id="weatherSunrise" class="extra-info">{ weather.Current.Sunrise }</div>
-						</div>
-						<div class="hidden sm:flex items-center gap-1">
-							<span class="flex-shrink-0 size-4 icon-[bi--sunset-fill]"></span>
-							<div id="weatherSunset" class="extra-info">{ weather.Current.Sunset }</div>
-						</div>
-					</div>
+func getClass(id int) string {
+	if id > 4 {
+		return "hidden 2xl:block"
+	}
+	if id > 3 {
+		return "hidden lg:block"
+	}
+	if id > 2 {
+		return "hidden md:block"
+	}
+	if id > 1 {
+		return "hidden sm:block"
+	}
+	return ""
+}
+
+templ card(id int, day services.Day) {
+	<div class={ "hover-box w-full truncate grid gap-2", getClass(id) }>
+		<div class="flex items-center gap-2">
+			<span id={ fmt.Sprintf("icon-day-%d", id+1) } class={ "flex-shrink-0 size-8", day.Icon }></span>
+			<div class="grid whitespace-nowrap">
+				<div class="text-xs text-secondary">{ day.Name }</div>
+				<div class="flex items-center gap-2">
+					<div id={ fmt.Sprintf("primary-day-%d", id+1) } class="font-semibold text-primary text-md lg:text-xl">{ day.PrimaryValue }</div>
+					<div id={ fmt.Sprintf("secondary-day-%d", id+1) }>{ day.SecondaryValue }</div>
 				</div>
 			</div>
 		</div>
-		<div class="hidden lg:flex items-center gap-4">
-			for id, day := range weather.Forecast {
-				<div class="hover-box grid justify-items-end gap-2 min-w-[6rem]">
-					<span id={ fmt.Sprintf("icon-day-%d", id+1) } class={ "flex-shrink-0 size-14", day.Icon }></span>
-					<div class="grid justify-items-end">
-						<div class="text-xs">{ day.Day }</div>
-						<div id={ fmt.Sprintf("max-day-%d", id+1) } class="font-semibold text-primary">{ day.TemperatureMax }</div>
-						<div id={ fmt.Sprintf("min-day-%d", id+1) } class="text-xs">{ day.TemperatureMin }</div>
-					</div>
+		<div>
+			<div class="flex items-center gap-4">
+				<div class="flex items-center justify-center gap-2">
+					<span class="flex-shrink-0 size-4 icon-[bi--sunrise-fill]"></span>
+					<div class="text-xs text-secondary">{ day.Sunrise }</div>
 				</div>
-			}
+				<div class="flex items-center gap-2">
+					<span class="flex-shrink-0 size-4 icon-[bi--sunset-fill]"></span>
+					<div class="text-xs text-secondary">{ day.Sunset }</div>
+				</div>
+			</div>
 		</div>
+	</div>
+}
+
+templ Weather(weather []services.Day) {
+	<div class="grid gap-5 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+		for id, day := range weather {
+			@card(id, day)
+		}
 	</div>
 	<script>
 		let weatherSSESource = null;
@@ -59,29 +67,16 @@ templ Weather(weather *services.Weather) {
 		};
 
 		function replaceWeather(parsed) {
-		const weatherIcon = document.getElementById('weatherIcon');
-			weatherIcon.className.split(' ').forEach(function(className) {
-				if (className.startsWith('icon-')) {
-					weatherIcon.classList.remove(className);
-				}
-			});
-			weatherIcon.classList.add(parsed.current.icon);
-			document.getElementById('weatherTemp').innerText = parsed.current.temperature;
-			document.getElementById('weatherDescription').innerText = parsed.current.apparent;
-			document.getElementById('weatherHumidity').innerText = parsed.current.humidity;
-			document.getElementById('weatherSunrise').innerText = parsed.current.sunrise;
-			document.getElementById('weatherSunset').innerText = parsed.current.sunset;
-
 			parsed.forecast.forEach(function(day, index) {
-				const icon = document.getElementById('icon-day-' + (index + 1));
+				const icon = document.getElementById('icon-day-' + index);
 				icon.className.split(' ').forEach(function(className) {
 					if (className.startsWith('icon-')) {
 						icon.classList.remove(className);
 					}
 				});
 				icon.classList.add(day.icon);
-				document.getElementById('max-day-' + (index + 1)).innerText = day.temperature_max;
-				document.getElementById('min-day-' + (index + 1)).innerText = day.temperature_min;
+				document.getElementById('primary-day-' + (index + 1)).innerText = day.temperature_max;
+				document.getElementById('secondary-day-' + (index + 1)).innerText = day.temperature_min;
 			})
 		}
 	</script>

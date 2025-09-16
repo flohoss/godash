@@ -11,28 +11,14 @@ import (
 )
 
 type WeatherService struct {
-	weather *Weather
+	weather []Day
 	sse     *sse.Server
 }
 
-type Weather struct {
-	Current  Current    `json:"current"`
-	Forecast []Forecast `json:"forecast"`
-}
-
-type Current struct {
-	Temperature string `json:"temperature"`
-	Apparent    string `json:"apparent"`
-	Humidity    string `json:"humidity"`
-	Icon        string `json:"icon"`
-	Sunrise     string `json:"sunrise"`
-	Sunset      string `json:"sunset"`
-}
-
-type Forecast struct {
-	Day            string `json:"day"`
-	TemperatureMax string `json:"temperature_max"`
-	TemperatureMin string `json:"temperature_min"`
+type Day struct {
+	Name           string `json:"day"`
+	PrimaryValue   string `json:"primary_value"`
+	SecondaryValue string `json:"secondary_value"`
 	Icon           string `json:"icon"`
 	Sunrise        string `json:"sunrise"`
 	Sunset         string `json:"sunset"`
@@ -44,7 +30,7 @@ func NewWeatherService(sse *sse.Server) *WeatherService {
 	return &w
 }
 
-func (w *WeatherService) GetCurrentWeather() *Weather {
+func (w *WeatherService) GetCurrentWeather() []Day {
 	return w.weather
 }
 
@@ -52,6 +38,7 @@ func (w *WeatherService) updateWeather(interval time.Duration) {
 	w.sse.CreateStream("weather")
 
 	for {
+		w.weather = []Day{}
 		settings := config.GetWeatherSettings()
 		res, _ := meteo.GetWeather(meteo.Options{
 			Latitude:  settings.Latitude,
@@ -61,23 +48,22 @@ func (w *WeatherService) updateWeather(interval time.Duration) {
 		})
 		sunrise, _ := time.Parse("2006-01-02T15:04", res.Daily.Sunrise[0])
 		sunset, _ := time.Parse("2006-01-02T15:04", res.Daily.Sunset[0])
-		current := Current{
-			Temperature: fmt.Sprintf("%.1f %s", res.Current.Temperature2m, res.CurrentUnits.Temperature2m),
-			Apparent:    fmt.Sprintf("Feels like %.1f %s", res.Current.ApparentTemperature, res.CurrentUnits.Temperature2m),
-			Humidity:    fmt.Sprintf("%d %s", res.Current.RelativeHumidity, res.CurrentUnits.RelativeHumidity),
-			Icon:        getIcon(res.Current.WeatherCode, res.Current.IsDay == 1),
-			Sunrise:     sunrise.Format("15:04"),
-			Sunset:      sunset.Format("15:04"),
-		}
-		w.weather = &Weather{
-			Current: current,
-		}
-		for i := 1; i < len(res.Daily.TemperatureMax); i++ {
+		w.weather = append(w.weather, Day{
+			Name:           time.Now().Format("Mon 02 Jan"),
+			PrimaryValue:   fmt.Sprintf("%.1f %s", res.Current.Temperature2m, res.CurrentUnits.Temperature2m),
+			SecondaryValue: fmt.Sprintf("%d %s", res.Current.RelativeHumidity, res.CurrentUnits.RelativeHumidity),
+			Icon:           getIcon(res.Current.WeatherCode, res.Current.IsDay == 1),
+			Sunrise:        sunrise.Format("15:04"),
+			Sunset:         sunset.Format("15:04"),
+		})
+		for i := 1; i < 6; i++ {
 			date, _ := time.Parse("2006-01-02", res.Daily.Time[i])
-			w.weather.Forecast = append(w.weather.Forecast, Forecast{
-				Day:            date.Weekday().String(),
-				TemperatureMax: fmt.Sprintf("%.1f %s", res.Daily.TemperatureMax[i], res.DailyUnits.TemperatureMax),
-				TemperatureMin: fmt.Sprintf("%.1f %s", res.Daily.TemperatureMin[i], res.DailyUnits.TemperatureMin),
+			sunrise, _ := time.Parse("2006-01-02T15:04", res.Daily.Sunrise[i])
+			sunset, _ := time.Parse("2006-01-02T15:04", res.Daily.Sunset[i])
+			w.weather = append(w.weather, Day{
+				Name:           date.Format("Mon 02 Jan"),
+				PrimaryValue:   fmt.Sprintf("%.1f %s", res.Daily.TemperatureMax[i], res.DailyUnits.TemperatureMax),
+				SecondaryValue: fmt.Sprintf("%.1f %s", res.Daily.TemperatureMin[i], res.DailyUnits.TemperatureMin),
 				Icon:           getIcon(res.Daily.WeatherCode[i], true),
 				Sunrise:        sunrise.Format("15:04"),
 				Sunset:         sunset.Format("15:04"),

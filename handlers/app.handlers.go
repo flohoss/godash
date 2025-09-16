@@ -13,7 +13,7 @@ type SystemService interface {
 }
 
 type WeatherService interface {
-	GetCurrentWeather() *services.Weather
+	GetCurrentWeather() []services.Day
 }
 
 func NewAppHandler(s SystemService, w WeatherService) *AppHandler {
