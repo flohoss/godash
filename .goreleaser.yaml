@@ -36,6 +36,7 @@ dockers:
       - yarn.lock
       - docker/entrypoint.sh
       - assets/
+      - services/
   - use: buildx
     dockerfile: docker/goreleaser.dockerfile
     goos: linux
@@ -54,6 +55,7 @@ dockers:
       - yarn.lock
       - docker/entrypoint.sh
       - assets/
+      - services/
 
 docker_manifests:
   - name_template: '{{ .Env.IMAGE_NAME }}:{{ .Tag }}'
