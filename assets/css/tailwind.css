@@ -23,15 +23,15 @@
   padding: 1rem;
 
   @media (width >=theme(--breakpoint-sm)) {
-    padding: 2rem;
+    padding: 1.5rem 2rem;
   }
 
   @media (width >=theme(--breakpoint-lg)) {
-    padding: 2.5rem;
+    padding: 2rem 2.5rem;
   }
 
   @media (width >=theme(--breakpoint-xl)) {
-    padding: 3rem;
+    padding: 2.5rem 3rem;
   }
 }
 
