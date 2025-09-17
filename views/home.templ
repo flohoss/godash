@@ -7,7 +7,7 @@ import (
 )
 
 templ Home(bookmarks []config.Category, links []config.Category, static *services.StaticInformation, live *services.LiveInformation, weather []services.Day) {
-	<section class="flex flex-col justify-between min-h-screen">
+	<section class="flex flex-col min-h-screen">
 		<div class="bg-base-200/90 dark:bg-base-200/40">
 			<div class="container grid gap-10 lg:gap-16">
 				@components.Weather(weather)
@@ -19,22 +19,21 @@ templ Home(bookmarks []config.Category, links []config.Category, static *service
 				@components.SystemScript()
 			</div>
 		</div>
-		<div class="container flex-1 py-5 lg:py-10 grid">
-			<div class="flex flex-col justify-evenly h-full gap-10">
-				for _, a := range bookmarks {
-					<div class="grid gap-4">
-						if a.Category != "" {
-							<div class="heading">{ a.Category }</div>
+		<div class="container grid gap-10 py-5 lg:py-10">
+			for _, a := range bookmarks {
+				<div class="grid gap-4">
+					if a.Category != "" {
+						<div class="heading">{ a.Category }</div>
+					}
+					<div class="grid-apps">
+						for _, entry := range a.Entries {
+							@components.Application(entry)
 						}
-						<div class="grid-apps">
-							for _, entry := range a.Entries {
-								@components.Application(entry)
-							}
-						</div>
 					</div>
-				}
-			</div>
+				</div>
+			}
 		</div>
+		<div class="flex-1"></div>
 		<div class="bg-base-200/90 dark:bg-base-200/40 w-full">
 			<div class="footer container grid-apps">
 				for _, l := range links {
