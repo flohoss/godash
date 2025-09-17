@@ -14,11 +14,13 @@ import (
 	"gitlab.unjx.de/flohoss/godash/internal/readable"
 )
 
-func calculatePercentage(used, total uint64) float64 {
+func calculatePercentage(used, total uint64) int {
 	if total == 0 {
-		return 0.0
+		return 0
 	}
-	return (float64(used) / float64(total)) * 100
+
+	percent := (float64(used) / float64(total)) * 100
+	return int(math.Round(percent))
 }
 
 func NewSystemService(sse *sse.Server) *SystemService {
@@ -75,7 +77,7 @@ func (s *SystemService) liveCpu() {
 	if err != nil {
 		return
 	}
-	s.Live.CPU = math.RoundToEven(p[0])
+	s.Live.CPU = int(math.Round(p[0]))
 }
 
 func staticRam() Ram {
@@ -99,7 +101,7 @@ func (s *SystemService) liveRam() {
 		return
 	}
 	s.Live.Ram.Value = readable.ReadableSize(r.Used)
-	s.Live.Ram.Percentage = math.RoundToEven(calculatePercentage(r.Used, r.Total))
+	s.Live.Ram.Percentage = calculatePercentage(r.Used, r.Total)
 }
 
 func staticDisk() Disk {
@@ -123,5 +125,5 @@ func (s *SystemService) liveDisk() {
 		return
 	}
 	s.Live.Disk.Value = readable.ReadableSize(d.Used)
-	s.Live.Disk.Percentage = math.RoundToEven(calculatePercentage(d.Used, d.Total))
+	s.Live.Disk.Percentage = calculatePercentage(d.Used, d.Total)
 }

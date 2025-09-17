@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "fmt"
 
-func System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage float64) templ.Component {
+func System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage int) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -123,9 +123,9 @@ func System(icon string, infoPre string, infoPost string, extraInfo string, perc
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %.0f%%", percentage))
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templruntime.SanitizeStyleAttributeValues(fmt.Sprintf("width: %d%%", percentage))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 14, Col: 148}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 14, Col: 146}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func SystemScript() templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<script>\n\t\tlet systemSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t\t\tsystemSSESource && systemSSESource.close();\n\t\t});\n\t\tsystemSSESource = new EventSource('/sse?stream=system');\n\t\tsystemSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\treplaceSystem(parsed);\n\t\t};\n\n\t\t// system elements\n\t\tconst systemCpuPercentage = document.getElementById('systemCpuPercentage');\n\t\tconst systemRamPercentage = document.getElementById('systemRamPercentage');\n\t\tconst systemRamValue = document.getElementById('systemRamValue');\n\t\tconst systemDiskPercentage = document.getElementById('systemDiskPercentage');\n\t\tconst systemDiskValue = document.getElementById('systemDiskValue');\n\n\t\tfunction replaceSystem(parsed) {\n\t\t\tsystemCpuPercentage.style.width = parsed.cpu;\n\t\t\tsystemRamPercentage.style.width = parsed.ram.percentage;\n\t\t\tsystemDiskPercentage.style.width = parsed.disk.percentage;\n\n\t\t\tsystemRamValue.innerText = parsed.ram.value;\n\t\t\tsystemDiskValue.innerText = parsed.disk.value;\n\t\t}\n  \t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<script>\n\t\tlet systemSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t\t\tsystemSSESource && systemSSESource.close();\n\t\t});\n\t\tsystemSSESource = new EventSource('/sse?stream=system');\n\t\tsystemSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\treplaceSystem(parsed);\n\t\t};\n\n\t\t// system elements\n\t\tconst systemCpuPercentage = document.getElementById('systemCpuPercentage');\n\t\tconst systemRamPercentage = document.getElementById('systemRamPercentage');\n\t\tconst systemRamValue = document.getElementById('systemRamValue');\n\t\tconst systemDiskPercentage = document.getElementById('systemDiskPercentage');\n\t\tconst systemDiskValue = document.getElementById('systemDiskValue');\n\n\t\tfunction replaceSystem(parsed) {\n\t\t\tsystemCpuPercentage.style.width = parsed.cpu + '%';\n\t\t\tsystemRamPercentage.style.width = parsed.ram.percentage + '%';\n\t\t\tsystemDiskPercentage.style.width = parsed.disk.percentage + '%';\n\n\t\t\tsystemRamValue.innerText = parsed.ram.value;\n\t\t\tsystemDiskValue.innerText = parsed.disk.value;\n\t\t}\n  \t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

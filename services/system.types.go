@@ -9,12 +9,12 @@ type SystemService struct {
 }
 
 type LiveStorageInformation struct {
-	Value      string  `json:"value"`
-	Percentage float64 `json:"percentage"`
+	Value      string `json:"value"`
+	Percentage int    `json:"percentage"`
 }
 
 type LiveInformation struct {
-	CPU  float64                `json:"cpu"`
+	CPU  int                    `json:"cpu"`
 	Ram  LiveStorageInformation `json:"ram"`
 	Disk LiveStorageInformation `json:"disk"`
 }
