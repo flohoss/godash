@@ -36,7 +36,7 @@
 }
 
 @utility progress {
-  @apply transition-[width] duration-700;
+  @apply transition-all duration-700;
 }
 
 @utility extra-info {
