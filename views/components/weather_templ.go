@@ -82,9 +82,9 @@ func card(id int, day services.Day) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
-		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("icon-day-%d", id+1))
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("icon-day-%d", id))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 27, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/weather.templ`, Line: 27, Col: 44}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -233,7 +233,7 @@ func Weather(weather []services.Day) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><script>\n\t\tlet weatherSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t  \t\tweatherSSESource && weatherSSESource.close();\n\t\t});\n\t\tweatherSSESource = new EventSource('/sse?stream=weather');\n\t\tweatherSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\tconsole.log(parsed);\n\t\t\treplaceWeather(parsed);\n\t\t};\n\n\t\tfunction replaceWeather(parsed) {\n\t\t\tparsed.forecast.forEach(function(day, index) {\n\t\t\t\tconst icon = document.getElementById('icon-day-' + index);\n\t\t\t\ticon.className.split(' ').forEach(function(className) {\n\t\t\t\t\tif (className.startsWith('icon-')) {\n\t\t\t\t\t\ticon.classList.remove(className);\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\ticon.classList.add(day.icon);\n\t\t\t\tdocument.getElementById('primary-day-' + (index + 1)).innerText = day.temperature_max;\n\t\t\t\tdocument.getElementById('secondary-day-' + (index + 1)).innerText = day.temperature_min;\n\t\t\t})\n\t\t}\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><script>\n\t\tlet weatherSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t  \t\tweatherSSESource && weatherSSESource.close();\n\t\t});\n\t\tweatherSSESource = new EventSource('/sse?stream=weather');\n\t\tweatherSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\tconsole.log(parsed);\n\t\t\treplaceWeather(parsed);\n\t\t};\n\n\t\tfunction replaceWeather(parsed) {\n\t\t\tparsed.forEach(function(day, index) {\n\t\t\t\tconst icon = document.getElementById('icon-day-' + index);\n\t\t\t\ticon.className.split(' ').forEach(function(className) {\n\t\t\t\t\tif (className.startsWith('icon-')) {\n\t\t\t\t\t\ticon.classList.remove(className);\n\t\t\t\t\t}\n\t\t\t\t});\n\t\t\t\ticon.classList.add(day.icon);\n\t\t\t\tdocument.getElementById('primary-day-' + (index + 1)).innerText = day.primary_value;\n\t\t\t\tdocument.getElementById('secondary-day-' + (index + 1)).innerText = day.secondary_value;\n\t\t\t})\n\t\t}\n\t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,26 +1,15 @@
 package components
 
-import "html/template"
-
-var BarTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
-
-type Bar struct {
-	Id         string
-	Percentage float64
-}
-
 templ System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage float64) {
 	<div class="hover-box w-full truncate grid gap-2">
 		<div class="flex justify-start gap-3 items-center">
 			<span class={ "size-8 shrink-0", icon }></span>
 			<div>
 				<div class="text-secondary text-xs">{ extraInfo }</div>
-				<div class="text-xl truncate"><span id={ valueId }>{ infoPre }</span>{ infoPost }</div>
+				<div class="text-md lg:text-xl truncate"><span class="font-semibold text-primary" id={ valueId }>{ infoPre }</span> { infoPost }</div>
 			</div>
 		</div>
-		<div class="progress-bar-wrapper">
-			@templ.FromGoHTML(BarTemplate, Bar{Id: percentageId, Percentage: percentage})
-		</div>
+		<progress id={ percentageId } class="progress rounded-full" value={ percentage } max="100"></progress>
 	</div>
 }
 
@@ -44,10 +33,11 @@ templ SystemScript() {
 		const systemDiskValue = document.getElementById('systemDiskValue');
 
 		function replaceSystem(parsed) {
-			systemCpuPercentage.style = 'width:' + parsed.cpu + '%';
-			systemRamPercentage.style = 'width:' + parsed.ram.percentage + '%';
+			systemCpuPercentage.value = parsed.cpu;
+			systemRamPercentage.value = parsed.ram.percentage;
+			systemDiskPercentage.value = parsed.disk.percentage;
+
 			systemRamValue.innerText = parsed.ram.value;
-			systemDiskPercentage.style = 'width:' + parsed.disk.percentage + '%';
 			systemDiskValue.innerText = parsed.disk.value;
 		}
   	</script>

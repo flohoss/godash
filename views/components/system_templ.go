@@ -8,15 +8,6 @@ package components
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "html/template"
-
-var BarTemplate = template.Must(template.New("bar").Parse("<div id=\"{{ .Id }}\" class=\"progress-bar\" style=\"width: {{ .Percentage }}%\"></div>"))
-
-type Bar struct {
-	Id         string
-	Percentage float64
-}
-
 func System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage float64) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -67,20 +58,20 @@ func System(icon string, infoPre string, infoPost string, extraInfo string, perc
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(extraInfo)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 17, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 8, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><div class=\"text-xl truncate\"><span id=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><div class=\"text-md lg:text-xl truncate\"><span class=\"font-semibold text-primary\" id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(valueId)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 18, Col: 52}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 9, Col: 98}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -93,34 +84,52 @@ func System(icon string, infoPre string, infoPost string, extraInfo string, perc
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(infoPre)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 18, Col: 64}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 9, Col: 110}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</span> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(infoPost)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 18, Col: 83}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 9, Col: 130}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div></div><div class=\"progress-bar-wrapper\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></div></div><progress id=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templ.FromGoHTML(BarTemplate, Bar{Id: percentageId, Percentage: percentage}).Render(ctx, templ_7745c5c3_Buffer)
+		var templ_7745c5c3_Var8 string
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(percentageId)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 12, Col: 29}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" class=\"progress rounded-full\" value=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var9 string
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(percentage)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/components/system.templ`, Line: 12, Col: 80}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "\" max=\"100\"></progress></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -144,12 +153,12 @@ func SystemScript() templ.Component {
 			}()
 		}
 		ctx = templ.InitializeContext(ctx)
-		templ_7745c5c3_Var8 := templ.GetChildren(ctx)
-		if templ_7745c5c3_Var8 == nil {
-			templ_7745c5c3_Var8 = templ.NopComponent
+		templ_7745c5c3_Var10 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var10 == nil {
+			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<script>\n\t\tlet systemSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t\t\tsystemSSESource && systemSSESource.close();\n\t\t});\n\t\tsystemSSESource = new EventSource('/sse?stream=system');\n\t\tsystemSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\treplaceSystem(parsed);\n\t\t};\n\n\t\t// system elements\n\t\tconst systemCpuPercentage = document.getElementById('systemCpuPercentage');\n\t\tconst systemRamPercentage = document.getElementById('systemRamPercentage');\n\t\tconst systemRamValue = document.getElementById('systemRamValue');\n\t\tconst systemDiskPercentage = document.getElementById('systemDiskPercentage');\n\t\tconst systemDiskValue = document.getElementById('systemDiskValue');\n\n\t\tfunction replaceSystem(parsed) {\n\t\t\tsystemCpuPercentage.style = 'width:' + parsed.cpu + '%';\n\t\t\tsystemRamPercentage.style = 'width:' + parsed.ram.percentage + '%';\n\t\t\tsystemRamValue.innerText = parsed.ram.value;\n\t\t\tsystemDiskPercentage.style = 'width:' + parsed.disk.percentage + '%';\n\t\t\tsystemDiskValue.innerText = parsed.disk.value;\n\t\t}\n  \t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<script>\n\t\tlet systemSSESource = null;\n\t\taddEventListener('beforeunload', () => {\n\t\t\tsystemSSESource && systemSSESource.close();\n\t\t});\n\t\tsystemSSESource = new EventSource('/sse?stream=system');\n\t\tsystemSSESource.onmessage = (e) => {\n\t\t\tconst parsed = JSON.parse(e.data);\n\t\t\treplaceSystem(parsed);\n\t\t};\n\n\t\t// system elements\n\t\tconst systemCpuPercentage = document.getElementById('systemCpuPercentage');\n\t\tconst systemRamPercentage = document.getElementById('systemRamPercentage');\n\t\tconst systemRamValue = document.getElementById('systemRamValue');\n\t\tconst systemDiskPercentage = document.getElementById('systemDiskPercentage');\n\t\tconst systemDiskValue = document.getElementById('systemDiskValue');\n\n\t\tfunction replaceSystem(parsed) {\n\t\t\tsystemCpuPercentage.value = parsed.cpu;\n\t\t\tsystemRamPercentage.value = parsed.ram.percentage;\n\t\t\tsystemDiskPercentage.value = parsed.disk.percentage;\n\n\t\t\tsystemRamValue.innerText = parsed.ram.value;\n\t\t\tsystemDiskValue.innerText = parsed.disk.value;\n\t\t}\n  \t</script>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

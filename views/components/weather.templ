@@ -24,7 +24,7 @@ func getClass(id int) string {
 templ card(id int, day services.Day) {
 	<div class={ "hover-box w-full truncate grid gap-2", getClass(id) }>
 		<div class="flex items-center gap-2">
-			<span id={ fmt.Sprintf("icon-day-%d", id+1) } class={ "flex-shrink-0 size-8", day.Icon }></span>
+			<span id={ fmt.Sprintf("icon-day-%d", id) } class={ "flex-shrink-0 size-8", day.Icon }></span>
 			<div class="grid whitespace-nowrap">
 				<div class="text-xs text-secondary">{ day.Name }</div>
 				<div class="flex items-center gap-2">
@@ -67,7 +67,7 @@ templ Weather(weather []services.Day) {
 		};
 
 		function replaceWeather(parsed) {
-			parsed.forecast.forEach(function(day, index) {
+			parsed.forEach(function(day, index) {
 				const icon = document.getElementById('icon-day-' + index);
 				icon.className.split(' ').forEach(function(className) {
 					if (className.startsWith('icon-')) {
@@ -75,8 +75,8 @@ templ Weather(weather []services.Day) {
 					}
 				});
 				icon.classList.add(day.icon);
-				document.getElementById('primary-day-' + (index + 1)).innerText = day.temperature_max;
-				document.getElementById('secondary-day-' + (index + 1)).innerText = day.temperature_min;
+				document.getElementById('primary-day-' + (index + 1)).innerText = day.primary_value;
+				document.getElementById('secondary-day-' + (index + 1)).innerText = day.secondary_value;
 			})
 		}
 	</script>
