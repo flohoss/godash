@@ -3,54 +3,31 @@ package views
 import (
 	"gitlab.unjx.de/flohoss/godash/config"
 	"gitlab.unjx.de/flohoss/godash/services"
-	"gitlab.unjx.de/flohoss/godash/views/components"
+	"gitlab.unjx.de/flohoss/godash/views/bookmarks"
+	"gitlab.unjx.de/flohoss/godash/views/links"
+	"gitlab.unjx.de/flohoss/godash/views/system"
+	"gitlab.unjx.de/flohoss/godash/views/wheater"
 )
 
-templ Home(bookmarks []config.Category, links []config.Category, static *services.StaticInformation, live *services.LiveInformation, weather []services.Day) {
-	<section class="flex flex-col min-h-screen">
-		<div class="bg-base-200/90 dark:bg-base-200/50">
-			<div class="container grid gap-8">
-				@components.Weather(weather)
-				<div class="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-8 select-none">
-					@components.System("icon-[bi--cpu]", static.CPU.Name, "", static.CPU.Threads, "systemCpuPercentage", "", live.CPU)
-					@components.System("icon-[bi--nvme]", live.Disk.Value, static.Disk.Total, static.Disk.Partitions, "systemDiskPercentage", "systemDiskValue", live.Disk.Percentage)
-					@components.System("icon-[bi--memory]", live.Ram.Value, static.Ram.Total, static.Ram.Swap, "systemRamPercentage", "systemRamValue", live.Ram.Percentage)
-				</div>
-				@components.SystemScript()
+templ Home(b []config.Category, l []config.Category, si *services.StaticInformation, li *services.LiveInformation, d []services.Day) {
+	<div class="grid">
+		<div class="container">
+			@weather.Weather(d)
+		</div>
+		<div class="bg-base-200/50">
+			<div class="container">
+				@system.System(si, li)
 			</div>
 		</div>
-		<div class="container grid gap-8 py-5">
-			for _, a := range bookmarks {
-				<div class="grid gap-4">
-					if a.Category != "" {
-						<div class="heading">{ a.Category }</div>
-					}
-					<div class="grid-apps">
-						for _, entry := range a.Entries {
-							@components.Application(entry)
-						}
-					</div>
-				</div>
-			}
-		</div>
-		<div class="flex-1"></div>
-		<div class="bg-base-200/60 w-full">
-			<div class="footer container grid-apps">
-				for _, l := range links {
-					<div class="flex flex-col gap-2">
-						if l.Category != "" {
-							<div class="heading">{ l.Category }</div>
-						} else {
-							<div class="my-[0.9rem]"></div>
-						}
-						for _, entry := range l.Entries {
-							@components.Link(entry)
-						}
-					</div>
-				}
+		<div class="container">
+			<div class="grid gap-8 lg:gap-12">
+				@bookmarks.Bookmarks(b)
+				@links.Links(l)
 			</div>
 		</div>
-	</section>
+	</div>
+	@weather.Script()
+	@system.Script()
 }
 
 templ HomeIndex(

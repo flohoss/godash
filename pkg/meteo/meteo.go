@@ -16,20 +16,22 @@ type WeatherResponse struct {
 	TimezoneAbbreviation string  `json:"timezone_abbreviation"`
 	Elevation            float64 `json:"elevation"`
 	CurrentUnits         struct {
-		Time             string `json:"time"`
-		Interval         string `json:"interval"`
-		Temperature2m    string `json:"temperature_2m"`
-		RelativeHumidity string `json:"relative_humidity_2m"`
-		WeatherCode      string `json:"weather_code"`
-		IsDay            string `json:"is_day"`
+		Time                string `json:"time"`
+		Interval            string `json:"interval"`
+		Temperature2m       string `json:"temperature_2m"`
+		ApparentTemperature string `json:"apparent_temperature"`
+		RelativeHumidity    string `json:"relative_humidity_2m"`
+		WeatherCode         string `json:"weather_code"`
+		IsDay               string `json:"is_day"`
 	} `json:"current_units"`
 	Current struct {
-		Time             string  `json:"time"`
-		Interval         int     `json:"interval"`
-		Temperature2m    float64 `json:"temperature_2m"`
-		RelativeHumidity int     `json:"relative_humidity_2m"`
-		WeatherCode      int     `json:"weather_code"`
-		IsDay            int     `json:"is_day"`
+		Time                string  `json:"time"`
+		Interval            int     `json:"interval"`
+		Temperature2m       float64 `json:"temperature_2m"`
+		ApparentTemperature float64 `json:"apparent_temperature"`
+		RelativeHumidity    int     `json:"relative_humidity_2m"`
+		WeatherCode         int     `json:"weather_code"`
+		IsDay               int     `json:"is_day"`
 	} `json:"current"`
 	DailyUnits struct {
 		Time           string `json:"time"`
@@ -60,7 +62,7 @@ func GetWeather(options Options) (WeatherResponse, error) {
 	url := "https://api.open-meteo.com/v1/forecast"
 	current := "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day"
 	daily := "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset"
-	params := fmt.Sprintf("?latitude=%f&longitude=%f&timezone=%s&temperature_unit=%s&daily=%s&current=%s&forecast_days=14", options.Latitude, options.Longitude, options.TimeZone, options.Units, daily, current)
+	params := fmt.Sprintf("?latitude=%f&longitude=%f&timezone=%s&temperature_unit=%s&daily=%s&current=%s", options.Latitude, options.Longitude, options.TimeZone, options.Units, daily, current)
 
 	resp, err := http.Get(url + params)
 	if err != nil {

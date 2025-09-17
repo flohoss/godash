@@ -1,0 +1,107 @@
+package weather
+
+import (
+	"fmt"
+	"gitlab.unjx.de/flohoss/godash/services"
+)
+
+templ Weather(d []services.Day) {
+	<div class="flex items-center justify-between">
+		@current(d[0])
+		<div class="hidden xl:flex">
+			@forecast(d)
+		</div>
+	</div>
+}
+
+templ current(today services.Day) {
+	<div class="distance w-full items-center justify-between xl:justify-start whitespace-nowrap">
+		<div id="weather-icon-0" class={ "icon size-30", today.Icon }></div>
+		<div class="grid place-items-end xl:place-items-start">
+			<div id="day-name-0" class="text-secondary text-xs">{ today.Name }</div>
+			<div id="temp" class="font-semibold text-2xl">{ today.More.CurrentTemperature }</div>
+			<div class="grid grid-cols-2 place-items-end xl:place-items-start gap-1">
+				<div class="distance text-accent">
+					<span class="order-2 xl:order-1 icon-[carbon--temperature-max]"></span>
+					<div id="max-temp-0" class="order-1 xl:order-2 text-xs">{ today.TemperatureMax }</div>
+				</div>
+				<div class="distance text-accent">
+					<span class="order-2 xl:order-1 icon-[carbon--humidity]"></span>
+					<div id="humidity" class="order-1 xl:order-2 text-xs">{ today.More.Humidity }</div>
+				</div>
+				<div class="distance text-accent">
+					<span class="order-2 xl:order-1 icon-[carbon--temperature-min]"></span>
+					<div id="min-temp-0" class="order-1 xl:order-2 text-xs">{ today.TemperatureMin }</div>
+				</div>
+				<div class="distance text-accent">
+					<span class="order-2 xl:order-1 icon-[carbon--sunrise]"></span>
+					<div id="sunrise" class="order-1 xl:order-2 text-xs">{ today.More.Sunrise }</div>
+				</div>
+				<div class="distance text-accent">
+					<span class="order-2 xl:order-1 icon-[carbon--temperature-feels-like]"></span>
+					<div id="apparent" class="order-1 xl:order-2 text-xs">{ today.More.ApparentTemperature }</div>
+				</div>
+				<div class="distance text-accent">
+					<span class="order-2 xl:order-1 icon-[carbon--sunset]"></span>
+					<div id="sunset" class="order-1 xl:order-2 text-xs">{ today.More.Sunset }</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ forecast(weather []services.Day) {
+	<div class="flex items-center gap-10 whitespace-nowrap">
+		for i := 1; i < len(weather); i++ {
+			<div class="grid place-items-end">
+				<div id={ fmt.Sprintf("weather-icon-%d", i) } class={ "icon", weather[i].Icon }></div>
+				<div id={ fmt.Sprintf("day-name-%d", i) } class="text-secondary text-xs">{ weather[i].Name }</div>
+				<div class="distance">
+					<div id={ fmt.Sprintf("max-temp-%d", i) } class="font-semibold">{ weather[i].TemperatureMax }</div>
+					<span class="icon-[carbon--temperature-max]"></span>
+				</div>
+				<div class="text-accent distance">
+					<div id={ fmt.Sprintf("min-temp-%d", i) } class="text-xs">{ weather[i].TemperatureMin }</div>
+					<span class="icon-[carbon--temperature-min]"></span>
+				</div>
+			</div>
+		}
+	</div>
+}
+
+templ Script() {
+	<script>
+		let weatherSSESource = null;
+		addEventListener('beforeunload', () => {
+	  		weatherSSESource && weatherSSESource.close();
+		});
+		weatherSSESource = new EventSource('/sse?stream=weather');
+		weatherSSESource.onmessage = (e) => {
+			const parsed = JSON.parse(e.data);
+			replaceWeather(parsed);
+		};
+
+		function replaceWeather(parsed) {
+			parsed.forEach(function(day, index) {
+				const icon = document.getElementById('weather-icon-' + index);
+				icon.className.split(' ').forEach(function(className) {
+					if (className.startsWith('icon-')) {
+						icon.classList.remove(className);
+					}
+				});
+				icon.classList.add(day.icon);
+				document.getElementById('day-name-' + index).innerText = day.name;
+				document.getElementById('max-temp-' + index).innerText = day.temperature_max;
+				document.getElementById('min-temp-' + index).innerText = day.temperature_min;
+
+				if (index === 0) {
+					document.getElementById('temp').innerText = day.more.current_temperature;
+					document.getElementById('apparent').innerText = day.more.apparent_temperature;
+					document.getElementById('humidity').innerText = day.more.humidity;
+					document.getElementById('sunrise').innerText = day.more.sunrise;
+					document.getElementById('sunset').innerText = day.more.sunset;
+				}
+			})
+		}
+	</script>
+}

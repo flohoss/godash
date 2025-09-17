@@ -1,0 +1,26 @@
+package links
+
+import "gitlab.unjx.de/flohoss/godash/config"
+
+templ link(link config.App) {
+	<a href={ templ.URL(link.URL) } class="hover-effect">
+		<div class="truncate">{ link.Name }</div>
+	</a>
+}
+
+templ Links(links []config.Category) {
+	<div class="grid-apps">
+		for _, l := range links {
+			<div class="flex flex-col gap-2">
+				if l.Category != "" {
+					<div class="heading">{ l.Category }</div>
+				} else {
+					<div class="my-[0.9rem]"></div>
+				}
+				for _, entry := range l.Entries {
+					@link(entry)
+				}
+			</div>
+		}
+	</div>
+}

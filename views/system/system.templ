@@ -1,0 +1,61 @@
+package system
+
+import (
+	"fmt"
+	"gitlab.unjx.de/flohoss/godash/services"
+)
+
+templ card(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage int) {
+	<div class="w-full truncate distance">
+		<div class="grid w-full gap-1">
+			<div class="flex items-start justify-between">
+				<span class={ "order-1 xl:order-2 size-8 shrink-0", icon }></span>
+				<div class="order-2 xl:order-1 grid place-items-end xl:place-items-start">
+					<div class="text-secondary text-xs">{ extraInfo }</div>
+					<div class="text-md truncate"><span class="font-semibold" id={ valueId }>{ infoPre }</span> <span class="text-accent">{ infoPost }</span></div>
+				</div>
+			</div>
+			<div class="w-full h-1 lg:h-2 rounded-full overflow-hidden bg-base-100">
+				<div id={ percentageId } class="h-1 lg:h-2 transition-[width] duration-1000 ease-in-out bg-base-content" style={ fmt.Sprintf("width: %d%%", percentage) }></div>
+			</div>
+		</div>
+	</div>
+}
+
+templ System(static *services.StaticInformation, live *services.LiveInformation) {
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 select-none">
+		@card("icon-[bi--cpu]", static.CPU.Name, "", static.CPU.Threads, "systemCpuPercentage", "", live.CPU)
+		@card("icon-[bi--nvme]", live.Disk.Value, static.Disk.Total, static.Disk.Partitions, "systemDiskPercentage", "systemDiskValue", live.Disk.Percentage)
+		@card("icon-[bi--memory]", live.Ram.Value, static.Ram.Total, static.Ram.Swap, "systemRamPercentage", "systemRamValue", live.Ram.Percentage)
+	</div>
+}
+
+templ Script() {
+	<script>
+		let systemSSESource = null;
+		addEventListener('beforeunload', () => {
+			systemSSESource && systemSSESource.close();
+		});
+		systemSSESource = new EventSource('/sse?stream=system');
+		systemSSESource.onmessage = (e) => {
+			const parsed = JSON.parse(e.data);
+			replaceSystem(parsed);
+		};
+
+		// system elements
+		const systemCpuPercentage = document.getElementById('systemCpuPercentage');
+		const systemRamPercentage = document.getElementById('systemRamPercentage');
+		const systemRamValue = document.getElementById('systemRamValue');
+		const systemDiskPercentage = document.getElementById('systemDiskPercentage');
+		const systemDiskValue = document.getElementById('systemDiskValue');
+
+		function replaceSystem(parsed) {
+			systemCpuPercentage.style.width = parsed.cpu + '%';
+			systemRamPercentage.style.width = parsed.ram.percentage + '%';
+			systemDiskPercentage.style.width = parsed.disk.percentage + '%';
+
+			systemRamValue.innerText = parsed.ram.value;
+			systemDiskValue.innerText = parsed.disk.value;
+		}
+  	</script>
+}
