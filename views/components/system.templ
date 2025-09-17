@@ -1,5 +1,7 @@
 package components
 
+import "fmt"
+
 templ System(icon string, infoPre string, infoPost string, extraInfo string, percentageId string, valueId string, percentage float64) {
 	<div class="hover-box w-full truncate grid gap-2">
 		<div class="flex justify-start gap-3 items-center">
@@ -9,7 +11,9 @@ templ System(icon string, infoPre string, infoPost string, extraInfo string, per
 				<div class="text-md lg:text-xl truncate"><span class="font-semibold text-primary" id={ valueId }>{ infoPre }</span> { infoPost }</div>
 			</div>
 		</div>
-		<progress id={ percentageId } class="progress rounded-full" value={ percentage } max="100"></progress>
+		<div class="w-full h-1 lg:h-2 rounded-full overflow-hidden bg-primary/10">
+			<div id={ percentageId } class="h-1 lg:h-2 transition-all duration-1000 ease-in-out bg-primary" style={ fmt.Sprintf("width: %.0f%%", percentage) }></div>
+		</div>
 	</div>
 }
 
@@ -33,9 +37,9 @@ templ SystemScript() {
 		const systemDiskValue = document.getElementById('systemDiskValue');
 
 		function replaceSystem(parsed) {
-			systemCpuPercentage.value = parsed.cpu;
-			systemRamPercentage.value = parsed.ram.percentage;
-			systemDiskPercentage.value = parsed.disk.percentage;
+			systemCpuPercentage.style.width = parsed.cpu;
+			systemRamPercentage.style.width = parsed.ram.percentage;
+			systemDiskPercentage.style.width = parsed.disk.percentage;
 
 			systemRamValue.innerText = parsed.ram.value;
 			systemDiskValue.innerText = parsed.disk.value;

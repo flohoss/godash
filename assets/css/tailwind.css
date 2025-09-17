@@ -35,10 +35,6 @@
   }
 }
 
-@utility progress {
-  @apply transition-all duration-700;
-}
-
 @utility extra-info {
   @apply whitespace-nowrap;
 }
@@ -56,5 +52,5 @@
 }
 
 @utility hover-box {
-  @apply lg:text-base-content opacity-85 hover:opacity-100 transition duration-150 hover:scale-105;
+  @apply lg:text-base-content opacity-85 hover:opacity-100 transition duration-150 hover:scale-102;
 }
