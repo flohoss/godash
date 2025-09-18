@@ -6,9 +6,11 @@ import (
 )
 
 templ Weather(d []services.Day) {
-	<div class="hidden xl:flex items-center justify-between">
+	<div class="flex items-center justify-between">
 		@current(d[0])
-		@forecast(d)
+		<div class="hidden xl:flex">
+			@forecast(d)
+		</div>
 	</div>
 }
 

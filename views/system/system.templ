@@ -6,22 +6,22 @@ templ System() {
 	<div id="usageChart" class="w-full h-10 rounded-md overflow-hidden"></div>
 }
 
-templ RamAndDiskBadges(latest services.UsagePoint) {
+templ RamAndDiskBadges(system *services.Buffer) {
 	<div class="absolute -top-2 right-5 distance font-mono">
 		<div class="badge badge-sm distance">
 			<span class="icon-[bi--memory]"></span>
-			<span id="current-ram">{ latest.Ram }</span>
+			<span id="current-ram">{ system.RAM }</span>
 		</div>
 		<div class="badge badge-sm distance">
 			<span class="icon-[bi--hdd]"></span>
-			<span id="current-disk">{ latest.Disk }</span>
+			<span id="current-disk">{ system.Disk }</span>
 		</div>
 	</div>
 }
 
-templ Script(buffer []services.UsagePoint) {
+templ Script(system *services.Buffer) {
 	<script>
-        const initialData = {{ buffer }};
+        const initialData = {{ system }};
         const chartDiv = document.getElementById('usageChart');
 
         function getCSSColor() {
@@ -51,7 +51,7 @@ templ Script(buffer []services.UsagePoint) {
             .style("display", "block");
 
         const pathCPU = svg.append("path")
-            .datum(initialData.map(d => d.cpu))
+            .datum(initialData.cpu)
             .attr("fill", "none")
             .attr("stroke", getCSSColor())
             .attr("stroke-width", 1.5)
@@ -101,12 +101,10 @@ templ Script(buffer []services.UsagePoint) {
             ram.innerText = data.ram;
             disk.innerText = data.disk;
 
-            initialData.push(data);
-            if (initialData.length > 60) initialData.shift();
+            initialData.cpu.push(data.cpu);
+            if (initialData.cpu.length > 60) initialData.cpu.shift();
 
-            const cpuData = initialData.map(d => d.cpu);
-
-            pathCPU.datum(cpuData)
+            pathCPU.datum(initialData.cpu)
                 .transition()
                 .duration(300)
                 .ease(d3.easeLinear)

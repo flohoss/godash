@@ -8,7 +8,7 @@ import (
 )
 
 type SystemService interface {
-	GetBuffer() []services.UsagePoint
+	GetBuffer() *services.Buffer
 }
 
 type WeatherService interface {
