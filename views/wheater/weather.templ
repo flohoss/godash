@@ -6,44 +6,42 @@ import (
 )
 
 templ Weather(d []services.Day) {
-	<div class="flex items-center justify-between">
+	<div class="hidden xl:flex items-center justify-between">
 		@current(d[0])
-		<div class="hidden xl:flex">
-			@forecast(d)
-		</div>
+		@forecast(d)
 	</div>
 }
 
 templ current(today services.Day) {
-	<div class="distance w-full items-center justify-between xl:justify-start whitespace-nowrap">
+	<div class="distance w-full items-center whitespace-nowrap">
 		<div id="weather-icon-0" class={ "icon size-24", today.Icon }></div>
-		<div class="grid place-items-end xl:place-items-start">
+		<div class="grid">
 			<div id="day-name-0" class="text-secondary text-xs">{ today.Name }</div>
 			<div id="temp" class="font-semibold text-2xl">{ today.More.CurrentTemperature }</div>
-			<div class="grid grid-cols-2 place-items-end xl:place-items-start gap-x-4 gap-y-1">
+			<div class="grid grid-cols-2 gap-x-4 gap-y-1">
 				<div class="distance text-accent">
-					<span class="order-2 xl:order-1 icon-[carbon--temperature-max]"></span>
-					<div id="max-temp-0" class="order-1 xl:order-2 text-xs">{ today.TemperatureMax }</div>
+					<span class="icon-[carbon--temperature-max]"></span>
+					<div id="max-temp-0" class="text-xs">{ today.TemperatureMax }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="order-2 xl:order-1 icon-[carbon--humidity]"></span>
-					<div id="humidity" class="order-1 xl:order-2 text-xs">{ today.More.Humidity }</div>
+					<span class="icon-[carbon--humidity]"></span>
+					<div id="humidity" class="text-xs">{ today.More.Humidity }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="order-2 xl:order-1 icon-[carbon--temperature-min]"></span>
-					<div id="min-temp-0" class="order-1 xl:order-2 text-xs">{ today.TemperatureMin }</div>
+					<span class="icon-[carbon--temperature-min]"></span>
+					<div id="min-temp-0" class="text-xs">{ today.TemperatureMin }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="order-2 xl:order-1 icon-[carbon--sunrise]"></span>
-					<div id="sunrise" class="order-1 xl:order-2 text-xs">{ today.More.Sunrise }</div>
+					<span class="icon-[carbon--sunrise]"></span>
+					<div id="sunrise" class="text-xs">{ today.More.Sunrise }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="order-2 xl:order-1 icon-[carbon--temperature-feels-like]"></span>
-					<div id="apparent" class="order-1 xl:order-2 text-xs">{ today.More.ApparentTemperature }</div>
+					<span class="icon-[carbon--temperature-feels-like]"></span>
+					<div id="apparent" class="text-xs">{ today.More.ApparentTemperature }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="order-2 xl:order-1 icon-[carbon--sunset]"></span>
-					<div id="sunset" class="order-1 xl:order-2 text-xs">{ today.More.Sunset }</div>
+					<span class="icon-[carbon--sunset]"></span>
+					<div id="sunset" class="text-xs">{ today.More.Sunset }</div>
 				</div>
 			</div>
 		</div>
