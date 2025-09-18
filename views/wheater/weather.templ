@@ -16,11 +16,11 @@ templ Weather(d []services.Day) {
 
 templ current(today services.Day) {
 	<div class="distance w-full items-center justify-between xl:justify-start whitespace-nowrap">
-		<div id="weather-icon-0" class={ "icon size-30", today.Icon }></div>
+		<div id="weather-icon-0" class={ "icon size-24", today.Icon }></div>
 		<div class="grid place-items-end xl:place-items-start">
 			<div id="day-name-0" class="text-secondary text-xs">{ today.Name }</div>
 			<div id="temp" class="font-semibold text-2xl">{ today.More.CurrentTemperature }</div>
-			<div class="grid grid-cols-2 place-items-end xl:place-items-start gap-1">
+			<div class="grid grid-cols-2 place-items-end xl:place-items-start gap-x-4 gap-y-1">
 				<div class="distance text-accent">
 					<span class="order-2 xl:order-1 icon-[carbon--temperature-max]"></span>
 					<div id="max-temp-0" class="order-1 xl:order-2 text-xs">{ today.TemperatureMax }</div>

@@ -9,14 +9,23 @@ import (
 	"gitlab.unjx.de/flohoss/godash/views/wheater"
 )
 
-templ Home(b []config.Category, l []config.Category, si *services.StaticInformation, li *services.LiveInformation, d []services.Day) {
+templ Home(b []config.Category, l []config.Category, s []services.UsagePoint, d []services.Day) {
+	{{
+		var latest services.UsagePoint
+		if len(s) == 0 {
+			latest = services.UsagePoint{}
+		} else {
+			latest = s[len(s)-1]
+		}
+	}}
 	<div class="grid">
 		<div class="container">
 			@weather.Weather(d)
 		</div>
 		<div class="bg-base-200/50">
-			<div class="container">
-				@system.System(si, li)
+			<div class="container relative">
+				@system.RamAndDiskBadges(latest)
+				@system.System()
 			</div>
 		</div>
 		<div class="container">
@@ -27,7 +36,7 @@ templ Home(b []config.Category, l []config.Category, si *services.StaticInformat
 		</div>
 	</div>
 	@weather.Script()
-	@system.Script()
+	@system.Script(s)
 }
 
 templ HomeIndex(

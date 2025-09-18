@@ -8,8 +8,7 @@ import (
 )
 
 type SystemService interface {
-	GetLiveInformation() *services.LiveInformation
-	GetStaticInformation() *services.StaticInformation
+	GetBuffer() []services.UsagePoint
 }
 
 type WeatherService interface {
@@ -29,9 +28,8 @@ type AppHandler struct {
 }
 
 func (bh *AppHandler) handleIndex(ctx echo.Context) error {
-	staticSystem := bh.systemService.GetStaticInformation()
-	liveSystem := bh.systemService.GetLiveInformation()
+	buffer := bh.systemService.GetBuffer()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	return render(ctx, views.HomeIndex(config.GetTitle(), views.Home(config.GetApplications(), config.GetLinks(), staticSystem, liveSystem, weather)))
+	return render(ctx, views.HomeIndex(config.GetTitle(), views.Home(config.GetApplications(), config.GetLinks(), buffer, weather)))
 }

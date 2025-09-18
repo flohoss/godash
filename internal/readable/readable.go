@@ -28,7 +28,19 @@ func amountString(size uint64) (uint64, string) {
 	}
 }
 
-func ReadableSize(size uint64) string {
-	unit, unitStr := amountString(size)
-	return fmt.Sprintf("%.2f %s", float64(size)/float64(unit), unitStr)
+func ReadableSizeWithUnit(size uint64, unit uint64) float64 {
+	return float64(size) / float64(unit)
+}
+
+func ReadableSizePair(size1, size2 uint64) string {
+	maxSize := size1
+	if size2 > size1 {
+		maxSize = size2
+	}
+	unit, unitStr := amountString(maxSize)
+	return fmt.Sprintf("%.2f / %.2f %s",
+		ReadableSizeWithUnit(size1, unit),
+		ReadableSizeWithUnit(size2, unit),
+		unitStr,
+	)
 }
