@@ -1,13 +1,6 @@
 # GoDash
 
-<div align="center">
-
-[![goreleaser](https://github.com/flohoss/godash/actions/workflows/release.yaml/badge.svg?branch=main)](https://github.com/flohoss/godash/actions/workflows/release.yaml)
-[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/gomods/athens.svg)](https://github.com/flohoss/godash)
-
 goDash is a simple, customizable dashboard written in Go. It provides an overview of weather information, system status, and bookmarks with icons and links.
-
-</div>
 
 # Table of Contents
 
@@ -15,28 +8,37 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
 - [Table of Contents](#table-of-contents)
   - [Features](#features)
   - [Screenshots](#screenshots)
+    - [Mobile](#mobile)
+    - [Desktop](#desktop)
   - [Configuration](#configuration)
-    - [Legend](#legend)
+    - [Config](#config)
   - [Docker](#docker)
     - [run command](#run-command)
     - [compose file](#compose-file)
-  - [Example bookmarks.yaml](#example-bookmarksyaml)
   - [✨ Star History](#-star-history)
   - [License](#license)
   - [Contributing](#contributing)
 
 ## Features
 
-- Displays current weather information
+- Displays current weather
+- Displays weather forcast for up to 6 days
 - Shows system status and resource usage
 - Provides quick access to bookmarks with icons and links
 - Lightweight and easy to deploy with Docker
 
 ## Screenshots
 
-<img src="img/dark.png" width="500px">
+<div align="left">
 
-<img src="img/light.png" width="500px">
+### Mobile
+
+<img src="img/mobile.webp" width="200px">
+
+### Desktop
+
+<img src="img/desktop.webp" width="600px">
+</div>
 
 ## Configuration
 
@@ -55,17 +57,64 @@ WEATHER_LANG=en
 WEATHER_DIGITS=false
 ```
 
-### Legend
+### Config
 
-- `TZ` - Time zone (e.g., `Europe/Berlin`)
-- `TITLE` - Title of the dashboard
-- `PUBLIC_URL` - Publicly accessible URL
-- `PORT` - Port on which the service runs
-- `LOCATION_LATITUDE` / `LOCATION_LONGITUDE` - Coordinates for weather data
-- `WEATHER_KEY` - API key for weather service
-- `WEATHER_UNITS` - Units for weather (metric/imperial)
-- `WEATHER_LANG` - Language for weather information
-- `WEATHER_DIGITS` - Display digits in weather data (true/false)
+At startup, godash will look for a `config.yaml` file in the current directory or create one. If it exists, it will be used to override the default values.
+
+Icons can be stored in a folder called icons or godash will automatically download from [https://selfh.st/icons/](https://selfh.st/icons/) with the prefix `sh/`
+
+```yaml
+log_level: "info"  # Valid options: debug, info, warn, error
+time_zone: "America/New_York"  # Must be a valid IANA timezone (e.g., America/New_York, Europe/London)
+title: "My Dashboard"  # Any string
+
+server:
+  address: "0.0.0.0"  # Valid IPv4 address, defaults to 0.0.0.0
+  port: 8080  # Optional, must be between 1024 and 65535, defaults to 8080
+
+weather:
+  units: "celsius"  # Valid options: celsius, fahrenheit
+  latitude: 40.7128  # Optional, must be a valid latitude (-90 to 90)
+  longitude: -74.0060  # Optional, must be a valid longitude (-180 to 180)
+
+applications:
+  - category: "Productivity"  # Any string
+    entries:
+      - name: "Notion"  # Any string
+        icon: "notion.png"  # File name or path for icon
+        ignore_dark: false  # should not use the light icon even though it exists in dark mode
+        url: "https://www.notion.so"  # Optional, must be a valid URL
+      - name: "Slack"
+        icon: "sh/slack.svg" # Use self-hosted icons
+        ignore_dark: true
+        url: "https://slack.com"
+
+  - category: "Entertainment"
+    entries:
+      - name: "YouTube"
+        icon: "youtube.png"
+        ignore_dark: false
+        url: "https://www.youtube.com"
+      - name: "Spotify"
+        icon: "spotify.png"
+        ignore_dark: false
+        url: "https://www.spotify.com"
+
+links:
+  - category: "Work"
+    entries:
+      - name: "GitHub"
+        url: "https://github.com"
+      - name: "Jira"
+        url: "https://jira.com"
+
+  - category: "Social"
+    entries:
+      - name: "Twitter"
+        url: "https://twitter.com"
+      - name: "LinkedIn"
+        url: "https://linkedin.com"
+```
 
 ## Docker
 
@@ -75,8 +124,7 @@ WEATHER_DIGITS=false
 docker run -d \
   --name godash \
   --restart always \
-  --env-file .env \
-  -v ./storage:/app/storage \
+  -v ./config:/app/config \
   ghcr.io/flohoss/godash:latest
 ```
 
@@ -88,33 +136,8 @@ services:
     restart: always
     image: ghcr.io/flohoss/godash:latest
     container_name: godash
-    env_file:
-      - ./.env
     volumes:
-      - ./storage:/app/storage
-```
-
-## Example bookmarks.yaml
-
-The page is configured by a simple file. Icons can be stored in a folder called icons or downloaded from [https://selfh.st/icons/](https://selfh.st/icons/) with the prefix `sh/`.
-
-```yml
-links:
-  - category: "Code"
-    entries:
-      - name: "Github"
-        url: "https://github.com"
-
-applications:
-  - category: "Code"
-    entries:
-    - name: "GitHub"
-      icon: "sh/github"
-      ignore_dark: true # does not use the light icon even though it exists in dark mode
-      url: "https://github.com"
-    - name: "Home Assistant"
-      icon: "sh/home-assistant"
-      url: "https://www.home-assistant.io/"`
+      - ./config:/app/config
 ```
 
 ## ✨ Star History
