@@ -2,6 +2,8 @@ package services
 
 import (
 	"encoding/json"
+	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -19,9 +21,10 @@ type SystemService struct {
 }
 
 type Buffer struct {
-	CPU  []float64 `json:"cpu"`
-	RAM  string    `json:"ram"`
-	Disk string    `json:"disk"`
+	CPUStr string    `json:"cpu_str"`
+	CPU    []float64 `json:"cpu"`
+	RAM    string    `json:"ram"`
+	Disk   string    `json:"disk"`
 }
 
 func NewSystemService(sse *sse.Server) *SystemService {
@@ -60,11 +63,12 @@ func (s *SystemService) collect() {
 		}
 
 		s.mu.Lock()
-
 		s.buffer.CPU = append(s.buffer.CPU, cpuPercent[0])
 		if len(s.buffer.CPU) > 60 {
 			s.buffer.CPU = s.buffer.CPU[1:]
 		}
+
+		s.buffer.CPUStr = fmt.Sprintf("%.0f %%", math.RoundToEven(cpuPercent[0]))
 
 		s.buffer.RAM = readable.ReadableSizePair(memStat.Used, memStat.Total)
 		s.buffer.Disk = readable.ReadableSizePair(diskStat.Used, diskStat.Total)
@@ -73,13 +77,15 @@ func (s *SystemService) collect() {
 		s.mu.Unlock()
 
 		data, _ := json.Marshal(struct {
-			CPU  float64 `json:"cpu"`
-			RAM  string  `json:"ram"`
-			Disk string  `json:"disk"`
+			CurrentCPU string  `json:"cpu_str"`
+			CPU        float64 `json:"cpu"`
+			RAM        string  `json:"ram"`
+			Disk       string  `json:"disk"`
 		}{
-			CPU:  snapshot.CPU[len(snapshot.CPU)-1],
-			RAM:  snapshot.RAM,
-			Disk: snapshot.Disk,
+			CurrentCPU: snapshot.CPUStr,
+			CPU:        snapshot.CPU[len(snapshot.CPU)-1],
+			RAM:        snapshot.RAM,
+			Disk:       snapshot.Disk,
 		})
 		s.sse.Publish("system", &sse.Event{Data: data})
 	}
