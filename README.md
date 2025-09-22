@@ -10,8 +10,7 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
   - [Screenshots](#screenshots)
     - [Mobile](#mobile)
     - [Desktop](#desktop)
-  - [Configuration](#configuration)
-    - [Config](#config)
+  - [Config](#config)
   - [Docker](#docker)
     - [run command](#run-command)
     - [compose file](#compose-file)
@@ -40,24 +39,7 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
 <img src="img/desktop.webp" width="600px">
 </div>
 
-## Configuration
-
-goDash is configured using environment variables. Below is an example `.env` file:
-
-```
-TZ=Europe/Berlin
-TITLE=My Dashboard
-PUBLIC_URL=https://mydashboard.example.com
-PORT=4000
-LOCATION_LATITUDE=48.7803
-LOCATION_LONGITUDE=9.1780
-WEATHER_KEY=your_openweather_api_key
-WEATHER_UNITS=metric
-WEATHER_LANG=en
-WEATHER_DIGITS=false
-```
-
-### Config
+## Config
 
 At startup, godash will look for a `config.yaml` file in the current directory or create one. If it exists, it will be used to override the default values.
 
@@ -65,17 +47,17 @@ Icons can be stored in a folder called icons or godash will automatically downlo
 
 ```yaml
 log_level: "info"  # Valid options: debug, info, warn, error
-time_zone: "America/New_York"  # Must be a valid IANA timezone (e.g., America/New_York, Europe/London)
+time_zone: "Europe/Berlin"  # Must be a valid IANA timezone (e.g., America/New_York, Europe/London)
 title: "My Dashboard"  # Any string
 
 server:
   address: "0.0.0.0"  # Valid IPv4 address, defaults to 0.0.0.0
-  port: 8080  # Optional, must be between 1024 and 65535, defaults to 8080
+  port: 8156  # Optional, must be between 1024 and 65535, defaults to 8156
 
 weather:
   units: "celsius"  # Valid options: celsius, fahrenheit
-  latitude: 40.7128  # Optional, must be a valid latitude (-90 to 90)
-  longitude: -74.0060  # Optional, must be a valid longitude (-180 to 180)
+  latitude: 52.5163  # Optional, must be a valid latitude (-90 to 90)
+  longitude: 13.3776  # Optional, must be a valid longitude (-180 to 180)
 
 applications:
   - category: "Productivity"  # Any string

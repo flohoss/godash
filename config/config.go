@@ -57,6 +57,13 @@ type App struct {
 	IgnoreDark bool   `mapstructure:"ignore_dark"`
 }
 
+type AppConfig struct {
+	Name       string `mapstructure:"name"`
+	Icon       string `mapstructure:"icon"`
+	URL        string `mapstructure:"url"`
+	IgnoreDark bool   `mapstructure:"ignore_dark"`
+}
+
 func init() {
 	os.Mkdir(ConfigFolder, os.ModePerm)
 	os.Mkdir(iconsFolder, os.ModePerm)
@@ -65,13 +72,36 @@ func init() {
 
 func New() {
 	viper.SetDefault("log_level", "info")
-	viper.SetDefault("time_zone", "Etc/UTC")
+	viper.SetDefault("time_zone", "Europe/Berlin")
 	viper.SetDefault("server.address", "0.0.0.0")
 	viper.SetDefault("server.port", 8156)
-	viper.SetDefault("title", "goDash")
-	viper.SetDefault("weather.units", "metric")
-	viper.SetDefault("weather.language", "en")
-	viper.SetDefault("applications", []Category{})
+	viper.SetDefault("title", "GoDash")
+	viper.SetDefault("weather.units", "celsius")
+	viper.SetDefault("weather.latitude", 52.5163)
+	viper.SetDefault("weather.longitude", 13.3776)
+	viper.SetDefault("applications", []map[string]interface{}{
+		{
+			"category": "Applications",
+			"entries": []map[string]interface{}{
+				{
+					"name": "GoDash",
+					"icon": "sh/homebox",
+					"url":  "https://gitlab.unjx.de/flohoss/godash",
+				},
+			},
+		},
+	})
+	viper.SetDefault("links", []map[string]interface{}{
+		{
+			"category": "Applications",
+			"entries": []map[string]interface{}{
+				{
+					"name": "GoDash",
+					"url":  "https://gitlab.unjx.de/flohoss/godash",
+				},
+			},
+		},
+	})
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
