@@ -8,14 +8,12 @@ import (
 templ Weather(d []services.Day) {
 	<div class="flex items-center justify-between">
 		@current(d[0])
-		<div class="hidden xl:flex">
-			@forecast(d)
-		</div>
+		@forecast(d)
 	</div>
 }
 
 templ current(today services.Day) {
-	<div class="distance w-full items-center whitespace-nowrap">
+	<div class="flex items-center gap-8 w-full whitespace-nowrap">
 		<div id="weather-icon-0" class={ "icon size-24", today.Icon }></div>
 		<div class="grid">
 			<div id="day-name-0" class="text-secondary text-xs">{ today.Name }</div>
@@ -50,10 +48,21 @@ templ current(today services.Day) {
 	</div>
 }
 
+func weatherDisplay(i int) string {
+	if i > 4 {
+		return "xl:grid"
+	} else if i > 2 {
+		return "lg:grid"
+	} else if i > 1 {
+		return "md:grid"
+	}
+	return "sm:grid"
+}
+
 templ forecast(weather []services.Day) {
 	<div class="flex items-center gap-10 whitespace-nowrap">
 		for i := 1; i < len(weather); i++ {
-			<div class="grid place-items-end">
+			<div class={ "hidden place-items-end", weatherDisplay(i) }>
 				<div id={ fmt.Sprintf("weather-icon-%d", i) } class={ "icon", weather[i].Icon }></div>
 				<div id={ fmt.Sprintf("day-name-%d", i) } class="text-secondary text-xs">{ weather[i].Name }</div>
 				<div class="distance">
