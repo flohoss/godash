@@ -41,13 +41,13 @@ templ Home(title string, b []config.Category, l []config.Category, s *services.B
 		</head>
 		<body>
 			<main id="main" class="grid">
-				<div class="container mt-4 mb-8 md:mt-8 md:mb-12 lg:mt-10 lg:mb-14">
+				<div class="container mt-4 mb-8 md:my-8 lg:my-10">
 					@weather.Weather(d)
 				</div>
 				<div class="container relative">
 					@system.RamAndDiskBadges(s)
 				</div>
-				<div class="bg-base-200/50 overflow-hidden">
+				<div class="bg-base-200 overflow-hidden">
 					<div class="container">
 						@system.System()
 					</div>
