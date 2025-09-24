@@ -31,5 +31,5 @@ func (bh *AppHandler) handleIndex(ctx echo.Context) error {
 	buffer := bh.systemService.GetBuffer()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	return render(ctx, views.HomeIndex(config.GetTitle(), views.Home(config.GetApplications(), config.GetLinks(), buffer, weather)))
+	return render(ctx, views.Home(config.GetTitle(), config.GetApplications(), config.GetLinks(), buffer, weather))
 }

@@ -7,35 +7,55 @@ import (
 	"gitlab.unjx.de/flohoss/godash/views/links"
 	"gitlab.unjx.de/flohoss/godash/views/system"
 	"gitlab.unjx.de/flohoss/godash/views/wheater"
+	"os"
+	"time"
 )
 
-templ Home(b []config.Category, l []config.Category, s *services.Buffer, d []services.Day) {
-	<div class="grid">
-		<div class="container">
-			@weather.Weather(d)
-		</div>
-		<div class="bg-base-200/50 mt-4 md:mt-2 lg:mt-0">
-			<div class="container relative">
-				@system.RamAndDiskBadges(s)
-				@system.System()
-			</div>
-		</div>
-		<div class="container">
-			<div class="grid gap-8 lg:gap-12">
-				@bookmarks.Bookmarks(b)
-				@links.Links(l)
-			</div>
-		</div>
-	</div>
-	@weather.Script()
-	@system.Script(s)
+func appendVersionQuery(url string) string {
+	version := os.Getenv("VERSION")
+	if version == "" {
+		version = time.Now().Format("20060102150405")
+	}
+	return url + "?v=" + version
 }
 
-templ HomeIndex(
-	title string,
-	cmp templ.Component,
-) {
-	@Base(title) {
-		@cmp
-	}
+templ Home(title string, b []config.Category, l []config.Category, s *services.Buffer, d []services.Day) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<title>{ title }</title>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta name="description" content="A blazing fast start-page for services written in Go "/>
+			<meta name="theme-color" content="#d07915"/>
+			<link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico"/>
+			<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png"/>
+			<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png"/>
+			<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
+			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
+			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
+			<script src={ appendVersionQuery("/assets/js/uplot.min.js") }></script>
+			@weather.Script()
+			@system.Script(s)
+		</head>
+		<body>
+			<main class="grid">
+				<div class="container">
+					@weather.Weather(d)
+				</div>
+				<div class="bg-base-200/50 mt-4 md:mt-2 lg:mt-0">
+					<div class="container relative">
+						@system.RamAndDiskBadges(s)
+						@system.System()
+					</div>
+				</div>
+				<div class="container">
+					<div class="grid gap-8 lg:gap-12">
+						@bookmarks.Bookmarks(b)
+						@links.Links(l)
+					</div>
+				</div>
+			</main>
+		</body>
+	</html>
 }
