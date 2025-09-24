@@ -85,7 +85,17 @@ func (s *SystemService) collect() {
 		snapshot := s.buffer
 		s.mu.Unlock()
 
-		data, _ := json.Marshal(snapshot)
+		data, _ := json.Marshal(struct {
+			CurrentCPU string `json:"cpu_str"`
+			CPU        CPU    `json:"cpu"`
+			RAM        string `json:"ram"`
+			Disk       string `json:"disk"`
+		}{
+			CurrentCPU: snapshot.CPUStr,
+			CPU:        snapshot.CPU[len(snapshot.CPU)-1],
+			RAM:        snapshot.RAM,
+			Disk:       snapshot.Disk,
+		})
 		s.sse.Publish("system", &sse.Event{Data: data})
 	}
 }

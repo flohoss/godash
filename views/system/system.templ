@@ -3,7 +3,7 @@ package system
 import "gitlab.unjx.de/flohoss/godash/services"
 
 templ System() {
-	<canvas id="chart" width="1000" height="100" class="w-full h-18 rounded-md overflow-hidden"></canvas>
+	<canvas id="chart" class="w-full h-24 block"></canvas>
 }
 
 templ RamAndDiskBadges(system *services.Buffer) {
@@ -27,39 +27,46 @@ templ Script(system *services.Buffer) {
 	<script>
         function getCSSColor() {
             return getComputedStyle(document.documentElement)
-            .getPropertyValue('--color-primary')
-            .trim();
+                .getPropertyValue('--color-primary')
+                .trim();
         }
 
         const initialData = {{ system }};
-        const dataSet = new TimeSeries();
-        for (let i = 0; i < initialData.cpu.length; i++) {
-            dataSet.append(initialData.cpu[i].time, initialData.cpu[i].percent);
-        }
+
+        const formattedInitialData = initialData.cpu.map(c => ({
+            x: c.time,
+            y: c.percent
+        }));
+
+        const ctx = document.getElementById('chart').getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        let latestCPU;
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: { datasets: [{ data: formattedInitialData, borderColor: getCSSColor(), backgroundColor: 'transparent', pointRadius: 0, tension: 0.5, borderWidth: 2 }] },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                devicePixelRatio: window.devicePixelRatio,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: { 
+                    x: { type: 'realtime', realtime: { duration: 57000, refresh: 1000, delay: 2000, onRefresh: chart => { if (latestCPU) chart.data.datasets[0].data.push({x: latestCPU.time, y: latestCPU.percent}); } }, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } },
+                    y: { min: -2, max: 102, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } }
+                }
+            },
+            plugins: [ChartStreaming]
+        });
 
         const systemSSESource = new EventSource('/sse?stream=system');
         systemSSESource.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            const latest = data.cpu[data.cpu.length - 1];
-            dataSet.append(latest.time, latest.percent);
+            latestCPU = data.cpu;
 
             document.getElementById('current-ram').innerText = data.ram;
             document.getElementById('current-disk').innerText = data.disk;
             document.getElementById('current-cpu').innerText = data.cpu_str;
         };
-
-        var chart = new SmoothieChart(
-            {
-                millisPerPixel: 60,
-                grid: { fillStyle: 'transparent', strokeStyle: 'transparent', borderVisible: false },
-                labels: { fillStyle: 'transparent', disabled: true },
-                maxValue: 100,
-                minValue: -0.1
-            }
-        );
-        const canvas = document.getElementById('chart');
-
-        chart.addTimeSeries(dataSet, { lineWidth: 2, strokeStyle: getCSSColor() });
-        chart.streamTo(canvas, 500);
     </script>
 }

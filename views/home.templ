@@ -34,28 +34,33 @@ templ Home(title string, b []config.Category, l []config.Category, s *services.B
 			<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
 			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
 			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
-			<script src={ appendVersionQuery("/assets/js/uplot.min.js") }></script>
-			@weather.Script()
-			@system.Script(s)
+			<script src={ appendVersionQuery("/assets/js/chart.min.js") }></script>
+			<script src={ appendVersionQuery("/assets/js/luxon.min.js") }></script>
+			<script src={ appendVersionQuery("/assets/js/chartjs-adapter-luxon.min.js") }></script>
+			<script src={ appendVersionQuery("/assets/js/chartjs-plugin-streaming.min.js") }></script>
 		</head>
 		<body>
-			<main class="grid">
-				<div class="container">
+			<main id="main" class="grid">
+				<div class="container mt-4 mb-8 md:mt-8 md:mb-12 lg:mt-10 lg:mb-14">
 					@weather.Weather(d)
 				</div>
-				<div class="bg-base-200/50 mt-4 md:mt-2 lg:mt-0">
-					<div class="container relative">
-						@system.RamAndDiskBadges(s)
+				<div class="container relative">
+					@system.RamAndDiskBadges(s)
+				</div>
+				<div class="bg-base-200/50 overflow-hidden">
+					<div class="container">
 						@system.System()
 					</div>
 				</div>
-				<div class="container">
+				<div class="container my-4 md:my-8 lg:my-10 xl:my-14">
 					<div class="grid gap-8 lg:gap-12">
 						@bookmarks.Bookmarks(b)
 						@links.Links(l)
 					</div>
 				</div>
 			</main>
+			@weather.Script()
+			@system.Script(s)
 		</body>
 	</html>
 }
