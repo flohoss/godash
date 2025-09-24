@@ -3,7 +3,7 @@ package system
 import "gitlab.unjx.de/flohoss/godash/services"
 
 templ System() {
-	<div id="usageChart" class="w-full h-10 rounded-md overflow-hidden"></div>
+	<canvas id="chart" width="1000" height="100" class="w-full h-18 rounded-md overflow-hidden"></canvas>
 }
 
 templ RamAndDiskBadges(system *services.Buffer) {
@@ -25,134 +25,41 @@ templ RamAndDiskBadges(system *services.Buffer) {
 
 templ Script(system *services.Buffer) {
 	<script>
-        const initialData = {{ system }};
-        const chartDiv = document.getElementById('usageChart');
-
         function getCSSColor() {
             return getComputedStyle(document.documentElement)
             .getPropertyValue('--color-primary')
             .trim();
         }
 
-        // chart dimensions
-        const bbox = chartDiv.getBoundingClientRect();
-        let width = Math.max(1, Math.round(bbox.width));
-        let height = Math.max(1, Math.round(bbox.height));
+        const initialData = {{ system }};
+        const dataSet = new TimeSeries();
+        for (let i = 0; i < initialData.cpu.length; i++) {
+            dataSet.append(initialData.cpu[i].time, initialData.cpu[i].percent);
+        }
 
-        let x = d3.scaleLinear().domain([0, 59]).range([0, width]);
-        const y = d3.scaleLinear().domain([0, 100]).range([height, 0]);
-
-        const lineCPU = d3.line()
-            .x((_, i) => x(i))
-            .y(d => y(d))
-            .curve(d3.curveBasis);
-
-        const svg = d3.select("#usageChart")
-            .append("svg")
-            .attr("viewBox", `0 0 ${width} ${height}`)
-            .attr("preserveAspectRatio", "none")
-            .style("width", "100%")
-            .style("height", "100%")
-            .style("display", "block");
-
-        const pathCPU = svg.append("path")
-            .attr("fill", "none")
-            .attr("stroke", getCSSColor())
-            .attr("stroke-width", 1.5);
-
-        // react to theme changes
-        const classObserver = new MutationObserver(() => {
-            pathCPU.attr("stroke", getCSSColor());
-        });
-        classObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-        const darkModeMedia = window.matchMedia('(prefers-color-scheme: dark)');
-        darkModeMedia.addEventListener('change', () => {
-            pathCPU.attr("stroke", getCSSColor());
-        });
-
-        // --- Streaming setup ---
-        const visibleCount = 60;
-        const bufferCount = visibleCount + 1; // 60 visible + 1 offscreen
-        const sampleInterval = 1000; // expected SSE interval in ms
-
-        let latestValue = (initialData.cpu && initialData.cpu.length)
-            ? initialData.cpu[initialData.cpu.length - 1]
-            : 0;
-
-        initialData.cpu = initialData.cpu ? initialData.cpu.slice(-bufferCount) : [];
-        while (initialData.cpu.length < bufferCount) initialData.cpu.unshift(latestValue);
-
-        pathCPU.datum(initialData.cpu).attr("d", lineCPU);
-
-        // animation state
-        let offset = 0;
-        let lastTime = Date.now();
-        const stepPx = () => x(1) - x(0);
-        const pxPerMs = () => stepPx() / sampleInterval;
-
-        // SSE: only updates latestValue + stats
         const systemSSESource = new EventSource('/sse?stream=system');
         systemSSESource.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            latestValue = data.cpu;
+            const latest = data.cpu[data.cpu.length - 1];
+            dataSet.append(latest.time, latest.percent);
 
             document.getElementById('current-ram').innerText = data.ram;
             document.getElementById('current-disk').innerText = data.disk;
             document.getElementById('current-cpu').innerText = data.cpu_str;
         };
 
-        // continuous animation
-        const timerHandle = d3.timer(() => {
-            const now = Date.now();
-            const dt = now - lastTime;
-            lastTime = now;
-
-            offset -= dt * pxPerMs();
-
-            if (offset <= -stepPx()) {
-            offset += stepPx();
-            initialData.cpu.push(latestValue);
-            if (initialData.cpu.length > bufferCount) initialData.cpu.shift();
-
-            pathCPU
-                .datum(initialData.cpu)
-                .attr("d", lineCPU)
-                .attr("transform", `translate(${offset},0)`);
-            } else {
-            pathCPU.attr("transform", `translate(${offset},0)`);
+        var chart = new SmoothieChart(
+            {
+                millisPerPixel: 60,
+                grid: { fillStyle: 'transparent', strokeStyle: 'transparent', borderVisible: false },
+                labels: { fillStyle: 'transparent', disabled: true },
+                maxValue: 100,
+                minValue: -0.1
             }
-        });
+        );
+        const canvas = document.getElementById('chart');
 
-        // resize handling
-        const resizeObserver = new ResizeObserver(entries => {
-            const r = entries[0].contentRect;
-            const newW = Math.max(1, Math.round(r.width));
-            const newH = Math.max(1, Math.round(r.height));
-            if (newW === width && newH === height) return;
-
-            width = newW;
-            height = newH;
-
-            x.range([0, width]);
-            y.range([height, 0]);
-            svg.attr("viewBox", `0 0 ${width} ${height}`);
-
-            offset = 0;
-            lastTime = Date.now();
-            pathCPU
-            .datum(initialData.cpu)
-            .attr("d", lineCPU)
-            .attr("transform", null);
-        });
-        resizeObserver.observe(chartDiv);
-
-        // cleanup
-        addEventListener('beforeunload', () => {
-            systemSSESource.close();
-            resizeObserver.disconnect();
-            classObserver.disconnect();
-            timerHandle.stop();
-        });
+        chart.addTimeSeries(dataSet, { lineWidth: 2, strokeStyle: getCSSColor() });
+        chart.streamTo(canvas, 500);
     </script>
 }
