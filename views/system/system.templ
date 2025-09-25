@@ -3,7 +3,7 @@ package system
 import "gitlab.unjx.de/flohoss/godash/services"
 
 templ System() {
-	<canvas id="chart" class="w-full h-24 block"></canvas>
+	<canvas id="chart" class="w-full h-20 block"></canvas>
 }
 
 templ RamAndDiskBadges(system *services.Buffer) {
@@ -53,7 +53,7 @@ templ Script(system *services.Buffer) {
                 plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 scales: { 
                     x: { type: 'realtime', realtime: { duration: 57000, refresh: 1000, delay: 2000, onRefresh: chart => { if (latestCPU) chart.data.datasets[0].data.push({x: latestCPU.time, y: latestCPU.percent}); } }, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } },
-                    y: { min: -2, max: 102, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } }
+                    y: { min: -5, max: 105, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } }
                 }
             },
             plugins: [ChartStreaming]
