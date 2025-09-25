@@ -20,27 +20,27 @@ templ current(today services.Day) {
 			<div id="temp" class="font-semibold text-2xl">{ today.More.CurrentTemperature }</div>
 			<div class="grid grid-cols-2 gap-x-4 gap-y-1">
 				<div class="distance text-accent">
-					<span class="icon-[carbon--temperature-max]"></span>
+					<span class="shrink-0 icon-[carbon--temperature-max]"></span>
 					<div id="max-temp-0" class="text-xs">{ today.TemperatureMax }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="icon-[carbon--humidity]"></span>
+					<span class="shrink-0 icon-[carbon--humidity]"></span>
 					<div id="humidity" class="text-xs">{ today.More.Humidity }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="icon-[carbon--temperature-min]"></span>
+					<span class="shrink-0 icon-[carbon--temperature-min]"></span>
 					<div id="min-temp-0" class="text-xs">{ today.TemperatureMin }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="icon-[carbon--sunrise]"></span>
+					<span class="shrink-0 icon-[carbon--sunrise]"></span>
 					<div id="sunrise" class="text-xs">{ today.More.Sunrise }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="icon-[carbon--temperature-feels-like]"></span>
+					<span class="shrink-0 icon-[carbon--temperature-feels-like]"></span>
 					<div id="apparent" class="text-xs">{ today.More.ApparentTemperature }</div>
 				</div>
 				<div class="distance text-accent">
-					<span class="icon-[carbon--sunset]"></span>
+					<span class="shrink-0 icon-[carbon--sunset]"></span>
 					<div id="sunset" class="text-xs">{ today.More.Sunset }</div>
 				</div>
 			</div>
@@ -67,11 +67,11 @@ templ forecast(weather []services.Day) {
 				<div id={ fmt.Sprintf("day-name-%d", i) } class="text-secondary text-xs">{ weather[i].Name }</div>
 				<div class="distance">
 					<div id={ fmt.Sprintf("max-temp-%d", i) } class="font-semibold">{ weather[i].TemperatureMax }</div>
-					<span class="icon-[carbon--temperature-max]"></span>
+					<span class="shrink-0 icon-[carbon--temperature-max]"></span>
 				</div>
 				<div class="text-accent distance">
 					<div id={ fmt.Sprintf("min-temp-%d", i) } class="text-xs">{ weather[i].TemperatureMin }</div>
-					<span class="icon-[carbon--temperature-min]"></span>
+					<span class="shrink-0 icon-[carbon--temperature-min]"></span>
 				</div>
 			</div>
 		}
