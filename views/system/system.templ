@@ -3,7 +3,7 @@ package system
 import "gitlab.unjx.de/flohoss/godash/services"
 
 templ System() {
-	<canvas id="chart" class="w-full h-20 block"></canvas>
+	<canvas id="chart" class="w-full h-24 block"></canvas>
 }
 
 templ RamAndDiskBadges(system *services.Buffer) {
@@ -25,48 +25,94 @@ templ RamAndDiskBadges(system *services.Buffer) {
 
 templ Script(system *services.Buffer) {
 	<script>
+        const initialData = {{ system }};
+        let latestCPU = null;
+        let chart = null;
+        let systemSSESource = null;
+        const pending = [];
+
         function getCSSColor() {
-            return getComputedStyle(document.documentElement)
-                .getPropertyValue('--color-primary')
-                .trim();
+            return getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
         }
 
-        const initialData = {{ system }};
+        function initChart() {
+            const formattedInitialData = initialData.cpu.map(c => ({ x: c.time, y: c.percent }));
 
-        const formattedInitialData = initialData.cpu.map(c => ({
-            x: c.time,
-            y: c.percent
-        }));
+            const ctx = document.getElementById('chart').getContext('2d');
+            if (chart) chart.destroy();
 
-        const ctx = document.getElementById('chart').getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        let latestCPU;
-
-        const chart = new Chart(ctx, {
-            type: 'line',
-            data: { datasets: [{ data: formattedInitialData, borderColor: getCSSColor(), backgroundColor: 'transparent', pointRadius: 0, tension: 0.5, borderWidth: 2 }] },
-            options: {
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                datasets: [{
+                    data: formattedInitialData,
+                    borderColor: getCSSColor(),
+                    backgroundColor: 'transparent',
+                    pointRadius: 0,
+                    tension: 0.5,
+                    borderWidth: 2
+                }]
+                },
+                options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
                 devicePixelRatio: window.devicePixelRatio,
                 plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                scales: { 
-                    x: { type: 'realtime', realtime: { duration: 57000, refresh: 1000, delay: 2000, onRefresh: chart => { if (latestCPU) chart.data.datasets[0].data.push({x: latestCPU.time, y: latestCPU.percent}); } }, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } },
-                    y: { min: -5, max: 105, ticks: { display: false }, grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false } }
+                scales: {
+                    x: {
+                    type: 'realtime',
+                    realtime: {
+                        duration: 57000,
+                        refresh: 1000,    
+                        delay: 2000,  
+                        frameRate: 30,
+                        onRefresh: chart => {
+                            const ds = chart.data.datasets[0].data;
+                            while (pending.length) {
+                                const p = pending.shift();
+                                ds.push({ x: p.time, y: p.percent });
+                            }
+                        }
+                    },
+                    ticks: { display: false },
+                    grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false }
+                    },
+                    y: {
+                    min: -5, max: 105,
+                    ticks: { display: false },
+                    grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false }
+                    }
                 }
-            },
-            plugins: [ChartStreaming]
-        });
+                },
+                plugins: [ChartStreaming]
+            });
+            }
 
-        const systemSSESource = new EventSource('/sse?stream=system');
-        systemSSESource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            latestCPU = data.cpu;
+            function initSSE(retryDelay = 1000) {
+            if (systemSSESource) systemSSESource.close();
+            systemSSESource = new EventSource('/sse?stream=system');
 
-            document.getElementById('current-ram').innerText = data.ram;
-            document.getElementById('current-disk').innerText = data.disk;
-            document.getElementById('current-cpu').innerText = data.cpu_str;
-        };
+            systemSSESource.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                pending.push({ time: data.cpu.time, percent: data.cpu.percent });
+                
+                document.getElementById('current-ram').innerText = data.ram;
+                document.getElementById('current-disk').innerText = data.disk;
+                document.getElementById('current-cpu').innerText = data.cpu_str;
+            };
+
+            systemSSESource.onerror = () => {
+                systemSSESource.close();
+                console.warn(`SSE disconnected. Reconnecting in ${retryDelay/1000}s`);
+                    setTimeout(() => {
+                    initChart();
+                    initSSE(Math.min(retryDelay * 2, 30000));
+                }, retryDelay);
+            };
+        }
+
+        initChart();
+        initSSE();
     </script>
 }
