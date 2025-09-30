@@ -33,7 +33,6 @@ ENV DATE=$DATE
 
 COPY --from=logo /app/logo.txt .
 COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
-COPY --from=node-builder /app/assets/js/ ./assets/js/
 COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
 COPY ./docker/entrypoint.sh .
 

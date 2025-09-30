@@ -34,23 +34,11 @@ templ Home(title string, b []config.Category, l []config.Category, s *services.B
 			<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
 			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
 			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
-			<script src={ appendVersionQuery("/assets/js/chart.min.js") }></script>
-			<script src={ appendVersionQuery("/assets/js/luxon.min.js") }></script>
-			<script src={ appendVersionQuery("/assets/js/chartjs-adapter-luxon.min.js") }></script>
-			<script src={ appendVersionQuery("/assets/js/chartjs-plugin-streaming.min.js") }></script>
 		</head>
 		<body>
-			<main id="main" class="grid">
+			<main id="main">
 				<div class="container mt-4 mb-8 md:my-8 lg:my-10">
 					@weather.Weather(d)
-				</div>
-				<div class="container relative">
-					@system.RamAndDiskBadges(s)
-				</div>
-				<div class="bg-base-200 overflow-hidden">
-					<div class="container">
-						@system.System()
-					</div>
 				</div>
 				<div class="container my-4 md:my-8 lg:my-10">
 					<div class="grid gap-8 lg:gap-12">
@@ -59,6 +47,11 @@ templ Home(title string, b []config.Category, l []config.Category, s *services.B
 					</div>
 				</div>
 			</main>
+			<footer class="bg-base-200 fixed bottom-0 w-full text-base-content py-3">
+				<div class="container">
+					@system.RamAndDiskBadges(s)
+				</div>
+			</footer>
 			@weather.Script()
 			@system.Script(s)
 		</body>

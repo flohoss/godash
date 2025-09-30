@@ -2,23 +2,19 @@ package system
 
 import "gitlab.unjx.de/flohoss/godash/services"
 
-templ System() {
-	<canvas id="chart" class="w-full h-24 block"></canvas>
-}
-
 templ RamAndDiskBadges(system *services.Buffer) {
-	<div class="absolute -top-2 left-2 sm:left-auto sm:right-6 lg:right-8 xl:right-10 distance font-mono whitespace-nowrap">
-		<div class="badge badge-sm distance">
+	<div class="flex flex-col justify-end gap-2 sm:flex-row sm:gap-8 font-mono text-xs whitespace-nowrap">
+		<div class="distance">
+			<span class="shrink-0 icon-[bi--cpu]"></span>
+			<span id="current-cpu">{ system.CPU }</span>
+		</div>
+		<div class="distance">
 			<span class="shrink-0 icon-[bi--memory]"></span>
 			<span id="current-ram">{ system.RAM }</span>
 		</div>
-		<div class="badge badge-sm distance">
+		<div class="distance">
 			<span class="shrink-0 icon-[bi--hdd]"></span>
 			<span id="current-disk">{ system.Disk }</span>
-		</div>
-		<div class="hidden sm:flex badge badge-sm distance">
-			<span class="shrink-0 icon-[bi--cpu]"></span>
-			<span id="current-cpu">{ system.CPUStr }</span>
 		</div>
 	</div>
 }
@@ -26,80 +22,16 @@ templ RamAndDiskBadges(system *services.Buffer) {
 templ Script(system *services.Buffer) {
 	<script>
         const initialData = {{ system }};
-        let latestCPU = null;
-        let chart = null;
         let systemSSESource = null;
-        const pending = [];
-
-        function getCSSColor() {
-            return getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim();
-        }
-
-        function initChart() {
-            const formattedInitialData = initialData.cpu.map(c => ({ x: c.time, y: c.percent }));
-
-            const ctx = document.getElementById('chart').getContext('2d');
-            if (chart) chart.destroy();
-
-            chart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                datasets: [{
-                    data: formattedInitialData,
-                    borderColor: getCSSColor(),
-                    backgroundColor: 'transparent',
-                    pointRadius: 0,
-                    tension: 0.5,
-                    borderWidth: 2
-                }]
-                },
-                options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                devicePixelRatio: window.devicePixelRatio,
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                scales: {
-                    x: {
-                    type: 'realtime',
-                    realtime: {
-                        duration: 57000,
-                        refresh: 1000,    
-                        delay: 2000,  
-                        frameRate: 30,
-                        onRefresh: chart => {
-                            const ds = chart.data.datasets[0].data;
-                            while (pending.length) {
-                                const p = pending.shift();
-                                ds.push({ x: p.time, y: p.percent });
-                            }
-                        }
-                    },
-                    ticks: { display: false },
-                    grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false }
-                    },
-                    y: {
-                    min: -5, max: 105,
-                    ticks: { display: false },
-                    grid: { drawTicks: false, drawBorder: false, drawOnChartArea: false }
-                    }
-                }
-                },
-                plugins: [ChartStreaming]
-            });
-            }
-
-            function initSSE(retryDelay = 1000) {
+        function initSSE(retryDelay = 1000) {
             if (systemSSESource) systemSSESource.close();
             systemSSESource = new EventSource('/sse?stream=system');
 
             systemSSESource.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                pending.push({ time: data.cpu.time, percent: data.cpu.percent });
-                
                 document.getElementById('current-ram').innerText = data.ram;
                 document.getElementById('current-disk').innerText = data.disk;
-                document.getElementById('current-cpu').innerText = data.cpu_str;
+                document.getElementById('current-cpu').innerText = data.cpu;
             };
 
             systemSSESource.onerror = () => {
@@ -112,7 +44,6 @@ templ Script(system *services.Buffer) {
             };
         }
 
-        initChart();
         initSSE();
     </script>
 }
