@@ -9,6 +9,7 @@ import (
 
 type SystemService interface {
 	GetBuffer() *services.Buffer
+	GetStatic() *services.Static
 }
 
 type WeatherService interface {
@@ -29,7 +30,8 @@ type AppHandler struct {
 
 func (bh *AppHandler) handleIndex(ctx echo.Context) error {
 	buffer := bh.systemService.GetBuffer()
+	static := bh.systemService.GetStatic()
 	weather := bh.weatherService.GetCurrentWeather()
 
-	return render(ctx, views.Home(config.GetTitle(), config.GetApplications(), config.GetLinks(), buffer, weather))
+	return render(ctx, views.Home(config.GetTitle(), config.GetApplications(), config.GetLinks(), buffer, static, weather))
 }

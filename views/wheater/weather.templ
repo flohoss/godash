@@ -16,32 +16,32 @@ templ current(today services.Day) {
 	<div class="flex items-center gap-8 w-full whitespace-nowrap">
 		<div id="weather-icon-0" class={ "icon size-24", today.Icon }></div>
 		<div class="grid">
-			<div id="day-name-0" class="text-secondary text-xs">{ today.Name }</div>
+			<div id="day-name-0" class="text-secondary text-secondary">{ today.Name }</div>
 			<div id="temp" class="font-semibold text-2xl">{ today.More.CurrentTemperature }</div>
 			<div class="grid grid-cols-2 gap-x-4 gap-y-1">
 				<div class="distance text-accent">
 					<span class="shrink-0 icon-[carbon--temperature-max]"></span>
-					<div id="max-temp-0" class="text-xs">{ today.TemperatureMax }</div>
+					<div id="max-temp-0" class="text-secondary">{ today.TemperatureMax }</div>
 				</div>
 				<div class="distance text-accent">
 					<span class="shrink-0 icon-[carbon--humidity]"></span>
-					<div id="humidity" class="text-xs">{ today.More.Humidity }</div>
+					<div id="humidity" class="text-secondary">{ today.More.Humidity }</div>
 				</div>
 				<div class="distance text-accent">
 					<span class="shrink-0 icon-[carbon--temperature-min]"></span>
-					<div id="min-temp-0" class="text-xs">{ today.TemperatureMin }</div>
+					<div id="min-temp-0" class="text-secondary">{ today.TemperatureMin }</div>
 				</div>
 				<div class="distance text-accent">
 					<span class="shrink-0 icon-[carbon--sunrise]"></span>
-					<div id="sunrise" class="text-xs">{ today.More.Sunrise }</div>
+					<div id="sunrise" class="text-secondary">{ today.More.Sunrise }</div>
 				</div>
 				<div class="distance text-accent">
 					<span class="shrink-0 icon-[carbon--temperature-feels-like]"></span>
-					<div id="apparent" class="text-xs">{ today.More.ApparentTemperature }</div>
+					<div id="apparent" class="text-secondary">{ today.More.ApparentTemperature }</div>
 				</div>
 				<div class="distance text-accent">
 					<span class="shrink-0 icon-[carbon--sunset]"></span>
-					<div id="sunset" class="text-xs">{ today.More.Sunset }</div>
+					<div id="sunset" class="text-secondary">{ today.More.Sunset }</div>
 				</div>
 			</div>
 		</div>
@@ -64,13 +64,13 @@ templ forecast(weather []services.Day) {
 		for i := 1; i < len(weather); i++ {
 			<div class={ "hidden place-items-end", weatherDisplay(i) }>
 				<div id={ fmt.Sprintf("weather-icon-%d", i) } class={ "icon", weather[i].Icon }></div>
-				<div id={ fmt.Sprintf("day-name-%d", i) } class="text-secondary text-xs">{ weather[i].Name }</div>
+				<div id={ fmt.Sprintf("day-name-%d", i) } class="text-secondary text-secondary">{ weather[i].Name }</div>
 				<div class="distance">
 					<div id={ fmt.Sprintf("max-temp-%d", i) } class="font-semibold">{ weather[i].TemperatureMax }</div>
 					<span class="shrink-0 icon-[carbon--temperature-max]"></span>
 				</div>
 				<div class="text-accent distance">
-					<div id={ fmt.Sprintf("min-temp-%d", i) } class="text-xs">{ weather[i].TemperatureMin }</div>
+					<div id={ fmt.Sprintf("min-temp-%d", i) } class="text-secondary">{ weather[i].TemperatureMin }</div>
 					<span class="shrink-0 icon-[carbon--temperature-min]"></span>
 				</div>
 			</div>

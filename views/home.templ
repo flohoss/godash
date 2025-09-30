@@ -19,7 +19,7 @@ func appendVersionQuery(url string) string {
 	return url + "?v=" + version
 }
 
-templ Home(title string, b []config.Category, l []config.Category, s *services.Buffer, d []services.Day) {
+templ Home(title string, b []config.Category, l []config.Category, buffer *services.Buffer, static *services.Static, d []services.Day) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -40,6 +40,11 @@ templ Home(title string, b []config.Category, l []config.Category, s *services.B
 				<div class="container mt-4 mb-8 md:my-8 lg:my-10">
 					@weather.Weather(d)
 				</div>
+				<div class="bg-base-200 text-base-content py-3">
+					<div class="container">
+						@system.System(buffer, static)
+					</div>
+				</div>
 				<div class="container my-4 md:my-8 lg:my-10">
 					<div class="grid gap-8 lg:gap-12">
 						@bookmarks.Bookmarks(b)
@@ -47,13 +52,8 @@ templ Home(title string, b []config.Category, l []config.Category, s *services.B
 					</div>
 				</div>
 			</main>
-			<footer class="bg-base-200 fixed bottom-0 w-full text-base-content py-3">
-				<div class="container">
-					@system.RamAndDiskBadges(s)
-				</div>
-			</footer>
 			@weather.Script()
-			@system.Script(s)
+			@system.Script()
 		</body>
 	</html>
 }

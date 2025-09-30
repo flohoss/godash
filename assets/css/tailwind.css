@@ -7,7 +7,7 @@
   default: true;
   prefersdark: false;
   --color-primary: #d97708;
-  --color-secondary: #f59830;
+  --color-secondary: #333333;
   --color-accent: #333333;
 }
 
@@ -16,7 +16,7 @@
   default: false;
   prefersdark: true;
   --color-primary: #d97708;
-  --color-secondary: #f59830;
+  --color-secondary: #d3d3d3;
   --color-accent: #eeeeee;
 }
 
@@ -58,9 +58,13 @@
 }
 
 @utility distance {
-  @apply flex items-center gap-3;
+  @apply flex items-center gap-2;
 }
 
 @utility icon {
   @apply flex-shrink-0 size-10;
+}
+
+@utility text-secondary {
+  @apply text-xs;
 }

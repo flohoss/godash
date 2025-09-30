@@ -1,44 +1,73 @@
 package system
 
-import "gitlab.unjx.de/flohoss/godash/services"
+import (
+	"fmt"
+	"gitlab.unjx.de/flohoss/godash/services"
+)
 
-templ RamAndDiskBadges(system *services.Buffer) {
-	<div class="flex flex-col justify-end gap-2 sm:flex-row sm:gap-8 font-mono text-xs whitespace-nowrap">
-		<div class="distance">
-			<span class="shrink-0 icon-[bi--cpu]"></span>
-			<span id="current-cpu">{ system.CPU }</span>
+templ badge(id string, icon string, details services.Detail, static string) {
+	<div class="grid gap-1 w-full">
+		<div class="flex gap-2 items-start justify-between w-full min-w-0">
+			<div>
+				<div
+					id={ "value-" + id }
+					class="truncate flex-1 overflow-hidden whitespace-nowrap"
+					title={ details.Value }
+				>
+					{ details.Value }
+				</div>
+				<div class="text-secondary">
+					{ static }
+				</div>
+			</div>
+			<div class={ "size-6 shrink-0 mt-1", icon }></div>
 		</div>
-		<div class="distance">
-			<span class="shrink-0 icon-[bi--memory]"></span>
-			<span id="current-ram">{ system.RAM }</span>
-		</div>
-		<div class="distance">
-			<span class="shrink-0 icon-[bi--hdd]"></span>
-			<span id="current-disk">{ system.Disk }</span>
+		<div class="w-full h-1 overflow-hidden bg-base-content/90">
+			<div
+				id={ "bar-" + id }
+				class="h-1 transition-[width] duration-700 ease-in-out bg-primary"
+				style={ fmt.Sprintf("width: %d%%", details.Percentage) }
+			></div>
 		</div>
 	</div>
 }
 
-templ Script(system *services.Buffer) {
+templ System(buffer *services.Buffer, static *services.Static) {
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
+		@badge("cpu", "icon-[bi--cpu]", buffer.CPU, static.CPU)
+		@badge("ram", "icon-[bi--memory]", buffer.RAM, static.RAM)
+		@badge("disk", "icon-[bi--hdd]", buffer.Disk, static.Disk)
+	</div>
+}
+
+templ Script() {
 	<script>
-        const initialData = {{ system }};
         let systemSSESource = null;
+		const valueRam = document.getElementById('value-ram');
+		const valueDisk = document.getElementById('value-disk');
+		const valueCpu = document.getElementById('value-cpu');
+		const barCpu = document.getElementById('bar-cpu');
+		const barDisk = document.getElementById('bar-disk');
+		const barRam = document.getElementById('bar-ram');
+
         function initSSE(retryDelay = 1000) {
             if (systemSSESource) systemSSESource.close();
             systemSSESource = new EventSource('/sse?stream=system');
 
             systemSSESource.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                document.getElementById('current-ram').innerText = data.ram;
-                document.getElementById('current-disk').innerText = data.disk;
-                document.getElementById('current-cpu').innerText = data.cpu;
+                valueRam.innerText = data.ram.value;
+                valueDisk.innerText = data.disk.value;
+                valueCpu.innerText = data.cpu.value;
+                barCpu.style.width = data.cpu.percentage + '%';
+                barDisk.style.width = data.disk.percentage + '%';
+                barRam.style.width = data.ram.percentage + '%';
             };
 
             systemSSESource.onerror = () => {
                 systemSSESource.close();
                 console.warn(`SSE disconnected. Reconnecting in ${retryDelay/1000}s`);
                     setTimeout(() => {
-                    initChart();
                     initSSE(Math.min(retryDelay * 2, 30000));
                 }, retryDelay);
             };

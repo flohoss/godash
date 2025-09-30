@@ -32,6 +32,11 @@ func ReadableSizeWithUnit(size uint64, unit uint64) float64 {
 	return float64(size) / float64(unit)
 }
 
+func ReadableSize(size uint64) string {
+	unit, unitStr := amountString(size)
+	return fmt.Sprintf("%.2f %s", ReadableSizeWithUnit(size, unit), unitStr)
+}
+
 func ReadableSizePair(size1, size2 uint64) string {
 	maxSize := size1
 	if size2 > size1 {
