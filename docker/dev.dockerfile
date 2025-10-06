@@ -1,4 +1,4 @@
-ARG V_GOLANG=1.24
+ARG V_GOLANG=1.25
 FROM golang:${V_GOLANG}-alpine
 RUN apk add --no-cache --update tzdata inotify-tools su-exec
 
