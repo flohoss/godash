@@ -36,14 +36,14 @@ templ Home(title string, b []config.Category, l []config.Category, buffer *servi
 			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
 		</head>
 		<body>
-			<main id="main">
-				<div class="container mt-4 mb-8 md:my-8 lg:my-10">
+			<main id="main" class="container">
+				<div class="mt-4 mb-8 md:my-8 lg:my-10">
 					@weather.Weather(d)
 				</div>
 				<div class="py-3">
 					@system.System(buffer, static)
 				</div>
-				<div class="container my-4 md:my-8 lg:my-10">
+				<div class="my-4 md:my-8 lg:my-10">
 					<div class="grid gap-8 lg:gap-12">
 						@bookmarks.Bookmarks(b)
 						@links.Links(l)
