@@ -5,8 +5,8 @@ import (
 	"gitlab.unjx.de/flohoss/godash/services"
 )
 
-templ badge(id string, icon string, details services.Detail, static string) {
-	<div class="grid gap-1 w-full">
+templ badge(id string, icon string, details services.Detail, static string, hideSmall bool) {
+	<div class={ "grid gap-1 w-full", templ.KV("hidden md:grid", hideSmall) }>
 		<div class="flex gap-2 items-start justify-between w-full min-w-0">
 			<div>
 				<div
@@ -22,10 +22,10 @@ templ badge(id string, icon string, details services.Detail, static string) {
 			</div>
 			<div class={ "size-6 shrink-0 mt-1", icon }></div>
 		</div>
-		<div class="w-full h-1 overflow-hidden bg-base-content/90">
+		<div class="w-full h-1 md:h-[0.4rem] overflow-hidden rounded-full bg-base-content/90">
 			<div
 				id={ "bar-" + id }
-				class="h-1 transition-[width] duration-700 ease-in-out bg-primary"
+				class="h-1 md:h-[0.4rem] transition-[width] duration-700 ease-in-out bg-primary"
 				style={ fmt.Sprintf("width: %d%%", details.Percentage) }
 			></div>
 		</div>
@@ -34,9 +34,9 @@ templ badge(id string, icon string, details services.Detail, static string) {
 
 templ System(buffer *services.Buffer, static *services.Static) {
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-		@badge("cpu", "icon-[bi--cpu]", buffer.CPU, static.CPU)
-		@badge("ram", "icon-[bi--memory]", buffer.RAM, static.RAM)
-		@badge("disk", "icon-[bi--hdd]", buffer.Disk, static.Disk)
+		@badge("cpu", "icon-[bi--cpu]", buffer.CPU, static.CPU, false)
+		@badge("ram", "icon-[bi--memory]", buffer.RAM, static.RAM, true)
+		@badge("disk", "icon-[bi--hdd]", buffer.Disk, static.Disk, true)
 	</div>
 }
 
