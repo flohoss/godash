@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/flohoss/godash/pkg/media"
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/viper"
-	"gitlab.unjx.de/flohoss/godash/pkg/media"
 )
 
 const (
@@ -86,7 +86,7 @@ func New() {
 				{
 					"name": "GoDash",
 					"icon": "sh/homebox",
-					"url":  "https://gitlab.unjx.de/flohoss/godash",
+					"url":  "https://github.com/flohoss/godash",
 				},
 			},
 		},
@@ -97,7 +97,7 @@ func New() {
 			"entries": []map[string]interface{}{
 				{
 					"name": "GoDash",
-					"url":  "https://gitlab.unjx.de/flohoss/godash",
+					"url":  "https://github.com/flohoss/godash",
 				},
 			},
 		},

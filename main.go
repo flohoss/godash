@@ -14,9 +14,9 @@ import (
 	"github.com/r3labs/sse/v2"
 	"github.com/spf13/viper"
 
-	"gitlab.unjx.de/flohoss/godash/config"
-	"gitlab.unjx.de/flohoss/godash/handlers"
-	"gitlab.unjx.de/flohoss/godash/services"
+	"github.com/flohoss/godash/config"
+	"github.com/flohoss/godash/handlers"
+	"github.com/flohoss/godash/services"
 )
 
 func setupRouter() *echo.Echo {

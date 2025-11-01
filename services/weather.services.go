@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/flohoss/godash/config"
+	"github.com/flohoss/godash/pkg/meteo"
 	"github.com/r3labs/sse/v2"
-	"gitlab.unjx.de/flohoss/godash/config"
-	"gitlab.unjx.de/flohoss/godash/pkg/meteo"
 )
 
 type WeatherService struct {

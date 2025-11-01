@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flohoss/godash/internal/readable"
 	"github.com/r3labs/sse/v2"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/mem"
-	"gitlab.unjx.de/flohoss/godash/internal/readable"
 )
 
 type SystemService struct {

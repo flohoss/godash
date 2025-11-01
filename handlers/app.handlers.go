@@ -1,10 +1,10 @@
 package handlers
 
 import (
+	"github.com/flohoss/godash/config"
+	"github.com/flohoss/godash/services"
+	"github.com/flohoss/godash/views"
 	"github.com/labstack/echo/v4"
-	"gitlab.unjx.de/flohoss/godash/config"
-	"gitlab.unjx.de/flohoss/godash/services"
-	"gitlab.unjx.de/flohoss/godash/views"
 )
 
 type SystemService interface {
