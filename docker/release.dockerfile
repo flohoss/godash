@@ -1,16 +1,28 @@
-ARG V_GOLANG=1.25
+ARG V_GOLANG=1.25.3
 ARG V_NODE=lts
 ARG V_ALPINE=3
 FROM alpine:${V_ALPINE} AS logo
 WORKDIR /app
-RUN apk add figlet
+RUN apk add figlet > /dev/null 2>&1
 RUN figlet GoDash > logo.txt
+
+FROM golang:${V_GOLANG} AS golang-builder
+WORKDIR /app
+
+RUN go install github.com/a-h/templ/cmd/templ@latest > /dev/null 2>&1
+
+COPY ./go.mod ./go.sum ./
+RUN go mod download > /dev/null 2>&1
+
+COPY . .
+RUN templ generate
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o godash main.go
 
 FROM node:${V_NODE}-alpine AS node-builder
 WORKDIR /app
 
 COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 30000
+RUN yarn install --frozen-lockfile --network-timeout 30000 --silent
 
 COPY ./views/ ./views/
 COPY ./assets/ ./assets/
@@ -18,22 +30,22 @@ COPY ./services/ ./services/
 RUN yarn run tw:build
 
 FROM alpine:${V_ALPINE} AS final
-RUN apk add --update --no-cache tzdata ca-certificates dumb-init inotify-tools su-exec && \
+RUN apk add --update --no-cache tzdata ca-certificates dumb-init su-exec && \
     rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
 
 WORKDIR /app
 
-# goreleaser
-COPY godash ./godash
-
-ARG VERSION
-ENV VERSION=$VERSION
-ARG DATE
-ENV DATE=$DATE
+ARG APP_VERSION
+ENV APP_VERSION=$APP_VERSION
+ARG BUILD_TIME
+ENV BUILD_TIME=$BUILD_TIME
+ARG REPO
+ENV REPO=$REPO
 
 COPY --from=logo /app/logo.txt .
 COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
 COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
+COPY --from=golang-builder /app/godash .
 COPY ./docker/entrypoint.sh .
 
 EXPOSE 8156
