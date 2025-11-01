@@ -46,56 +46,56 @@ At startup, godash will look for a `config.yaml` file in the current directory o
 Icons can be stored in a folder called icons or godash will automatically download from [https://selfh.st/icons/](https://selfh.st/icons/) with the prefix `sh/`
 
 ```yaml
-log_level: "info"  # Valid options: debug, info, warn, error
-time_zone: "Europe/Berlin"  # Must be a valid IANA timezone (e.g., America/New_York, Europe/London)
-title: "My Dashboard"  # Any string
+log_level: 'info' # Valid options: debug, info, warn, error
+time_zone: 'Europe/Berlin' # Must be a valid IANA timezone (e.g., America/New_York, Europe/London)
+title: 'My Dashboard' # Any string
 
 server:
-  address: "0.0.0.0"  # Valid IPv4 address, defaults to 0.0.0.0
-  port: 8156  # Optional, must be between 1024 and 65535, defaults to 8156
+  address: '0.0.0.0' # Valid IPv4 address, defaults to 0.0.0.0
+  port: 8156 # Optional, must be between 1024 and 65535, defaults to 8156
 
 weather:
-  units: "celsius"  # Valid options: celsius, fahrenheit
-  latitude: 52.5163  # Optional, must be a valid latitude (-90 to 90)
-  longitude: 13.3776  # Optional, must be a valid longitude (-180 to 180)
+  units: 'celsius' # Valid options: celsius, fahrenheit
+  latitude: 52.5163 # Optional, must be a valid latitude (-90 to 90)
+  longitude: 13.3776 # Optional, must be a valid longitude (-180 to 180)
 
 applications:
-  - category: "Productivity"  # Any string
+  - category: 'Productivity' # Any string
     entries:
-      - name: "Notion"  # Any string
-        icon: "notion.png"  # File name or path for icon
-        ignore_dark: false  # should not use the light icon even though it exists in dark mode
-        url: "https://www.notion.so"  # Optional, must be a valid URL
-      - name: "Slack"
-        icon: "sh/slack.svg" # Use self-hosted icons
+      - name: 'Notion' # Any string
+        icon: 'notion.png' # File name or path for icon
+        ignore_dark: false # should not use the light icon even though it exists in dark mode
+        url: 'https://www.notion.so' # Optional, must be a valid URL
+      - name: 'Slack'
+        icon: 'sh/slack.svg' # Use self-hosted icons
         ignore_dark: true
-        url: "https://slack.com"
+        url: 'https://slack.com'
 
-  - category: "Entertainment"
+  - category: 'Entertainment'
     entries:
-      - name: "YouTube"
-        icon: "youtube.png"
+      - name: 'YouTube'
+        icon: 'youtube.png'
         ignore_dark: false
-        url: "https://www.youtube.com"
-      - name: "Spotify"
-        icon: "spotify.png"
+        url: 'https://www.youtube.com'
+      - name: 'Spotify'
+        icon: 'spotify.png'
         ignore_dark: false
-        url: "https://www.spotify.com"
+        url: 'https://www.spotify.com'
 
 links:
-  - category: "Work"
+  - category: 'Work'
     entries:
-      - name: "GitHub"
-        url: "https://github.com"
-      - name: "Jira"
-        url: "https://jira.com"
+      - name: 'GitHub'
+        url: 'https://github.com'
+      - name: 'Jira'
+        url: 'https://jira.com'
 
-  - category: "Social"
+  - category: 'Social'
     entries:
-      - name: "Twitter"
-        url: "https://twitter.com"
-      - name: "LinkedIn"
-        url: "https://linkedin.com"
+      - name: 'Twitter'
+        url: 'https://twitter.com'
+      - name: 'LinkedIn'
+        url: 'https://linkedin.com'
 ```
 
 ## Docker
@@ -137,3 +137,26 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 ## Contributing
 
 Feel free to open issues or submit pull requests to improve goDash!
+
+---
+
+## Development
+
+### Run Locally with Docker Compose
+
+```bash
+docker compose up --build --force-recreate
+```
+
+- Auto-creates `config.yaml` if missing
+- Detects changes automatically
+
+### Update Dependencies
+
+```bash
+# Node packages
+docker compose run --rm node yarn upgrade --latest
+
+# Go packages
+docker compose run --rm backend go get -u && go mod tidy
+```
