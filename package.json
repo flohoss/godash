@@ -5,10 +5,10 @@
     "tw:build": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --minify"
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.384",
+    "@iconify/json": "^2.2.402",
     "@iconify/tailwind4": "^1.0.6",
-    "@tailwindcss/cli": "^4.0.9",
-    "daisyui": "^5.0.0",
-    "tailwindcss": "^4.0.9"
+    "@tailwindcss/cli": "^4.1.16",
+    "daisyui": "^5.3.10",
+    "tailwindcss": "^4.1.16"
   }
 }
