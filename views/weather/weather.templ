@@ -66,7 +66,7 @@ func weatherDisplay(i int) string {
 }
 
 templ forecast(weather []services.Day) {
-	<div class="flex items-center gap-10 whitespace-nowrap opacity-80">
+	<div class="flex items-center gap-10 whitespace-nowrap opacity-90">
 		for i := 1; i < len(weather); i++ {
 			<div class={ "hidden place-items-end", weatherDisplay(i) }>
 				<div id={ fmt.Sprintf("weather-icon-%d", i) } class={ "icon", weather[i].Icon }></div>

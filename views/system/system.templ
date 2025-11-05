@@ -25,7 +25,7 @@ templ badge(id string, icon string, details services.Detail, static string, hide
 		<div class="w-full h-1 md:h-[0.4rem] overflow-hidden rounded-full bg-base-content/5">
 			<div
 				id={ "bar-" + id }
-				class="h-1 md:h-[0.4rem] transition-[width] duration-700 ease-in-out bg-primary/70"
+				class="h-1 md:h-[0.4rem] transition-[width] duration-700 ease-in-out bg-primary/90"
 				style={ fmt.Sprintf("width: %d%%", details.Percentage) }
 			></div>
 		</div>
