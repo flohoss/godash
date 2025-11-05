@@ -6,7 +6,7 @@ import (
 	"github.com/flohoss/godash/views/bookmarks"
 	"github.com/flohoss/godash/views/links"
 	"github.com/flohoss/godash/views/system"
-	"github.com/flohoss/godash/views/wheater"
+	"github.com/flohoss/godash/views/weather"
 	"os"
 	"time"
 )
@@ -35,6 +35,7 @@ templ Home(title string, b []config.Category, l []config.Category, buffer *servi
 			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
 			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
 			<script src={ appendVersionQuery("/assets/js/htmx.min.js") } defer></script>
+			<script src={ appendVersionQuery("/assets/js/htmx-sse.min.js") } defer></script>
 		</head>
 		<body>
 			<main id="main" class="container">
@@ -51,8 +52,6 @@ templ Home(title string, b []config.Category, l []config.Category, buffer *servi
 					</div>
 				</div>
 			</main>
-			@weather.Script()
-			@system.Script()
 		</body>
 	</html>
 }

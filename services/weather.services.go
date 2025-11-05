@@ -1,19 +1,22 @@
 package services
 
 import (
-	"encoding/json"
+	"bytes"
+	"context"
 	"fmt"
 	"log/slog"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/pkg/meteo"
 	"github.com/r3labs/sse/v2"
 )
 
 type WeatherService struct {
-	weather []Day
-	sse     *sse.Server
+	weather      []Day
+	sse          *sse.Server
+	renderReport func([]Day) templ.Component
 }
 
 type Day struct {
@@ -32,8 +35,8 @@ type More struct {
 	Sunset              string `json:"sunset"`
 }
 
-func NewWeatherService(sse *sse.Server) *WeatherService {
-	var w = WeatherService{sse: sse}
+func NewWeatherService(sse *sse.Server, renderReport func([]Day) templ.Component) *WeatherService {
+	var w = WeatherService{sse: sse, renderReport: renderReport}
 	w.sse.CreateStream("weather")
 	interval := time.Second * 90
 	w.updateWeather(interval)
@@ -87,8 +90,12 @@ func (w *WeatherService) updateWeather(interval time.Duration) error {
 		newWeather = append(newWeather, day)
 	}
 
-	json, _ := json.Marshal(newWeather)
-	w.sse.Publish("weather", &sse.Event{Data: json})
+	var buf bytes.Buffer
+	err = w.renderReport(newWeather).Render(context.Background(), &buf)
+	if err != nil {
+		return err
+	}
+	w.sse.Publish("weather", &sse.Event{Data: buf.Bytes()})
 	w.weather = newWeather
 	return nil
 }

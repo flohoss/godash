@@ -396,7 +396,14 @@ graceful-fs@^4.2.4:
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.2.11.tgz#4183e4e8bf08bb6e05bbb2f7d2e0c8f712ca40e3"
   integrity sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==
 
-htmx.org@^2.0.8:
+htmx-ext-sse@^2.2.4:
+  version "2.2.4"
+  resolved "https://registry.yarnpkg.com/htmx-ext-sse/-/htmx-ext-sse-2.2.4.tgz#56c131924e57c862f42a1a963949633815fd4192"
+  integrity sha512-LJmxVhykyflBWgh5PvbRidcyuqMHlgfajmmzumvKctv9puvsufeH6OaejSMZTNTnEI8O2wXXn4ZZtBdpEMqmEQ==
+  dependencies:
+    htmx.org "^2.0.2"
+
+htmx.org@^2.0.2, htmx.org@^2.0.8:
   version "2.0.8"
   resolved "https://registry.yarnpkg.com/htmx.org/-/htmx.org-2.0.8.tgz#8ac8ba87c141b7bfda7576117476062eeb4aceda"
   integrity sha512-fm297iru0iWsNJlBrjvtN7V9zjaxd+69Oqjh4F/Vq9Wwi2kFisLcrLCiv5oBX0KLfOX/zG8AUo9ROMU5XUB44Q==
@@ -588,6 +595,11 @@ pkg-types@^2.3.0:
     confbox "^0.2.2"
     exsolve "^1.0.7"
     pathe "^2.0.3"
+
+prettier@^3.6.2:
+  version "3.6.2"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.6.2.tgz#ccda02a1003ebbb2bfda6f83a074978f608b9393"
+  integrity sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==
 
 quansync@^0.2.11:
   version "0.2.11"

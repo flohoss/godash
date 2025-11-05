@@ -23,6 +23,7 @@
     "printWidth": 160
   },
   "dependencies": {
+    "htmx-ext-sse": "^2.2.4",
     "htmx.org": "^2.0.8"
   }
 }

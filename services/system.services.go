@@ -1,13 +1,15 @@
 package services
 
 import (
-	"encoding/json"
+	"bytes"
+	"context"
 	"math"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/flohoss/godash/internal/readable"
 	"github.com/r3labs/sse/v2"
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -16,10 +18,11 @@ import (
 )
 
 type SystemService struct {
-	sse    *sse.Server
-	mu     sync.Mutex
-	static Static
-	buffer Buffer
+	sse          *sse.Server
+	mu           sync.Mutex
+	static       Static
+	buffer       Buffer
+	renderReport func(*Buffer, *Static) templ.Component
 }
 
 type Static struct {
@@ -39,10 +42,8 @@ type Detail struct {
 	Percentage int    `json:"percentage"`
 }
 
-func NewSystemService(sse *sse.Server) *SystemService {
-	s := SystemService{
-		sse: sse,
-	}
+func NewSystemService(sse *sse.Server, renderReport func(*Buffer, *Static) templ.Component) *SystemService {
+	s := SystemService{sse: sse, renderReport: renderReport}
 	sse.CreateStream("system")
 	go s.collect()
 	return &s
@@ -117,11 +118,12 @@ func (s *SystemService) collect() {
 			Value:      readable.ReadableSizePair(diskStat.Used, diskStat.Total),
 			Percentage: int(math.Floor(diskStat.UsedPercent)),
 		}
-
-		snapshot := s.buffer
 		s.mu.Unlock()
 
-		data, _ := json.Marshal(snapshot)
-		s.sse.Publish("system", &sse.Event{Data: data})
+		var buf bytes.Buffer
+		err = s.renderReport(s.GetBuffer(), s.GetStatic()).Render(context.Background(), &buf)
+		if err == nil {
+			s.sse.Publish("system", &sse.Event{Data: buf.Bytes()})
+		}
 	}
 }

@@ -6,7 +6,13 @@ import (
 )
 
 templ Weather(d []services.Day) {
-	<div class="flex items-center justify-between">
+	<div
+		class="flex items-center justify-between"
+		hx-ext="sse"
+		sse-connect="/sse?stream=weather"
+		sse-swap="message"
+		hx-swap="outerHTML"
+	>
 		@current(d[0])
 		@forecast(d)
 	</div>
@@ -76,41 +82,4 @@ templ forecast(weather []services.Day) {
 			</div>
 		}
 	</div>
-}
-
-templ Script() {
-	<script>
-		let weatherSSESource = null;
-		addEventListener('beforeunload', () => {
-	  		weatherSSESource && weatherSSESource.close();
-		});
-		weatherSSESource = new EventSource('/sse?stream=weather');
-		weatherSSESource.onmessage = (e) => {
-			const parsed = JSON.parse(e.data);
-			replaceWeather(parsed);
-		};
-
-		function replaceWeather(parsed) {
-			parsed.forEach(function(day, index) {
-				const icon = document.getElementById('weather-icon-' + index);
-				icon.className.split(' ').forEach(function(className) {
-					if (className.startsWith('icon-')) {
-						icon.classList.remove(className);
-					}
-				});
-				icon.classList.add(day.icon);
-				document.getElementById('day-name-' + index).innerText = day.name;
-				document.getElementById('max-temp-' + index).innerText = day.temperature_max;
-				document.getElementById('min-temp-' + index).innerText = day.temperature_min;
-
-				if (index === 0) {
-					document.getElementById('temp').innerText = day.more.current_temperature;
-					document.getElementById('apparent').innerText = day.more.apparent_temperature;
-					document.getElementById('humidity').innerText = day.more.humidity;
-					document.getElementById('sunrise').innerText = day.more.sunrise;
-					document.getElementById('sunset').innerText = day.more.sunset;
-				}
-			})
-		}
-	</script>
 }

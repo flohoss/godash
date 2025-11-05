@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -17,6 +18,8 @@ import (
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/handlers"
 	"github.com/flohoss/godash/services"
+	"github.com/flohoss/godash/views/system"
+	"github.com/flohoss/godash/views/weather"
 )
 
 func setupRouter() *echo.Echo {
@@ -81,8 +84,12 @@ func main() {
 	sse := sse.New()
 	sse.AutoReplay = false
 
-	s := services.NewSystemService(sse)
-	w := services.NewWeatherService(sse)
+	s := services.NewSystemService(sse, func(buffer *services.Buffer, static *services.Static) templ.Component {
+		return system.System(buffer, static)
+	})
+	w := services.NewWeatherService(sse, func(days []services.Day) templ.Component {
+		return weather.Weather(days)
+	})
 
 	appHandler := handlers.NewAppHandler(s, w)
 	handlers.SetupRoutes(e, sse, appHandler)

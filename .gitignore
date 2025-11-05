@@ -218,3 +218,4 @@ config/config.yaml
 config/icons/
 
 assets/js/htmx.min.js
+assets/js/htmx-sse.min.js
