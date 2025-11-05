@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKERFILE_PATH: docker/release.dockerfile
+  DOCKERFILE_PATH: docker/dockerfile
   IMAGE_NAME: ghcr.io/${{ github.repository }}
   PLATFORM: linux/amd64,linux/arm64
 
