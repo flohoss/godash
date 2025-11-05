@@ -50,7 +50,7 @@
 }
 
 @utility icon {
-  @apply flex-shrink-0 size-10;
+  @apply shrink-0 size-10;
 }
 
 @utility text-secondary {
