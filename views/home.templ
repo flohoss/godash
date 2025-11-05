@@ -12,7 +12,7 @@ import (
 )
 
 func appendVersionQuery(url string) string {
-	version := os.Getenv("VERSION")
+	version := os.Getenv("APP_VERSION")
 	if version == "" {
 		version = time.Now().Format("20060102150405")
 	}
@@ -34,6 +34,7 @@ templ Home(title string, b []config.Category, l []config.Category, buffer *servi
 			<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
 			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
 			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
+			<script src={ appendVersionQuery("/assets/js/htmx.min.js") } defer></script>
 		</head>
 		<body>
 			<main id="main" class="container">
