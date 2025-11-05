@@ -1,5 +1,5 @@
 {
-  "license": "Apache-2.0",
+  "license": "MIT",
   "scripts": {
     "tw:dev": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --watch",
     "tw:build": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --minify"
@@ -9,6 +9,20 @@
     "@iconify/tailwind4": "^1.0.6",
     "@tailwindcss/cli": "^4.1.16",
     "daisyui": "^5.3.10",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4.1.16"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": true,
+    "singleQuote": true,
+    "trailingComma": "es5",
+    "bracketSpacing": true,
+    "arrowParens": "always",
+    "printWidth": 160
+  },
+  "dependencies": {
+    "htmx.org": "^2.0.8"
   }
 }
