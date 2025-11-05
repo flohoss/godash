@@ -30,10 +30,20 @@ COPY ./services/ ./services/
 RUN yarn run tw:build
 
 FROM alpine:${V_ALPINE} AS final
+WORKDIR /app
+
 RUN apk add --update --no-cache tzdata ca-certificates dumb-init su-exec && \
     rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
 
-WORKDIR /app
+COPY --from=logo /app/logo.txt .
+COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
+COPY --from=node-builder /app/node_modules/htmx.org/dist/htmx.min.js ./assets/js/htmx.min.js
+COPY --from=node-builder /app/node_modules/htmx-ext-sse/dist/sse.min.js ./assets/js/sse.min.js
+COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
+COPY --from=golang-builder /app/godash .
+COPY ./docker/entrypoint.sh .
+
+EXPOSE 8156
 
 ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
@@ -41,13 +51,5 @@ ARG BUILD_TIME
 ENV BUILD_TIME=$BUILD_TIME
 ARG REPO
 ENV REPO=$REPO
-
-COPY --from=logo /app/logo.txt .
-COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
-COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
-COPY --from=golang-builder /app/godash .
-COPY ./docker/entrypoint.sh .
-
-EXPOSE 8156
 
 ENTRYPOINT ["dumb-init", "--", "/app/entrypoint.sh"]
