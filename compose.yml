@@ -3,17 +3,33 @@ services:
     build:
       context: .
       dockerfile: docker/dev.dockerfile
-    working_dir: /app
-    command: templ generate --watch --proxybind="0.0.0.0" --proxy="http://localhost:8156" --cmd="go run ." --open-browser=false
     volumes:
       - .:/app/
     ports:
       - 7331:7331
 
-  node:
+  tailwind:
     image: node:lts-alpine
     working_dir: /app
-    command: sh -c "yarn install && yarn tw:dev"
+    command: yarn tw:dev
     tty: true
+    volumes:
+      - .:/app/
+
+  yarn:
+    profiles:
+      - dev
+    image: node:lts-alpine
+    working_dir: /app
+    entrypoint: yarn
+    volumes:
+      - .:/app/
+
+  go:
+    profiles:
+      - dev
+    image: golang:1.25-alpine
+    working_dir: /app
+    entrypoint: go
     volumes:
       - .:/app/

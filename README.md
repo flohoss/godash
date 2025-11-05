@@ -145,6 +145,7 @@ Feel free to open issues or submit pull requests to improve goDash!
 ### Run Locally with Docker Compose
 
 ```bash
+docker compose run --rm yarn install --frozen-lockfile
 docker compose up --build --force-recreate
 ```
 
@@ -153,10 +154,14 @@ docker compose up --build --force-recreate
 
 ### Update Dependencies
 
-```bash
-# Node packages
-docker compose run --rm node yarn upgrade --latest
+#### Node packages
 
-# Go packages
-docker compose run --rm backend go get -u && go mod tidy
+```sh
+docker compose run --rm yarn upgrade --latest
+```
+
+#### Go modules
+
+```sh
+docker compose run --rm go get -u && go mod tidy
 ```
