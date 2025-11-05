@@ -216,3 +216,5 @@ __debug*
 config/downloads/
 config/config.yaml
 config/icons/
+
+assets/js/htmx.min.js
