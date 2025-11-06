@@ -83,6 +83,7 @@ func main() {
 
 	sse := sse.New()
 	sse.AutoReplay = false
+	sse.EventTTL = time.Millisecond * 100
 
 	s := services.NewSystemService(sse, func(id, icon, static string, detail services.Detail) templ.Component {
 		return system.Badge(id, icon, static, detail)
