@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/a-h/templ"
@@ -14,9 +15,12 @@ import (
 )
 
 type WeatherService struct {
-	weather      []Day
-	sse          *sse.Server
-	renderReport func([]Day) templ.Component
+	weather        []Day
+	sse            *sse.Server
+	mu             sync.RWMutex
+	renderCurrent  func(Day) templ.Component
+	renderForecast func([]Day) templ.Component
+	lastResponse   *meteo.WeatherResponse
 }
 
 type Day struct {
@@ -35,27 +39,50 @@ type More struct {
 	Sunset              string `json:"sunset"`
 }
 
-func NewWeatherService(sse *sse.Server, renderReport func([]Day) templ.Component) *WeatherService {
-	var w = WeatherService{sse: sse, renderReport: renderReport}
-	w.sse.CreateStream("weather")
-	interval := time.Second * 90
-	w.updateWeather(interval)
-	go func() {
-		for {
-			if err := w.updateWeather(interval); err != nil {
-				slog.Error("Failed to update weather", "error", err)
-			}
-			time.Sleep(interval)
-		}
-	}()
-	return &w
+func NewWeatherService(sse *sse.Server, renderCurrent func(Day) templ.Component, renderForecast func([]Day) templ.Component) *WeatherService {
+	w := &WeatherService{
+		sse:            sse,
+		renderCurrent:  renderCurrent,
+		renderForecast: renderForecast,
+	}
+	sse.CreateStream("weather")
+
+	var currentBuf, forecastBuf bytes.Buffer
+	if err := w.fetchAndPublish(&currentBuf, &forecastBuf); err != nil {
+		slog.Error("Failed initial weather fetch", "error", err)
+		w.weather = []Day{{
+			Name:           "Loading...",
+			TemperatureMax: "--",
+			TemperatureMin: "--",
+			Icon:           "icon-[bi--cloud-fill]",
+			More:           More{},
+		}}
+	}
+
+	go w.collect()
+	return w
 }
 
 func (w *WeatherService) GetCurrentWeather() []Day {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
 	return w.weather
 }
 
-func (w *WeatherService) updateWeather(interval time.Duration) error {
+func (w *WeatherService) collect() {
+	ticker := time.NewTicker(90 * time.Second)
+	defer ticker.Stop()
+
+	var currentBuf, forecastBuf bytes.Buffer
+
+	for range ticker.C {
+		if err := w.fetchAndPublish(&currentBuf, &forecastBuf); err != nil {
+			slog.Error("Failed to update weather", "error", err)
+		}
+	}
+}
+
+func (w *WeatherService) fetchAndPublish(currentBuf, forecastBuf *bytes.Buffer) error {
 	settings := config.GetWeatherSettings()
 	res, err := meteo.GetWeather(meteo.Options{
 		Latitude:  settings.Latitude,
@@ -66,6 +93,15 @@ func (w *WeatherService) updateWeather(interval time.Duration) error {
 	if err != nil {
 		return err
 	}
+
+	w.mu.RLock()
+	hasChanged := w.lastResponse == nil || w.hasResponseChanged(&res)
+	w.mu.RUnlock()
+
+	if !hasChanged {
+		return nil
+	}
+
 	newWeather := []Day{}
 	for i, t := range res.Daily.Time {
 		t, _ := time.Parse("2006-01-02", t)
@@ -90,14 +126,57 @@ func (w *WeatherService) updateWeather(interval time.Duration) error {
 		newWeather = append(newWeather, day)
 	}
 
-	var buf bytes.Buffer
-	err = w.renderReport(newWeather).Render(context.Background(), &buf)
-	if err != nil {
+	w.mu.Lock()
+	w.weather = newWeather
+	w.lastResponse = &res
+	w.mu.Unlock()
+
+	currentBuf.Reset()
+	if err := w.renderCurrent(newWeather[0]).Render(context.Background(), currentBuf); err != nil {
 		return err
 	}
-	w.sse.Publish("weather", &sse.Event{Data: buf.Bytes()})
-	w.weather = newWeather
+	w.sse.Publish("weather", &sse.Event{Event: []byte("current"), Data: currentBuf.Bytes()})
+
+	forecastBuf.Reset()
+	if err := w.renderForecast(newWeather).Render(context.Background(), forecastBuf); err != nil {
+		return err
+	}
+	w.sse.Publish("weather", &sse.Event{Event: []byte("forecast"), Data: forecastBuf.Bytes()})
+
 	return nil
+}
+
+func (w *WeatherService) hasResponseChanged(newRes *meteo.WeatherResponse) bool {
+	if w.lastResponse == nil {
+		return true
+	}
+
+	prev := w.lastResponse
+
+	if prev.Current.Temperature2m != newRes.Current.Temperature2m ||
+		prev.Current.WeatherCode != newRes.Current.WeatherCode ||
+		prev.Current.IsDay != newRes.Current.IsDay ||
+		prev.Current.RelativeHumidity != newRes.Current.RelativeHumidity ||
+		prev.Current.ApparentTemperature != newRes.Current.ApparentTemperature {
+		return true
+	}
+
+	if len(prev.Daily.TemperatureMax) > 0 && len(newRes.Daily.TemperatureMax) > 0 {
+		if prev.Daily.TemperatureMax[0] != newRes.Daily.TemperatureMax[0] ||
+			prev.Daily.TemperatureMin[0] != newRes.Daily.TemperatureMin[0] {
+			return true
+		}
+	}
+
+	if len(prev.Daily.TemperatureMax) > 1 && len(newRes.Daily.TemperatureMax) > 1 {
+		if prev.Daily.TemperatureMax[1] != newRes.Daily.TemperatureMax[1] ||
+			prev.Daily.TemperatureMin[1] != newRes.Daily.TemperatureMin[1] ||
+			prev.Daily.WeatherCode[1] != newRes.Daily.WeatherCode[1] {
+			return true
+		}
+	}
+
+	return false
 }
 
 func getIcon(code int, isDay bool) string {

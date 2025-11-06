@@ -87,9 +87,14 @@ func main() {
 	s := services.NewSystemService(sse, func(id, icon, static string, detail services.Detail) templ.Component {
 		return system.Badge(id, icon, static, detail)
 	})
-	w := services.NewWeatherService(sse, func(days []services.Day) templ.Component {
-		return weather.Weather(days)
-	})
+	w := services.NewWeatherService(sse,
+		func(today services.Day) templ.Component {
+			return weather.Current(today)
+		},
+		func(days []services.Day) templ.Component {
+			return weather.Forecast(days)
+		},
+	)
 
 	appHandler := handlers.NewAppHandler(s, w)
 	handlers.SetupRoutes(e, sse, appHandler)

@@ -10,16 +10,18 @@ templ Weather(d []services.Day) {
 		class="flex items-center justify-between"
 		hx-ext="sse"
 		sse-connect="/sse?stream=weather"
-		sse-swap="message"
 		hx-swap="outerHTML"
 	>
-		@current(d[0])
-		@forecast(d)
+		@Current(d[0])
+		@Forecast(d)
 	</div>
 }
 
-templ current(today services.Day) {
-	<div class="flex items-center gap-8 w-full whitespace-nowrap">
+templ Current(today services.Day) {
+	<div
+		class="flex items-center gap-8 w-full whitespace-nowrap"
+		sse-swap="current"
+	>
 		<div id="weather-icon-0" class={ "icon size-24", today.Icon }></div>
 		<div class="grid">
 			<div id="day-name-0" class="text-secondary text-secondary">{ today.Name }</div>
@@ -65,8 +67,11 @@ func weatherDisplay(i int) string {
 	return "sm:grid"
 }
 
-templ forecast(weather []services.Day) {
-	<div class="flex items-center gap-10 whitespace-nowrap opacity-90">
+templ Forecast(weather []services.Day) {
+	<div
+		class="flex items-center gap-10 whitespace-nowrap opacity-90"
+		sse-swap="forecast"
+	>
 		for i := 1; i < len(weather); i++ {
 			<div class={ "hidden place-items-end", weatherDisplay(i) }>
 				<div id={ fmt.Sprintf("weather-icon-%d", i) } class={ "icon", weather[i].Icon }></div>
