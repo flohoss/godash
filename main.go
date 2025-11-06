@@ -84,8 +84,8 @@ func main() {
 	sse := sse.New()
 	sse.AutoReplay = false
 
-	s := services.NewSystemService(sse, func(buffer *services.Buffer, static *services.Static) templ.Component {
-		return system.System(buffer, static)
+	s := services.NewSystemService(sse, func(id, icon, static string, detail services.Detail) templ.Component {
+		return system.Badge(id, icon, static, detail)
 	})
 	w := services.NewWeatherService(sse, func(days []services.Day) templ.Component {
 		return weather.Weather(days)

@@ -5,8 +5,12 @@ import (
 	"github.com/flohoss/godash/services"
 )
 
-templ badge(id string, icon string, details services.Detail, static string, hideSmall bool) {
-	<div class={ "grid gap-1 w-full", templ.KV("hidden md:grid", hideSmall) }>
+templ Badge(id, icon, static string, details services.Detail) {
+	{{ hideSmall := id == "disk" }}
+	<div
+		class={ "grid gap-1 w-full", templ.KV("hidden md:grid", hideSmall) }
+		sse-swap={ id }
+	>
 		<div class="flex gap-2 items-start justify-between w-full min-w-0">
 			<div>
 				<div
@@ -37,11 +41,10 @@ templ System(buffer *services.Buffer, static *services.Static) {
 		class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8"
 		hx-ext="sse"
 		sse-connect="/sse?stream=system"
-		sse-swap="message"
 		hx-swap="outerHTML"
 	>
-		@badge("cpu", "icon-[bi--cpu]", buffer.CPU, static.CPU, false)
-		@badge("ram", "icon-[bi--memory]", buffer.RAM, static.RAM, true)
-		@badge("disk", "icon-[bi--hdd]", buffer.Disk, static.Disk, true)
+		@Badge("cpu", "icon-[bi--cpu]", static.CPU, buffer.CPU)
+		@Badge("ram", "icon-[bi--memory]", static.RAM, buffer.RAM)
+		@Badge("disk", "icon-[bi--hdd]", static.Disk, buffer.Disk)
 	</div>
 }

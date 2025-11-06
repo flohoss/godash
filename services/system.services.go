@@ -18,11 +18,11 @@ import (
 )
 
 type SystemService struct {
-	sse          *sse.Server
-	mu           sync.Mutex
-	static       Static
-	buffer       Buffer
-	renderReport func(*Buffer, *Static) templ.Component
+	sse         *sse.Server
+	mu          sync.Mutex
+	static      Static
+	buffer      Buffer
+	renderBadge func(string, string, string, Detail) templ.Component
 }
 
 type Static struct {
@@ -42,8 +42,8 @@ type Detail struct {
 	Percentage int    `json:"percentage"`
 }
 
-func NewSystemService(sse *sse.Server, renderReport func(*Buffer, *Static) templ.Component) *SystemService {
-	s := SystemService{sse: sse, renderReport: renderReport}
+func NewSystemService(sse *sse.Server, renderBadge func(string, string, string, Detail) templ.Component) *SystemService {
+	s := SystemService{sse: sse, renderBadge: renderBadge}
 	sse.CreateStream("system")
 	go s.collect()
 	return &s
@@ -69,7 +69,7 @@ func (s *SystemService) initStatic() {
 	}
 
 	r, err := mem.VirtualMemory()
-	if err != nil && r.SwapTotal > 0 {
+	if err == nil && r.SwapTotal > 0 {
 		s.static.RAM = readable.ReadableSize(r.SwapTotal) + " swap"
 	} else {
 		s.static.RAM = "no swap"
@@ -92,6 +92,12 @@ func (s *SystemService) collect() {
 	s.initStatic()
 	s.mu.Unlock()
 
+	// Reusable buffers to reduce allocations
+	var cpuBuf, ramBuf, diskBuf bytes.Buffer
+
+	// Track previous values to avoid unnecessary updates
+	var prevCPU, prevRAM, prevDisk int
+
 	for range ticker.C {
 		cpuPercent, err := cpu.Percent(0, false)
 		if err != nil || len(cpuPercent) == 0 {
@@ -108,22 +114,52 @@ func (s *SystemService) collect() {
 			continue
 		}
 
-		s.mu.Lock()
-		s.buffer.CPU.Percentage = int(math.Floor(cpuPercent[0]))
-		s.buffer.RAM = Detail{
-			Value:      readable.ReadableSizePair(memStat.Used, memStat.Total),
-			Percentage: int(math.Floor(memStat.UsedPercent)),
-		}
-		s.buffer.Disk = Detail{
-			Value:      readable.ReadableSizePair(diskStat.Used, diskStat.Total),
-			Percentage: int(math.Floor(diskStat.UsedPercent)),
-		}
-		s.mu.Unlock()
+		// Calculate new values
+		newCPU := int(math.Floor(cpuPercent[0]))
+		newRAM := int(math.Floor(memStat.UsedPercent))
+		newDisk := int(math.Floor(diskStat.UsedPercent))
 
-		var buf bytes.Buffer
-		err = s.renderReport(s.GetBuffer(), s.GetStatic()).Render(context.Background(), &buf)
-		if err == nil {
-			s.sse.Publish("system", &sse.Event{Data: buf.Bytes()})
+		s.mu.Lock()
+
+		// Update and publish CPU (changes frequently)
+		if newCPU != prevCPU {
+			prevCPU = newCPU
+			s.buffer.CPU.Percentage = newCPU
+
+			cpuBuf.Reset()
+			if err := s.renderBadge("cpu", "icon-[bi--cpu]", s.static.CPU, s.buffer.CPU).Render(context.Background(), &cpuBuf); err == nil {
+				s.sse.Publish("system", &sse.Event{Event: []byte("cpu"), Data: cpuBuf.Bytes()})
+			}
 		}
+
+		// Update and publish RAM (changes less frequently)
+		if newRAM != prevRAM {
+			prevRAM = newRAM
+			s.buffer.RAM = Detail{
+				Value:      readable.ReadableSizePair(memStat.Used, memStat.Total),
+				Percentage: newRAM,
+			}
+
+			ramBuf.Reset()
+			if err := s.renderBadge("ram", "icon-[bi--memory]", s.static.RAM, s.buffer.RAM).Render(context.Background(), &ramBuf); err == nil {
+				s.sse.Publish("system", &sse.Event{Event: []byte("ram"), Data: ramBuf.Bytes()})
+			}
+		}
+
+		// Update and publish Disk (changes rarely)
+		if newDisk != prevDisk {
+			prevDisk = newDisk
+			s.buffer.Disk = Detail{
+				Value:      readable.ReadableSizePair(diskStat.Used, diskStat.Total),
+				Percentage: newDisk,
+			}
+
+			diskBuf.Reset()
+			if err := s.renderBadge("disk", "icon-[bi--hdd]", s.static.Disk, s.buffer.Disk).Render(context.Background(), &diskBuf); err == nil {
+				s.sse.Publish("system", &sse.Event{Event: []byte("disk"), Data: diskBuf.Bytes()})
+			}
+		}
+
+		s.mu.Unlock()
 	}
 }
