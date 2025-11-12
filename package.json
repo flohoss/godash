@@ -5,12 +5,12 @@
     "tw:build": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --minify"
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.403",
+    "@iconify/json": "^2.2.406",
     "@iconify/tailwind4": "^1.1.0",
-    "@tailwindcss/cli": "^4.1.16",
-    "daisyui": "^5.4.5",
+    "@tailwindcss/cli": "^4.1.17",
+    "daisyui": "^5.5.0",
     "prettier": "^3.6.2",
-    "tailwindcss": "^4.1.16"
+    "tailwindcss": "^4.1.17"
   },
   "prettier": {
     "tabWidth": 2,
