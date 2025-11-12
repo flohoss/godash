@@ -157,11 +157,11 @@ docker compose up --build --force-recreate
 #### Node packages
 
 ```sh
-docker compose run --rm yarn upgrade --latest
+docker compose run --rm --pull always yarn upgrade --latest
 ```
 
 #### Go modules
 
 ```sh
-docker compose run --rm go get -u && go mod tidy
+docker compose run --rm --pull always go get -u && go mod tidy
 ```
