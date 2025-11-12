@@ -9,7 +9,7 @@ services:
       - 7331:7331
 
   tailwind:
-    image: node:lts-alpine
+    image: node:24-alpine
     working_dir: /app
     command: yarn tw:dev
     tty: true
@@ -19,7 +19,7 @@ services:
   yarn:
     profiles:
       - dev
-    image: node:lts-alpine
+    image: node:24-alpine
     working_dir: /app
     entrypoint: yarn
     volumes:
