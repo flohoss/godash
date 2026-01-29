@@ -152,6 +152,12 @@ docker compose up --build --force-recreate
 - Auto-creates `config.yaml` if missing
 - Detects changes automatically
 
+### Format Code
+
+```bash
+docker compose run --rm --pull always yarn format
+```
+
 ### Update Dependencies
 
 #### Node packages
