@@ -1,8 +1,9 @@
 {
   "license": "MIT",
   "scripts": {
-    "tw:dev": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --watch",
-    "tw:build": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --minify"
+    "dev": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --watch",
+    "build": "npx @tailwindcss/cli -i ./assets/css/tailwind.css -o ./assets/css/style.css --minify",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "@iconify/json": "^2.2.433",
@@ -13,14 +14,15 @@
     "tailwindcss": "^4.1.18"
   },
   "prettier": {
+    "printWidth": 160,
+    "singleQuote": true,
+    "semi": true,
     "tabWidth": 2,
     "useTabs": false,
-    "semi": true,
-    "singleQuote": true,
     "trailingComma": "es5",
+    "endOfLine": "lf",
     "bracketSpacing": true,
-    "arrowParens": "always",
-    "printWidth": 160
+    "arrowParens": "always"
   },
   "dependencies": {
     "htmx-ext-sse": "^2.2.4",

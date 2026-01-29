@@ -27,7 +27,7 @@ RUN yarn install --frozen-lockfile --network-timeout 30000 --silent
 COPY ./views/ ./views/
 COPY ./assets/ ./assets/
 COPY ./services/ ./services/
-RUN yarn run tw:build
+RUN yarn run build
 
 FROM alpine:${V_ALPINE} AS final
 WORKDIR /app

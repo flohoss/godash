@@ -11,7 +11,7 @@ services:
   tailwind:
     image: node:25-alpine
     working_dir: /app
-    command: yarn tw:dev
+    command: yarn dev
     tty: true
     volumes:
       - .:/app/
