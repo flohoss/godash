@@ -31,7 +31,7 @@ type WeatherResponse struct {
 		ApparentTemperature float64 `json:"apparent_temperature"`
 		RelativeHumidity    int     `json:"relative_humidity_2m"`
 		WeatherCode         int     `json:"weather_code"`
-		IsDay               int     `json:"is_day"`
+		IsDay               float64 `json:"is_day"`
 	} `json:"current"`
 	DailyUnits struct {
 		Time           string `json:"time"`
@@ -76,7 +76,8 @@ func GetWeather(options Options) (WeatherResponse, error) {
 
 	var weatherData WeatherResponse
 	if err := json.NewDecoder(resp.Body).Decode(&weatherData); err != nil {
-		log.Fatal(err)
+		log.Printf("failed to decode weather response: %v", err)
+		return WeatherResponse{}, err
 	}
 
 	return weatherData, nil
