@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bytes"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -16,8 +17,14 @@ func longCacheLifetime(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func render(c echo.Context, cmp templ.Component) error {
+	c.Response().Writer.WriteHeader(http.StatusOK)
 	c.Response().Header().Set(echo.HeaderContentType, "text/html; charset=utf-8")
-	return cmp.Render(c.Request().Context(), c.Response().Writer)
+	var buf bytes.Buffer
+	if err := cmp.Render(c.Request().Context(), &buf); err != nil {
+		return err
+	}
+	_, err := buf.WriteTo(c.Response())
+	return err
 }
 
 func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler) {
