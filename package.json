@@ -6,12 +6,12 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.433",
-    "@iconify/tailwind4": "^1.2.1",
-    "@tailwindcss/cli": "^4.1.18",
-    "daisyui": "^5.5.14",
+    "@iconify/json": "^2.2.451",
+    "@iconify/tailwind4": "^1.2.3",
+    "@tailwindcss/cli": "^4.2.1",
+    "daisyui": "^5.5.19",
     "prettier": "^3.8.1",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.2.1"
   },
   "prettier": {
     "printWidth": 160,
