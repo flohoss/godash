@@ -1,35 +1,59 @@
+# Single source of truth for container tool versions. CI reads this block too.
+x-build-args: &build-args
+  V_GOLANG: ${V_GOLANG:-1.26.4}
+  V_NODE: ${V_NODE:-25}
+  V_ALPINE: ${V_ALPINE:-3}
+  V_TEMPL: ${V_TEMPL:-0.3.1020}
+
+x-images:
+  go: &go-image golang:${V_GOLANG:-1.26.4}
+  node: &node-image node:${V_NODE:-25}
+
 services:
   backend:
     build:
       context: .
       dockerfile: docker/dev.dockerfile
+      args: *build-args
     volumes:
       - .:/app/
     ports:
       - 7331:7331
 
+  release:
+    profiles:
+      - build
+    build:
+      context: .
+      dockerfile: docker/release.dockerfile
+      args:
+        <<: *build-args
+        APP_VERSION: ${APP_VERSION:-dev}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+        REPO_URL: ${REPO_URL:-}
+
   tailwind:
-    image: node:25-alpine
+    image: *node-image
     working_dir: /app
     command: yarn dev
     tty: true
     volumes:
       - .:/app/
 
-  yarn:
-    profiles:
-      - dev
-    image: node:25-alpine
-    working_dir: /app
-    entrypoint: yarn
-    volumes:
-      - .:/app/
-
   go:
     profiles:
       - dev
-    image: golang:1.25-alpine
+    image: *go-image
     working_dir: /app
     entrypoint: go
+    volumes:
+      - ./:/app/
+
+  yarn:
+    profiles:
+      - dev
+    image: *node-image
+    working_dir: /app
+    entrypoint: yarn
     volumes:
       - .:/app/

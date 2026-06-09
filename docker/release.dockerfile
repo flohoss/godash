@@ -1,11 +1,7 @@
-ARG V_GOLANG=1.25.6
-ARG V_NODE=25
-ARG V_ALPINE=3
-ARG V_TEMPL=0.3.1001
-FROM alpine:${V_ALPINE} AS logo
-WORKDIR /app
-RUN apk add figlet > /dev/null 2>&1
-RUN figlet GoDash > logo.txt
+ARG V_GOLANG
+ARG V_NODE
+ARG V_ALPINE
+ARG V_TEMPL
 
 FROM golang:${V_GOLANG} AS golang-builder
 WORKDIR /app
@@ -37,13 +33,12 @@ WORKDIR /app
 RUN apk add --update --no-cache tzdata ca-certificates dumb-init su-exec && \
     rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
 
-COPY --from=logo /app/logo.txt .
 COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
 COPY --from=node-builder /app/node_modules/htmx.org/dist/htmx.min.js ./assets/js/htmx.min.js
 COPY --from=node-builder /app/node_modules/htmx-ext-sse/dist/sse.min.js ./assets/js/htmx-sse.min.js
 COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
 COPY --from=golang-builder /app/godash .
-COPY ./docker/entrypoint.sh .
+COPY ./docker/release.entrypoint.sh .
 
 EXPOSE 8156
 
@@ -51,7 +46,7 @@ ARG APP_VERSION
 ENV APP_VERSION=$APP_VERSION
 ARG BUILD_TIME
 ENV BUILD_TIME=$BUILD_TIME
-ARG REPO
-ENV REPO=$REPO
+ARG REPO_URL
+ENV REPO_URL=$REPO_URL
 
-ENTRYPOINT ["dumb-init", "--", "/app/entrypoint.sh"]
+ENTRYPOINT ["dumb-init", "--", "/app/release.entrypoint.sh"]

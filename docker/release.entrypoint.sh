@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e
 
-cat /app/logo.txt
-
 APP="./godash"
 USER="appuser"
 HOME="/app"

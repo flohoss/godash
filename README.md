@@ -142,32 +142,20 @@ Feel free to open issues or submit pull requests to improve goDash!
 
 ## Development
 
-### Run Locally with Docker Compose
+### Automatic rebuild and reload
 
-```bash
-docker compose run --rm yarn install --frozen-lockfile
-docker compose up --build --force-recreate
-```
-
-- Auto-creates `config.yaml` if missing
-- Detects changes automatically
-
-### Format Code
-
-```bash
-docker compose run --rm --pull always yarn format
+```sh
+docker compose up
 ```
 
 ### Update Dependencies
 
-#### Node packages
+```bash
+# Node packages
+docker compose run --rm yarn install --frozen-lockfile
+docker compose run --rm yarn upgrade --latest
 
-```sh
-docker compose run --rm --pull always yarn upgrade --latest
-```
-
-#### Go modules
-
-```sh
-docker compose run --rm --pull always go get -u && go mod tidy
+# Go packages
+docker compose run --rm go get -u ./...
+docker compose run --rm go mod tidy
 ```
