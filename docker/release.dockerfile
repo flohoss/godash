@@ -34,8 +34,7 @@ RUN apk add --update --no-cache tzdata ca-certificates dumb-init su-exec && \
     rm -rf /tmp/* /var/tmp/* /usr/share/man /var/cache/apk/*
 
 COPY --from=node-builder /app/assets/favicon/ ./assets/favicon/
-COPY --from=node-builder /app/node_modules/htmx.org/dist/htmx.min.js ./assets/js/htmx.min.js
-COPY --from=node-builder /app/node_modules/htmx-ext-sse/dist/sse.min.js ./assets/js/htmx-sse.min.js
+COPY --from=node-builder /app/assets/js/sse.js ./assets/js/sse.js
 COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
 COPY --from=golang-builder /app/godash .
 COPY ./docker/release.entrypoint.sh .
