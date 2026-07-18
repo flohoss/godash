@@ -21,7 +21,6 @@ const (
 var cfg GlobalConfig
 var validate *validator.Validate
 var mu sync.RWMutex
-var cfgVersion uint64
 
 var (
 	iconCache   = map[string][2]string{}
@@ -146,7 +145,6 @@ func ValidateAndLoadConfig() error {
 
 	mu.Lock()
 	cfg = tempCfg
-	cfgVersion++
 	mu.Unlock()
 
 	os.Setenv("TZ", cfg.TimeZone)
@@ -303,10 +301,4 @@ func GetTimeZone() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.TimeZone
-}
-
-func GetVersion() uint64 {
-	mu.RLock()
-	defer mu.RUnlock()
-	return cfgVersion
 }
