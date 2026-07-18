@@ -19,9 +19,14 @@ const (
 )
 
 var cfg GlobalConfig
-
 var validate *validator.Validate
 var mu sync.RWMutex
+var cfgVersion uint64
+
+var (
+	iconCache   = map[string][2]string{}
+	iconCacheMu sync.Mutex
+)
 
 type GlobalConfig struct {
 	LogLevel     string         `mapstructure:"log_level" validate:"omitempty,oneof=debug info warn error"`
@@ -141,6 +146,7 @@ func ValidateAndLoadConfig() error {
 
 	mu.Lock()
 	cfg = tempCfg
+	cfgVersion++
 	mu.Unlock()
 
 	os.Setenv("TZ", cfg.TimeZone)
@@ -152,27 +158,48 @@ func replaceIconStrings(applications []Category) {
 		for j := range applications[i].Entries {
 			bookmark := &applications[i].Entries[j]
 
+			if cached, ok := lookupIconCache(bookmark.Icon); ok {
+				bookmark.Icon = cached[0]
+				bookmark.IconLight = cached[1]
+				continue
+			}
+
 			var filePath, filePathLight string
-			var err error
 
 			if strings.HasPrefix(bookmark.Icon, "sh/") {
-				filePath, filePathLight, err = downloadIcons(handleSelfHostedIcons(bookmark.Icon, ".webp"))
+				path, lightPath, err := downloadIcons(handleSelfHostedIcons(bookmark.Icon, ".webp"))
 				if err != nil {
 					slog.Error(err.Error())
 					continue
 				}
+				filePath, filePathLight = path, lightPath
 			} else {
 				ext := filepath.Ext(bookmark.Icon)
-				filePath, filePathLight = handleLocalIcons(bookmark.Icon, ext)
-				if filePath == "" {
-					slog.Warn("could not find local icon", "path", bookmark.Icon)
+				path, lightPath, err := handleLocalIcons(bookmark.Icon, ext)
+				if err != nil {
+					slog.Warn("could not find local icon", "path", bookmark.Icon, "error", err)
 				}
+				filePath, filePathLight = path, lightPath
 			}
 
 			bookmark.Icon = filePath
 			bookmark.IconLight = filePathLight
+			storeIconCache(bookmark.Icon, [2]string{filePath, filePathLight})
 		}
 	}
+}
+
+func lookupIconCache(key string) ([2]string, bool) {
+	iconCacheMu.Lock()
+	defer iconCacheMu.Unlock()
+	v, ok := iconCache[key]
+	return v, ok
+}
+
+func storeIconCache(key string, value [2]string) {
+	iconCacheMu.Lock()
+	defer iconCacheMu.Unlock()
+	iconCache[key] = value
 }
 
 func downloadIcons(title, url, lightTitle, lightUrl string) (string, string, error) {
@@ -180,7 +207,11 @@ func downloadIcons(title, url, lightTitle, lightUrl string) (string, string, err
 	if err != nil {
 		return "", "", err
 	}
-	lightPath, _ := downloadIcon(lightTitle, lightUrl)
+	lightPath, err := downloadIcon(lightTitle, lightUrl)
+	if err != nil {
+		slog.Warn("could not download light icon, falling back to base", "title", lightTitle, "error", err)
+		lightPath = path
+	}
 	return path, lightPath, nil
 }
 
@@ -192,6 +223,8 @@ func downloadIcon(title, url string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+	} else if err != nil {
+		return "", fmt.Errorf("stat icon %q: %w", filePath, err)
 	}
 	return "/" + strings.TrimPrefix(filePath, ConfigFolder), nil
 }
@@ -204,18 +237,17 @@ func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
 	return title, url, lightTitle, lightUrl
 }
 
-func handleLocalIcons(title, ext string) (string, string) {
+func handleLocalIcons(title, ext string) (string, string, error) {
 	filePath := iconsFolder + title
-	_, err := os.Stat(filePath)
-	if os.IsNotExist(err) {
-		return "", ""
+	if _, err := os.Stat(filePath); err != nil {
+		return "", "", err
 	}
+	basePath := "/" + strings.TrimPrefix(filePath, ConfigFolder)
 	filePathLight := strings.Replace(filePath, ext, "-light"+ext, 1)
-	_, err = os.Stat(filePathLight)
-	if os.IsNotExist(err) {
-		return "/" + strings.TrimPrefix(filePath, ConfigFolder), ""
+	if _, err := os.Stat(filePathLight); err != nil {
+		return basePath, basePath, nil
 	}
-	return "/" + strings.TrimPrefix(filePath, ConfigFolder), "/" + strings.TrimPrefix(filePathLight, ConfigFolder)
+	return basePath, "/" + strings.TrimPrefix(filePathLight, ConfigFolder), nil
 }
 
 func ConfigLoaded() bool {
@@ -271,4 +303,10 @@ func GetTimeZone() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.TimeZone
+}
+
+func GetVersion() uint64 {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfgVersion
 }
