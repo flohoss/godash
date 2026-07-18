@@ -8,9 +8,7 @@ import (
 templ Weather(d []services.Day) {
 	<div
 		class="flex items-center justify-between"
-		hx-ext="sse"
-		sse-connect="/sse?stream=weather"
-		hx-swap="outerHTML"
+		data-sse="/sse?stream=weather"
 	>
 		@Current(d[0])
 		@Forecast(d)
@@ -20,7 +18,6 @@ templ Weather(d []services.Day) {
 templ Current(today services.Day) {
 	<div
 		class="flex items-center gap-8 w-full whitespace-nowrap"
-		sse-swap="current"
 	>
 		<div id="weather-icon-0" class={ "icon size-24", today.Icon }></div>
 		<div class="grid">
@@ -70,7 +67,6 @@ func weatherDisplay(i int) string {
 templ Forecast(weather []services.Day) {
 	<div
 		class="flex items-center gap-10 whitespace-nowrap opacity-90"
-		sse-swap="forecast"
 	>
 		for i := 1; i < len(weather); i++ {
 			<div class={ "hidden place-items-end", weatherDisplay(i) }>

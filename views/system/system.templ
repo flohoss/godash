@@ -9,7 +9,6 @@ templ Badge(id, icon, static string, details services.Detail) {
 	{{ hideSmall := id == "disk" }}
 	<div
 		class={ "grid gap-1 w-full", templ.KV("hidden md:grid", hideSmall) }
-		sse-swap={ id }
 	>
 		<div class="flex gap-2 items-start justify-between w-full min-w-0">
 			<div>
@@ -39,9 +38,7 @@ templ Badge(id, icon, static string, details services.Detail) {
 templ System(buffer *services.Buffer, static *services.Static) {
 	<div
 		class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8"
-		hx-ext="sse"
-		sse-connect="/sse?stream=system"
-		hx-swap="outerHTML"
+		data-sse="/sse?stream=system"
 	>
 		@Badge("cpu", "icon-[bi--cpu]", static.CPU, buffer.CPU)
 		@Badge("ram", "icon-[bi--memory]", static.RAM, buffer.RAM)

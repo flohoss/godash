@@ -4,22 +4,18 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
-	"github.com/a-h/templ"
 	"github.com/fsnotify/fsnotify"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/r3labs/sse/v2"
+	sseserver "github.com/r3labs/sse/v2"
 	"github.com/spf13/viper"
 
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/handlers"
 	"github.com/flohoss/godash/services"
-	"github.com/flohoss/godash/views/system"
-	"github.com/flohoss/godash/views/weather"
 )
 
 func setupRouter() *echo.Echo {
@@ -31,7 +27,7 @@ func setupRouter() *echo.Echo {
 	e.Use(middleware.Recover())
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
-			return strings.Contains(c.Path(), "sse")
+			return c.Path() == "/sse"
 		},
 	}))
 
@@ -81,20 +77,14 @@ func main() {
 
 	setupViperWatcher()
 
-	sse := sse.New()
+	sse := sseserver.New()
 	sse.AutoReplay = false
+	sse.OnSubscribe = func(streamID string, _ *sseserver.Subscriber) {
+		services.PublishSnapshot(streamID)
+	}
 
-	s := services.NewSystemService(sse, func(id, icon, static string, detail services.Detail) templ.Component {
-		return system.Badge(id, icon, static, detail)
-	})
-	w := services.NewWeatherService(sse,
-		func(today services.Day) templ.Component {
-			return weather.Current(today)
-		},
-		func(days []services.Day) templ.Component {
-			return weather.Forecast(days)
-		},
-	)
+	s := services.NewSystemService(sse)
+	w := services.NewWeatherService(sse)
 
 	appHandler := handlers.NewAppHandler(s, w)
 	handlers.SetupRoutes(e, sse, appHandler)

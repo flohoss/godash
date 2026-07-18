@@ -1,26 +1,22 @@
 package services
 
 import (
-	"bytes"
-	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"sync"
 	"time"
 
-	"github.com/a-h/templ"
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/pkg/meteo"
 	"github.com/r3labs/sse/v2"
 )
 
 type WeatherService struct {
-	weather        []Day
-	sse            *sse.Server
-	mu             sync.RWMutex
-	renderCurrent  func(Day) templ.Component
-	renderForecast func([]Day) templ.Component
-	lastResponse   *meteo.WeatherResponse
+	weather      []Day
+	sse          *sse.Server
+	mu           sync.RWMutex
+	lastResponse *meteo.WeatherResponse
 }
 
 type Day struct {
@@ -39,16 +35,11 @@ type More struct {
 	Sunset              string `json:"sunset"`
 }
 
-func NewWeatherService(sse *sse.Server, renderCurrent func(Day) templ.Component, renderForecast func([]Day) templ.Component) *WeatherService {
-	w := &WeatherService{
-		sse:            sse,
-		renderCurrent:  renderCurrent,
-		renderForecast: renderForecast,
-	}
+func NewWeatherService(sse *sse.Server) *WeatherService {
+	w := &WeatherService{sse: sse}
 	sse.CreateStream("weather")
 
-	var currentBuf, forecastBuf bytes.Buffer
-	if err := w.fetchAndPublish(&currentBuf, &forecastBuf); err != nil {
+	if err := w.fetchAndPublish(); err != nil {
 		slog.Error("Failed initial weather fetch", "error", err)
 		w.weather = []Day{{
 			Name:           "Loading...",
@@ -59,8 +50,37 @@ func NewWeatherService(sse *sse.Server, renderCurrent func(Day) templ.Component,
 		}}
 	}
 
+	RegisterSnapshot("weather", w.publishSnapshot)
+
 	go w.collect()
 	return w
+}
+
+func (w *WeatherService) publishSnapshot() {
+	w.mu.RLock()
+	weather := w.weather
+	w.mu.RUnlock()
+	if len(weather) == 0 {
+		return
+	}
+	w.publishCurrent(weather[0])
+	w.publishForecast(weather)
+}
+
+func (w *WeatherService) publishCurrent(day Day) {
+	data, err := json.Marshal(day)
+	if err != nil {
+		return
+	}
+	w.sse.Publish("weather", &sse.Event{Event: []byte("current"), Data: append([]byte(nil), data...)})
+}
+
+func (w *WeatherService) publishForecast(days []Day) {
+	data, err := json.Marshal(days)
+	if err != nil {
+		return
+	}
+	w.sse.Publish("weather", &sse.Event{Event: []byte("forecast"), Data: append([]byte(nil), data...)})
 }
 
 func (w *WeatherService) GetCurrentWeather() []Day {
@@ -70,19 +90,17 @@ func (w *WeatherService) GetCurrentWeather() []Day {
 }
 
 func (w *WeatherService) collect() {
-	ticker := time.NewTicker(90 * time.Second)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	var currentBuf, forecastBuf bytes.Buffer
-
 	for range ticker.C {
-		if err := w.fetchAndPublish(&currentBuf, &forecastBuf); err != nil {
+		if err := w.fetchAndPublish(); err != nil {
 			slog.Error("Failed to update weather", "error", err)
 		}
 	}
 }
 
-func (w *WeatherService) fetchAndPublish(currentBuf, forecastBuf *bytes.Buffer) error {
+func (w *WeatherService) fetchAndPublish() error {
 	settings := config.GetWeatherSettings()
 	res, err := meteo.GetWeather(meteo.Options{
 		Latitude:  settings.Latitude,
@@ -131,17 +149,8 @@ func (w *WeatherService) fetchAndPublish(currentBuf, forecastBuf *bytes.Buffer) 
 	w.lastResponse = &res
 	w.mu.Unlock()
 
-	currentBuf.Reset()
-	if err := w.renderCurrent(newWeather[0]).Render(context.Background(), currentBuf); err != nil {
-		return err
-	}
-	w.sse.Publish("weather", &sse.Event{Event: []byte("current"), Data: currentBuf.Bytes()})
-
-	forecastBuf.Reset()
-	if err := w.renderForecast(newWeather).Render(context.Background(), forecastBuf); err != nil {
-		return err
-	}
-	w.sse.Publish("weather", &sse.Event{Event: []byte("forecast"), Data: forecastBuf.Bytes()})
+	w.publishCurrent(newWeather[0])
+	w.publishForecast(newWeather)
 
 	return nil
 }

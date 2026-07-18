@@ -1,22 +1,26 @@
 package views
 
 import (
+	"os"
+	"time"
+
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/services"
 	"github.com/flohoss/godash/views/bookmarks"
 	"github.com/flohoss/godash/views/links"
 	"github.com/flohoss/godash/views/system"
 	"github.com/flohoss/godash/views/weather"
-	"os"
-	"time"
 )
 
-func appendVersionQuery(url string) string {
-	version := os.Getenv("APP_VERSION")
-	if version == "" {
-		version = time.Now().Format("20060102150405")
+var assetVersion = func() string {
+	if v := os.Getenv("APP_VERSION"); v != "" {
+		return v
 	}
-	return url + "?v=" + version
+	return time.Now().Format("20060102150405")
+}()
+
+func appendVersionQuery(url string) string {
+	return url + "?v=" + assetVersion
 }
 
 templ Home(title string, b []config.Category, l []config.Category, buffer *services.Buffer, static *services.Static, d []services.Day) {
@@ -34,8 +38,7 @@ templ Home(title string, b []config.Category, l []config.Category, buffer *servi
 			<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
 			<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
 			<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
-			<script src={ appendVersionQuery("/assets/js/htmx.min.js") } defer></script>
-			<script src={ appendVersionQuery("/assets/js/htmx-sse.min.js") } defer></script>
+			<script src={ appendVersionQuery("/assets/js/sse.js") } defer></script>
 		</head>
 		<body>
 			<main id="main" class="container">

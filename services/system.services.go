@@ -1,15 +1,13 @@
 package services
 
 import (
-	"bytes"
-	"context"
+	"encoding/json"
 	"math"
 	"runtime"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/a-h/templ"
 	"github.com/flohoss/godash/internal/readable"
 	"github.com/r3labs/sse/v2"
 	"github.com/shirou/gopsutil/v4/cpu"
@@ -18,11 +16,10 @@ import (
 )
 
 type SystemService struct {
-	sse         *sse.Server
-	mu          sync.Mutex
-	static      Static
-	buffer      Buffer
-	renderBadge func(string, string, string, Detail) templ.Component
+	sse    *sse.Server
+	mu     sync.Mutex
+	static Static
+	buffer Buffer
 }
 
 type Static struct {
@@ -42,11 +39,28 @@ type Detail struct {
 	Percentage int    `json:"percentage"`
 }
 
-func NewSystemService(sse *sse.Server, renderBadge func(string, string, string, Detail) templ.Component) *SystemService {
-	s := SystemService{sse: sse, renderBadge: renderBadge}
+func NewSystemService(sse *sse.Server) *SystemService {
+	s := SystemService{sse: sse}
 	sse.CreateStream("system")
 	go s.collect()
+	RegisterSnapshot("system", s.publishSnapshot)
 	return &s
+}
+
+func (s *SystemService) publishJSON(id string, d Detail) {
+	data, err := json.Marshal(d)
+	if err != nil {
+		return
+	}
+	s.sse.Publish("system", &sse.Event{Event: []byte(id), Data: append([]byte(nil), data...)})
+}
+
+func (s *SystemService) publishSnapshot() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.publishJSON("cpu", s.buffer.CPU)
+	s.publishJSON("ram", s.buffer.RAM)
+	s.publishJSON("disk", s.buffer.Disk)
 }
 
 func (s *SystemService) GetBuffer() *Buffer {
@@ -92,10 +106,6 @@ func (s *SystemService) collect() {
 	s.initStatic()
 	s.mu.Unlock()
 
-	// Reusable buffers to reduce allocations
-	var cpuBuf, ramBuf, diskBuf bytes.Buffer
-
-	// Track previous values to avoid unnecessary updates
 	var prevCPU, prevRAM, prevDisk int
 
 	for range ticker.C {
@@ -114,50 +124,34 @@ func (s *SystemService) collect() {
 			continue
 		}
 
-		// Calculate new values
 		newCPU := int(math.Floor(cpuPercent[0]))
 		newRAM := int(math.Floor(memStat.UsedPercent))
 		newDisk := int(math.Floor(diskStat.UsedPercent))
 
 		s.mu.Lock()
 
-		// Update and publish CPU (changes frequently)
 		if newCPU != prevCPU {
 			prevCPU = newCPU
 			s.buffer.CPU.Percentage = newCPU
-
-			cpuBuf.Reset()
-			if err := s.renderBadge("cpu", "icon-[bi--cpu]", s.static.CPU, s.buffer.CPU).Render(context.Background(), &cpuBuf); err == nil {
-				s.sse.Publish("system", &sse.Event{Event: []byte("cpu"), Data: cpuBuf.Bytes()})
-			}
+			s.publishJSON("cpu", s.buffer.CPU)
 		}
 
-		// Update and publish RAM (changes less frequently)
 		if newRAM != prevRAM {
 			prevRAM = newRAM
 			s.buffer.RAM = Detail{
 				Value:      readable.ReadableSizePair(memStat.Used, memStat.Total),
 				Percentage: newRAM,
 			}
-
-			ramBuf.Reset()
-			if err := s.renderBadge("ram", "icon-[bi--memory]", s.static.RAM, s.buffer.RAM).Render(context.Background(), &ramBuf); err == nil {
-				s.sse.Publish("system", &sse.Event{Event: []byte("ram"), Data: ramBuf.Bytes()})
-			}
+			s.publishJSON("ram", s.buffer.RAM)
 		}
 
-		// Update and publish Disk (changes rarely)
 		if newDisk != prevDisk {
 			prevDisk = newDisk
 			s.buffer.Disk = Detail{
 				Value:      readable.ReadableSizePair(diskStat.Used, diskStat.Total),
 				Percentage: newDisk,
 			}
-
-			diskBuf.Reset()
-			if err := s.renderBadge("disk", "icon-[bi--hdd]", s.static.Disk, s.buffer.Disk).Render(context.Background(), &diskBuf); err == nil {
-				s.sse.Publish("system", &sse.Event{Event: []byte("disk"), Data: diskBuf.Bytes()})
-			}
+			s.publishJSON("disk", s.buffer.Disk)
 		}
 
 		s.mu.Unlock()
