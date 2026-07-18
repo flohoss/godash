@@ -2,7 +2,6 @@ package bookmarks
 
 import (
 	"github.com/flohoss/godash/config"
-	"html/template"
 	"strings"
 )
 
@@ -35,27 +34,18 @@ func displayDark(app config.App) bool {
 	return !app.IgnoreDark && app.IconLight != ""
 }
 
-var bgTemplate = template.Must(template.New("bgTemplate").Parse(
-	`<div class="size-8 bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
-))
-
-var bgTemplateLight = template.Must(template.New("bgTemplate").Parse(
-	`<div class="size-8 dark:hidden bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
-))
-
-var bgTemplateDark = template.Must(template.New("bgTemplate").Parse(
-	`<div class="size-8 hidden dark:block bg-cover bg-center" style="background-image: url('{{ .Path }}')"></div>`,
-))
-
-type Icon struct {
-	Path string
+templ bgIcon(path, class string) {
+	<div
+		class={ "size-8 bg-cover bg-center", class }
+		style={ "background-image: url(" + path + ")" }
+	></div>
 }
 
 templ bookmark(application config.App) {
 	<a href={ templ.URL(application.URL) } class="hover-effect flex items-center">
 		if displayDark(application) {
-			@templ.FromGoHTML(bgTemplateLight, Icon{Path: application.Icon})
-			@templ.FromGoHTML(bgTemplateDark, Icon{Path: application.IconLight})
+			@bgIcon(application.Icon, "dark:hidden")
+			@bgIcon(application.IconLight, "hidden dark:block")
 		} else if noIcon(application) {
 			<div class="avatar avatar-placeholder">
 				<div class="bg-primary text-primary-content w-8 rounded-full">
@@ -63,7 +53,7 @@ templ bookmark(application config.App) {
 				</div>
 			</div>
 		} else {
-			@templ.FromGoHTML(bgTemplate, Icon{Path: application.Icon})
+			@bgIcon(application.Icon, "")
 		}
 		<div class="uppercase truncate ml-2">{ application.Name }</div>
 	</a>
