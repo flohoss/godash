@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 )
+
+var httpClient = &http.Client{Timeout: 10 * time.Second}
 
 type WeatherResponse struct {
 	Latitude             float64 `json:"latitude"`
@@ -64,7 +67,7 @@ func GetWeather(options Options) (WeatherResponse, error) {
 	daily := "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset"
 	params := fmt.Sprintf("?latitude=%f&longitude=%f&timezone=%s&temperature_unit=%s&daily=%s&current=%s", options.Latitude, options.Longitude, options.TimeZone, options.Units, daily, current)
 
-	resp, err := http.Get(url + params)
+	resp, err := httpClient.Get(url + params)
 	if err != nil {
 		return WeatherResponse{}, err
 	}
