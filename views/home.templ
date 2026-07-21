@@ -23,7 +23,7 @@ func appendVersionQuery(url string) string {
 	return url + "?v=" + assetVersion
 }
 
-templ Home(title string, b []config.Category, l []config.Category, buffer *services.Buffer, static *services.Static, d []services.Day) {
+templ Home(title string, b []config.Category, l []config.Category, buffer *services.Buffer, static *services.Static, d []services.Day, h []services.Hour) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
@@ -43,7 +43,7 @@ templ Home(title string, b []config.Category, l []config.Category, buffer *servi
 		<body>
 			<main id="main" class="container">
 				<div class="mt-4 mb-8 md:my-8 lg:my-10">
-					@weather.Weather(d)
+					@weather.Weather(d, h)
 				</div>
 				<div class="py-3">
 					@system.System(buffer, static)

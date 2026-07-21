@@ -14,6 +14,7 @@ import (
 
 type WeatherService struct {
 	weather      []Day
+	hourly       []Hour
 	sse          *sse.Server
 	mu           sync.RWMutex
 	lastResponse *meteo.WeatherResponse
@@ -27,10 +28,22 @@ type Day struct {
 	More           More   `json:"more"`
 }
 
+type Hour struct {
+	Time        string `json:"time"`
+	Temperature string `json:"temperature"`
+	FeelsLike   string `json:"feels_like"`
+	Icon        string `json:"icon"`
+	WindSpeed   string `json:"wind_speed"`
+	WindDir     string `json:"wind_dir"`
+	PrecipProb  string `json:"precip_prob"`
+}
+
 type More struct {
 	CurrentTemperature  string `json:"current_temperature"`
 	ApparentTemperature string `json:"apparent_temperature"`
 	Humidity            string `json:"humidity"`
+	WindSpeed           string `json:"wind_speed"`
+	WindDir             string `json:"wind_dir"`
 	Sunrise             string `json:"sunrise"`
 	Sunset              string `json:"sunset"`
 }
@@ -59,12 +72,14 @@ func NewWeatherService(sse *sse.Server) *WeatherService {
 func (w *WeatherService) publishSnapshot() {
 	w.mu.RLock()
 	weather := w.weather
+	hourly := w.hourly
 	w.mu.RUnlock()
 	if len(weather) == 0 {
 		return
 	}
 	w.publishCurrent(weather[0])
 	w.publishForecast(weather)
+	w.publishHourly(hourly)
 }
 
 func (w *WeatherService) publishCurrent(day Day) {
@@ -83,21 +98,56 @@ func (w *WeatherService) publishForecast(days []Day) {
 	w.sse.Publish("weather", &sse.Event{Event: []byte("forecast"), Data: append([]byte(nil), data...)})
 }
 
+func (w *WeatherService) publishHourly(hours []Hour) {
+	data, err := json.Marshal(hours)
+	if err != nil {
+		return
+	}
+	w.sse.Publish("weather", &sse.Event{Event: []byte("hourly"), Data: append([]byte(nil), data...)})
+}
+
 func (w *WeatherService) GetCurrentWeather() []Day {
 	w.mu.RLock()
 	defer w.mu.RUnlock()
 	return w.weather
 }
 
-func (w *WeatherService) collect() {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
+func (w *WeatherService) GetCurrentHourly() []Hour {
+	w.mu.RLock()
+	defer w.mu.RUnlock()
+	return w.hourly
+}
 
-	for range ticker.C {
-		if err := w.fetchAndPublish(); err != nil {
-			slog.Error("Failed to update weather", "error", err)
+func (w *WeatherService) collect() {
+	fetchTicker := time.NewTicker(5 * time.Minute)
+	defer fetchTicker.Stop()
+	hourlyTicker := time.NewTicker(1 * time.Minute)
+	defer hourlyTicker.Stop()
+
+	for {
+		select {
+		case <-fetchTicker.C:
+			if err := w.fetchAndPublish(); err != nil {
+				slog.Error("Failed to update weather", "error", err)
+			}
+		case <-hourlyTicker.C:
+			w.recomputeHourly()
 		}
 	}
+}
+
+func (w *WeatherService) recomputeHourly() {
+	w.mu.RLock()
+	res := w.lastResponse
+	w.mu.RUnlock()
+	if res == nil {
+		return
+	}
+	hours := buildHourly(res)
+	w.mu.Lock()
+	w.hourly = hours
+	w.mu.Unlock()
+	w.publishHourly(hours)
 }
 
 func (w *WeatherService) fetchAndPublish() error {
@@ -117,6 +167,7 @@ func (w *WeatherService) fetchAndPublish() error {
 	w.mu.RUnlock()
 
 	if !hasChanged {
+		w.recomputeHourly()
 		return nil
 	}
 
@@ -137,6 +188,8 @@ func (w *WeatherService) fetchAndPublish() error {
 				CurrentTemperature:  fmt.Sprintf("%.1f %s", res.Current.Temperature2m, res.CurrentUnits.Temperature2m),
 				ApparentTemperature: fmt.Sprintf("%.1f %s", res.Current.ApparentTemperature, res.CurrentUnits.ApparentTemperature),
 				Humidity:            fmt.Sprintf("%d %s", res.Current.RelativeHumidity, res.CurrentUnits.RelativeHumidity),
+				WindSpeed:           fmt.Sprintf("%.0f %s", res.Current.WindSpeed10m, res.CurrentUnits.WindSpeed10m),
+				WindDir:             windDirArrow(res.Current.WindDirection10m),
 				Sunrise:             sunrise.Format("15:04"),
 				Sunset:              sunset.Format("15:04"),
 			}
@@ -144,15 +197,73 @@ func (w *WeatherService) fetchAndPublish() error {
 		newWeather = append(newWeather, day)
 	}
 
+	hours := buildHourly(&res)
+
 	w.mu.Lock()
 	w.weather = newWeather
+	w.hourly = hours
 	w.lastResponse = &res
 	w.mu.Unlock()
 
 	w.publishCurrent(newWeather[0])
 	w.publishForecast(newWeather)
+	w.publishHourly(hours)
 
 	return nil
+}
+
+func buildHourly(res *meteo.WeatherResponse) []Hour {
+	if len(res.Hourly.Time) == 0 {
+		return []Hour{}
+	}
+	now := time.Now()
+	start := now.Truncate(time.Hour).Add(time.Hour)
+	hours := make([]Hour, 0, 8)
+	for t := start; len(hours) < 8; t = t.Add(time.Hour) {
+		idx := nearestHourIndex(res, t)
+		if idx < 0 {
+			continue
+		}
+		isDay := res.Hourly.IsDay[idx] == 1
+		hours = append(hours, Hour{
+			Time:        t.Format("15:04"),
+			Temperature: fmt.Sprintf("%.0f %s", res.Hourly.Temperature2m[idx], res.HourlyUnits.Temperature2m),
+			FeelsLike:   fmt.Sprintf("%.0f %s", res.Hourly.ApparentTemperature[idx], res.HourlyUnits.ApparentTemperature),
+			Icon:        getIcon(res.Hourly.WeatherCode[idx], isDay),
+			WindSpeed:   fmt.Sprintf("%.0f %s", res.Hourly.WindSpeed10m[idx], res.HourlyUnits.WindSpeed10m),
+			WindDir:     windDirArrow(res.Hourly.WindDirection10m[idx]),
+			PrecipProb:  fmt.Sprintf("%d%%", res.Hourly.PrecipitationProbability[idx]),
+		})
+	}
+	return hours
+}
+
+func windDirArrow(deg int) string {
+	arrows := []string{"↓", "↙", "←", "↖", "↑", "↗", "→", "↘"}
+	if deg < 0 || deg >= 360 {
+		return ""
+	}
+	return arrows[(deg+22)/45%8]
+}
+
+func nearestHourIndex(res *meteo.WeatherResponse, target time.Time) int {
+	bestIdx := -1
+	bestDelta := time.Duration(1<<63 - 1)
+	for i, ts := range res.Hourly.Time {
+		t, err := time.ParseInLocation("2006-01-02T15:04", ts, target.Location())
+		if err != nil {
+			continue
+		}
+		delta := t.Sub(target)
+		if delta < 0 {
+			delta = -delta
+		}
+		if delta < bestDelta {
+			bestDelta = delta
+			bestIdx = i
+		}
+	}
+	return bestIdx
 }
 
 func (w *WeatherService) hasResponseChanged(newRes *meteo.WeatherResponse) bool {
@@ -166,7 +277,9 @@ func (w *WeatherService) hasResponseChanged(newRes *meteo.WeatherResponse) bool 
 		prev.Current.WeatherCode != newRes.Current.WeatherCode ||
 		prev.Current.IsDay != newRes.Current.IsDay ||
 		prev.Current.RelativeHumidity != newRes.Current.RelativeHumidity ||
-		prev.Current.ApparentTemperature != newRes.Current.ApparentTemperature {
+		prev.Current.ApparentTemperature != newRes.Current.ApparentTemperature ||
+		prev.Current.WindSpeed10m != newRes.Current.WindSpeed10m ||
+		prev.Current.WindDirection10m != newRes.Current.WindDirection10m {
 		return true
 	}
 

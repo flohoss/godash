@@ -14,6 +14,7 @@ type SystemService interface {
 
 type WeatherService interface {
 	GetCurrentWeather() []services.Day
+	GetCurrentHourly() []services.Hour
 }
 
 func NewAppHandler(s SystemService, w WeatherService) *AppHandler {
@@ -32,6 +33,7 @@ func (bh *AppHandler) handleIndex(ctx echo.Context) error {
 	buffer := bh.systemService.GetBuffer()
 	static := bh.systemService.GetStatic()
 	weather := bh.weatherService.GetCurrentWeather()
+	hourly := bh.weatherService.GetCurrentHourly()
 
-	return render(ctx, views.Home(config.GetTitle(), config.GetApplications(), config.GetLinks(), buffer, static, weather))
+	return render(ctx, views.Home(config.GetTitle(), config.GetApplications(), config.GetLinks(), buffer, static, weather, hourly))
 }

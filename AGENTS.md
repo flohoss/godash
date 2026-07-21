@@ -29,8 +29,14 @@ Split commit message to a meaningful scope!
 
 ## Verification after changes
 
-After any code change, **always run these before committing** — do not skip even for small edits:
+The dev server runs `templ generate --watch --proxy` — it compiles `*.templ` files into
+`*_templ.go`, runs `go run .` behind the proxy, and **hot-reloads the browser live on every
+file change** (both templ and Go). Do **not** run `go build` or `templ generate` manually.
+Do not edit `*_templ.go` files by hand — edit the matching `*.templ` source and let the
+watcher regenerate the Go. The user sees errors live in the running server / browser.
+
+After any code change, **only run formatting before committing** — do not skip even for small edits:
 
 - **Backend:** `docker compose run --rm go fmt ./...`
 
-Only commit if all commands pass.
+Only commit if formatting passes.
