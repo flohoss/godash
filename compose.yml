@@ -4,7 +4,6 @@ x-build-args: &build-args
   V_NODE: ${V_NODE:-25}
   V_ALPINE: ${V_ALPINE:-3}
   V_TEMPL: ${V_TEMPL:-0.3.1020}
-  V_AIR: ${V_AIR:-1.65.1}
 
 x-images:
   go: &go-image golang:${V_GOLANG:-1.26.4}
@@ -16,28 +15,10 @@ services:
       context: .
       dockerfile: docker/dev.dockerfile
       args: *build-args
-    command: >
-      air
-      --build.pre_cmd "templ generate"
-      --build.cmd "go build -o tmp/main ."
-      --build.include_ext "go,templ"
-      --build.exclude_dir "tmp,assets,node_modules"
-      --build.bin "tmp/main"
-      --build.delay "100"
-      --build.stop_on_error "false"
-      --misc.clean_on_exit true
     volumes:
       - .:/app/
-    healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://localhost:8156/']
-      start_period: 10s
-      interval: 5s
-      timeout: 5s
-      retries: 60
-    environment:
-      - TZ=Europe/Berlin
     ports:
-      - 8156:8156
+      - 7331:7331
 
   release:
     profiles:
