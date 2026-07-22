@@ -35,7 +35,7 @@ templ Badge(id, icon, static string, details services.Detail) {
 	</div>
 }
 
-templ System(buffer *services.Buffer, static *services.Static) {
+templ System(buffer services.Buffer, static services.Static) {
 	<div
 		class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8"
 		data-sse="/sse?stream=system"

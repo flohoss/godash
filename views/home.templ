@@ -23,7 +23,7 @@ func appendVersionQuery(url string) string {
 	return url + "?v=" + assetVersion
 }
 
-templ Home(title string, b []config.Category, l []config.Category, buffer *services.Buffer, static *services.Static, d []services.Day, h []services.Hour) {
+templ Home(title string, b []config.Category, l []config.Category, buffer services.Buffer, static services.Static, d []services.Day, h []services.Hour) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
