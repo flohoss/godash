@@ -17,13 +17,6 @@ func longCacheLifetime(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func shortCacheLifetime(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		c.Response().Header().Set(echo.HeaderCacheControl, "no-cache")
-		return next(c)
-	}
-}
-
 func staticHandler(root string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		p := c.Param("*")
@@ -53,7 +46,7 @@ func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler) {
 	assets := e.Group("/assets", longCacheLifetime)
 	assets.GET("/*", staticHandler("assets"))
 
-	icons := e.Group("/icons", shortCacheLifetime)
+	icons := e.Group("/icons", longCacheLifetime)
 	icons.GET("/*", staticHandler("config/icons"))
 
 	e.GET("/robots.txt", func(ctx echo.Context) error {
