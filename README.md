@@ -152,8 +152,8 @@ docker compose up
 
 ```bash
 # Node packages
-docker compose run --rm yarn install --frozen-lockfile
-docker compose run --rm yarn upgrade --latest
+docker compose run --rm npm install
+docker compose run --rm npm update --latest
 
 # Go packages
 docker compose run --rm go get -u ./...

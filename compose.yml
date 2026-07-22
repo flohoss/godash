@@ -35,7 +35,7 @@ services:
   tailwind:
     image: *node-image
     working_dir: /app
-    command: yarn dev
+    command: sh -c "npm install && npm run dev"
     tty: true
     volumes:
       - .:/app/
@@ -49,11 +49,11 @@ services:
     volumes:
       - ./:/app/
 
-  yarn:
+  npm:
     profiles:
       - dev
     image: *node-image
     working_dir: /app
-    entrypoint: yarn
+    entrypoint: npm
     volumes:
-      - .:/app/
+      - ./:/app/

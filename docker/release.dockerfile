@@ -19,13 +19,13 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o godash main.go
 FROM node:${V_NODE}-alpine AS node-builder
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile --network-timeout 30000 --silent
+COPY package.json package-lock.json ./
+RUN npm ci --silent
 
 COPY ./views/ ./views/
 COPY ./assets/ ./assets/
 COPY ./services/ ./services/
-RUN yarn run build
+RUN npm run build
 
 FROM alpine:${V_ALPINE} AS final
 WORKDIR /app
