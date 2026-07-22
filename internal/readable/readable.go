@@ -13,6 +13,8 @@ const (
 
 func amountString(size uint64) (uint64, string) {
 	switch {
+	case size < KiB:
+		return 1, "B"
 	case size < MiB:
 		return KiB, "KiB"
 	case size < GiB:
