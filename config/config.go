@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +22,7 @@ const (
 var cfg GlobalConfig
 var validate *validator.Validate
 var mu sync.RWMutex
+var reloadMu sync.Mutex
 
 var (
 	iconCache   = map[string][2]string{}
@@ -69,8 +71,8 @@ type AppConfig struct {
 }
 
 func init() {
-	os.Mkdir(ConfigFolder, os.ModePerm)
-	os.Mkdir(iconsFolder, os.ModePerm)
+	os.Mkdir(ConfigFolder, 0750)
+	os.Mkdir(iconsFolder, 0750)
 	validate = validator.New()
 }
 
@@ -131,6 +133,9 @@ func New() {
 }
 
 func ValidateAndLoadConfig() error {
+	reloadMu.Lock()
+	defer reloadMu.Unlock()
+
 	var tempCfg GlobalConfig
 	if err := viper.Unmarshal(&tempCfg); err != nil {
 		return fmt.Errorf("failed to unmarshal configuration: %w", err)
@@ -140,6 +145,8 @@ func ValidateAndLoadConfig() error {
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
+	clearIconCache()
+
 	replaceIconStrings(tempCfg.Applications)
 	replaceIconStrings(tempCfg.Links)
 
@@ -147,7 +154,6 @@ func ValidateAndLoadConfig() error {
 	cfg = tempCfg
 	mu.Unlock()
 
-	os.Setenv("TZ", cfg.TimeZone)
 	return nil
 }
 
@@ -180,9 +186,9 @@ func replaceIconStrings(applications []Category) {
 				filePath, filePathLight = path, lightPath
 			}
 
+			storeIconCache(bookmark.Icon, [2]string{filePath, filePathLight})
 			bookmark.Icon = filePath
 			bookmark.IconLight = filePathLight
-			storeIconCache(bookmark.Icon, [2]string{filePath, filePathLight})
 		}
 	}
 }
@@ -198,6 +204,12 @@ func storeIconCache(key string, value [2]string) {
 	iconCacheMu.Lock()
 	defer iconCacheMu.Unlock()
 	iconCache[key] = value
+}
+
+func clearIconCache() {
+	iconCacheMu.Lock()
+	defer iconCacheMu.Unlock()
+	iconCache = map[string][2]string{}
 }
 
 func downloadIcons(title, url, lightTitle, lightUrl string) (string, string, error) {
@@ -228,15 +240,26 @@ func downloadIcon(title, url string) (string, error) {
 }
 
 func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
-	title := strings.Replace(icon, "sh/", "", 1) + ext
-	url := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + title
+	name := strings.Replace(icon, "sh/", "", 1)
+	clean := filepath.Clean(name)
+	if strings.Contains(clean, "..") || filepath.IsAbs(clean) {
+		return "", "", "", ""
+	}
+	title := clean + ext
+	encoded := url.PathEscape(title)
+	iconURL := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + encoded
 	lightTitle := strings.Replace(title, ext, "-light"+ext, 1)
-	lightUrl := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + lightTitle
-	return title, url, lightTitle, lightUrl
+	lightEncoded := url.PathEscape(lightTitle)
+	lightURL := "https://cdn.jsdelivr.net/gh/selfhst/icons/" + strings.TrimPrefix(ext, ".") + "/" + lightEncoded
+	return title, iconURL, lightTitle, lightURL
 }
 
 func handleLocalIcons(title, ext string) (string, string, error) {
-	filePath := iconsFolder + title
+	clean := filepath.Clean(title)
+	if strings.Contains(clean, "..") || filepath.IsAbs(clean) {
+		return "", "", fmt.Errorf("invalid icon path: %s", title)
+	}
+	filePath := iconsFolder + clean
 	if _, err := os.Stat(filePath); err != nil {
 		return "", "", err
 	}
@@ -285,12 +308,6 @@ func GetLinks() []Category {
 	return cfg.Links
 }
 
-func GetWeatherSettings() Weather {
-	mu.RLock()
-	defer mu.RUnlock()
-	return cfg.Weather
-}
-
 func GetTitle() string {
 	mu.RLock()
 	defer mu.RUnlock()
@@ -301,4 +318,10 @@ func GetTimeZone() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.TimeZone
+}
+
+func GetWeatherConfig() (Weather, string) {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Weather, cfg.TimeZone
 }
