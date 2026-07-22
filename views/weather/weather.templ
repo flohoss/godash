@@ -39,7 +39,7 @@ templ Current(today services.Day) {
 				<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-secondary text-xs md:text-sm">
 					@stat("icon-[carbon--temperature-feels-like]", "apparent", today.More.ApparentTemperature)
 					@stat("icon-[carbon--humidity]", "humidity", today.More.Humidity)
-					@stat("icon-[carbon--windy]", "wind", today.More.WindSpeed+" "+today.More.WindDir)
+				@stat("icon-[carbon--windy]", "wind", today.More.WindSpeed)
 					@stat("icon-[carbon--sunrise]", "sunrise", today.More.Sunrise)
 					@stat("icon-[carbon--sunset]", "sunset", today.More.Sunset)
 				</div>
@@ -58,7 +58,7 @@ templ stat(iconClass string, id string, value string) {
 templ Hourly(hours []services.Hour) {
 	<div
 		id="hourly"
-		class="hidden md:flex gap-2 md:gap-3 pb-1 opacity-95 justify-end"
+		class="hidden md:flex flex-1 gap-4 md:gap-6 pb-1 opacity-95 justify-end"
 	>
 		for i := range hours {
 			@hourCard(i, hours[i])
@@ -68,18 +68,17 @@ templ Hourly(hours []services.Hour) {
 
 templ hourCard(i int, h services.Hour) {
 	{{ responsive := "" ; if i >= 6 { responsive = "hidden 2xl:flex" } else if i >= 4 { responsive = "hidden xl:flex" } else if i >= 2 { responsive = "hidden lg:flex" } }}
-	<div class={ "flex w-20 shrink-0 flex-col items-center gap-2 px-2 py-3 text-center", responsive }>
+	<div class={ "flex w-16 shrink-0 flex-col items-center gap-1 px-2 py-1.5 text-center", responsive }>
 		<div id={ fmt.Sprintf("hour-time-%d", i) } class="text-secondary text-xs">{ h.Time }</div>
-		<div id={ fmt.Sprintf("hour-icon-%d", i) } class={ "icon size-10 shrink-0", h.Icon }></div>
-		<div id={ fmt.Sprintf("hour-temp-%d", i) } class="font-semibold">{ h.Temperature }</div>
-		<div class="flex flex-col gap-1 text-secondary text-xs w-full">
+		<div id={ fmt.Sprintf("hour-icon-%d", i) } class={ "icon size-7 shrink-0", h.Icon }></div>
+		<div id={ fmt.Sprintf("hour-temp-%d", i) } class="font-semibold text-sm">{ h.Temperature }</div>
+		<div class="flex flex-col gap-0.5 text-secondary text-xs w-full">
 			<div class="flex items-center justify-center gap-1 whitespace-nowrap">
-				<span class="icon-[carbon--windy] size-4 shrink-0"></span>
+				<span class="icon-[carbon--windy] size-3.5 shrink-0"></span>
 				<div id={ fmt.Sprintf("hour-wind-%d", i) } class="text-secondary whitespace-nowrap">{ h.WindSpeed }</div>
-				<div id={ fmt.Sprintf("hour-winddir-%d", i) } class="text-secondary">{ h.WindDir }</div>
 			</div>
 			<div class="flex items-center justify-center gap-1">
-				<span class="icon-[carbon--rain] size-4 shrink-0"></span>
+				<span class="icon-[carbon--rain] size-3.5 shrink-0"></span>
 				<div id={ fmt.Sprintf("hour-precip-%d", i) } class="text-secondary">{ h.PrecipProb }</div>
 			</div>
 		</div>
