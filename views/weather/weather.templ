@@ -15,31 +15,33 @@ templ Weather(d []services.Day, h []services.Hour) {
 }
 
 templ Current(today services.Day) {
-	<div class="flex flex-col gap-2">
-		<div class="flex flex-row items-center gap-4 md:gap-6 lg:gap-8">
-			<div
-				id="weather-icon-0"
-				class={ "icon size-16 md:size-20 shrink-0", today.Icon }
-			></div>
-			<div class="flex flex-1 flex-col gap-1 min-w-0">
+	<div class="flex flex-row items-center gap-4 md:gap-6 lg:gap-8">
+		<div
+			id="weather-icon-0"
+			class={ "icon size-26 md:size-28 lg:size-32 shrink-0", today.Icon }
+		></div>
+		<div class="flex flex-1 flex-col gap-2 min-w-0">
+			<div class="flex flex-col">
 				<div id="day-name-0" class="text-secondary text-sm">{ today.Name }</div>
 				<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 whitespace-nowrap">
 					<div id="temp" class="font-semibold text-4xl md:text-5xl tracking-tight">{ today.More.CurrentTemperature }</div>
-					<div class="flex items-center gap-3 text-secondary text-sm">
-						<span class="flex items-center gap-1">
-							<span class="icon-[carbon--temperature-max] size-4"></span>
-							<div id="max-temp-0">{ today.TemperatureMax }</div>
-						</span>
-						<span class="flex items-center gap-1">
-							<span class="icon-[carbon--temperature-min] size-4"></span>
-							<div id="min-temp-0">{ today.TemperatureMin }</div>
-						</span>
-					</div>
 				</div>
-				<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-secondary text-xs md:text-sm">
+			</div>
+			<div class="flex flex-col gap-0.5">
+				<div class="flex items-center gap-3 text-secondary text-xs">
+					<span class="flex items-center gap-1">
+						<span class="icon-[carbon--temperature-max] size-4"></span>
+						<div id="max-temp-0">{ today.TemperatureMax }</div>
+					</span>
+					<span class="flex items-center gap-1">
+						<span class="icon-[carbon--temperature-min] size-4"></span>
+						<div id="min-temp-0">{ today.TemperatureMin }</div>
+					</span>
+				</div>
+				<div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-secondary text-xs">
 					@stat("icon-[carbon--temperature-feels-like]", "apparent", today.More.ApparentTemperature)
 					@stat("icon-[carbon--humidity]", "humidity", today.More.Humidity)
-				@stat("icon-[carbon--windy]", "wind", today.More.WindSpeed)
+					@stat("icon-[carbon--windy]", "wind", today.More.WindSpeed)
 					@stat("icon-[carbon--sunrise]", "sunrise", today.More.Sunrise)
 					@stat("icon-[carbon--sunset]", "sunset", today.More.Sunset)
 				</div>
@@ -67,12 +69,23 @@ templ Hourly(hours []services.Hour) {
 }
 
 templ hourCard(i int, h services.Hour) {
-	{{ responsive := "" ; if i >= 6 { responsive = "hidden 2xl:flex" } else if i >= 4 { responsive = "hidden xl:flex" } else if i >= 2 { responsive = "hidden lg:flex" } }}
-	<div class={ "flex w-16 shrink-0 flex-col items-center gap-1 px-2 py-1.5 text-center", responsive }>
-		<div id={ fmt.Sprintf("hour-time-%d", i) } class="text-secondary text-xs">{ h.Time }</div>
-		<div id={ fmt.Sprintf("hour-icon-%d", i) } class={ "icon size-7 shrink-0", h.Icon }></div>
-		<div id={ fmt.Sprintf("hour-temp-%d", i) } class="font-semibold text-sm">{ h.Temperature }</div>
-		<div class="flex flex-col gap-0.5 text-secondary text-xs w-full">
+	{{
+		responsive := ""
+		if i >= 6 {
+			responsive = "hidden 2xl:flex"
+		} else if i >= 4 {
+			responsive = "hidden xl:flex"
+		} else if i >= 2 {
+			responsive = "hidden lg:flex"
+		}
+	}}
+	<div class={ "flex w-16 shrink-0 flex-col items-end gap-1 px-2 py-1.5", responsive }>
+		<div class="flex flex-col items-end gap-0.5">
+			<div id={ fmt.Sprintf("hour-time-%d", i) } class="text-secondary text-xs">{ h.Time }</div>
+			<div id={ fmt.Sprintf("hour-icon-%d", i) } class={ "icon size-8 shrink-0", h.Icon }></div>
+			<div id={ fmt.Sprintf("hour-temp-%d", i) } class="font-semibold text-sm">{ h.Temperature }</div>
+		</div>
+		<div class="flex flex-col items-end gap-0.5 text-secondary text-xs w-full">
 			<div class="flex items-center justify-center gap-1 whitespace-nowrap">
 				<span class="icon-[carbon--windy] size-3.5 shrink-0"></span>
 				<div id={ fmt.Sprintf("hour-wind-%d", i) } class="text-secondary whitespace-nowrap">{ h.WindSpeed }</div>
