@@ -8,8 +8,8 @@ import (
 )
 
 type SystemService interface {
-	GetBuffer() *services.Buffer
-	GetStatic() *services.Static
+	GetBuffer() services.Buffer
+	GetStatic() services.Static
 }
 
 type WeatherService interface {
