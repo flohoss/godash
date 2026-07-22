@@ -3,8 +3,10 @@ package meteo
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"io"
+	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -62,7 +64,7 @@ type Options struct {
 }
 
 func GetWeather(options Options) (WeatherResponse, error) {
-	url := "https://api.open-meteo.com/v1/forecast"
+	baseURL := "https://api.open-meteo.com/v1/forecast"
 	current := "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m"
 	daily := "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset"
 	hourly := "temperature_2m,weather_code,is_day,wind_speed_10m,precipitation_probability"
@@ -70,9 +72,18 @@ func GetWeather(options Options) (WeatherResponse, error) {
 	if options.Units == "fahrenheit" {
 		windUnit = "mph"
 	}
-	params := fmt.Sprintf("?latitude=%f&longitude=%f&timezone=%s&temperature_unit=%s&wind_speed_unit=%s&daily=%s&current=%s&hourly=%s&forecast_days=2", options.Latitude, options.Longitude, options.TimeZone, options.Units, windUnit, daily, current, hourly)
+	params := url.Values{}
+	params.Set("latitude", fmt.Sprintf("%f", options.Latitude))
+	params.Set("longitude", fmt.Sprintf("%f", options.Longitude))
+	params.Set("timezone", options.TimeZone)
+	params.Set("temperature_unit", options.Units)
+	params.Set("wind_speed_unit", windUnit)
+	params.Set("daily", daily)
+	params.Set("current", current)
+	params.Set("hourly", hourly)
+	params.Set("forecast_days", "2")
 
-	resp, err := httpClient.Get(url + params)
+	resp, err := httpClient.Get(baseURL + "?" + params.Encode())
 	if err != nil {
 		return WeatherResponse{}, err
 	}
@@ -83,8 +94,8 @@ func GetWeather(options Options) (WeatherResponse, error) {
 	}
 
 	var weatherData WeatherResponse
-	if err := json.NewDecoder(resp.Body).Decode(&weatherData); err != nil {
-		log.Printf("failed to decode weather response: %v", err)
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&weatherData); err != nil {
+		slog.Error("failed to decode weather response", "error", err)
 		return WeatherResponse{}, err
 	}
 

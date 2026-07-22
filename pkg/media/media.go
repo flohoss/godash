@@ -6,10 +6,13 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"time"
 )
 
+var httpClient = &http.Client{Timeout: 10 * time.Second}
+
 func DownloadSelfHostedIcon(url, title, filePath string) (string, error) {
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to get icon: %w", err)
 	}
@@ -17,13 +20,17 @@ func DownloadSelfHostedIcon(url, title, filePath string) (string, error) {
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to get icon, status: %d, url: %s", resp.StatusCode, url)
 	}
-	data, err := io.ReadAll(resp.Body)
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return "", fmt.Errorf("failed to read icon: %w", err)
 	}
-	err = os.WriteFile(filePath, data, fs.FileMode(0640))
-	if err != nil {
+	tmpPath := filePath + ".tmp"
+	if err := os.WriteFile(tmpPath, data, fs.FileMode(0640)); err != nil {
 		return "", fmt.Errorf("failed to write icon: %w", err)
+	}
+	if err := os.Rename(tmpPath, filePath); err != nil {
+		os.Remove(tmpPath)
+		return "", fmt.Errorf("failed to move icon: %w", err)
 	}
 	return filePath, nil
 }
