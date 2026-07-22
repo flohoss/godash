@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -79,9 +83,6 @@ func main() {
 
 	sse := sseserver.New()
 	sse.AutoReplay = false
-	sse.OnSubscribe = func(streamID string, _ *sseserver.Subscriber) {
-		services.PublishSnapshot(streamID)
-	}
 
 	s := services.NewSystemService(sse)
 	w := services.NewWeatherService(sse)
@@ -90,5 +91,21 @@ func main() {
 	handlers.SetupRoutes(e, sse, appHandler)
 
 	slog.Info("Starting server", "url", fmt.Sprintf("http://%s", config.GetServer()))
-	slog.Error(e.Start(config.GetServer()).Error())
+
+	go func() {
+		if err := e.Start(config.GetServer()); err != nil && err != http.ErrServerClosed {
+			slog.Error("Failed to start server", "error", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	slog.Info("Shutting down server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		slog.Error("Failed to shutdown server", "error", err)
+	}
 }

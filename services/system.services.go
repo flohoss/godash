@@ -17,7 +17,7 @@ import (
 
 type SystemService struct {
 	sse    *sse.Server
-	mu     sync.Mutex
+	mu     sync.RWMutex
 	static Static
 	buffer Buffer
 }
@@ -43,36 +43,35 @@ func NewSystemService(sse *sse.Server) *SystemService {
 	s := SystemService{sse: sse}
 	sse.CreateStream("system")
 	go s.collect()
-	RegisterSnapshot("system", s.publishSnapshot)
 	return &s
 }
 
-func (s *SystemService) publishJSON(id string, d Detail) {
-	data, err := json.Marshal(d)
+func (s *SystemService) publishString(id string, v string) {
+	data, err := json.Marshal(v)
 	if err != nil {
 		return
 	}
 	s.sse.Publish("system", &sse.Event{Event: []byte(id), Data: append([]byte(nil), data...)})
 }
 
-func (s *SystemService) publishSnapshot() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.publishJSON("cpu", s.buffer.CPU)
-	s.publishJSON("ram", s.buffer.RAM)
-	s.publishJSON("disk", s.buffer.Disk)
+func (s *SystemService) publishInt(id string, n int) {
+	data, err := json.Marshal(n)
+	if err != nil {
+		return
+	}
+	s.sse.Publish("system", &sse.Event{Event: []byte(id), Data: append([]byte(nil), data...)})
 }
 
-func (s *SystemService) GetBuffer() *Buffer {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return &s.buffer
+func (s *SystemService) GetBuffer() Buffer {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.buffer
 }
 
-func (s *SystemService) GetStatic() *Static {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return &s.static
+func (s *SystemService) GetStatic() Static {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.static
 }
 
 func (s *SystemService) initStatic() {
@@ -96,7 +95,7 @@ func (s *SystemService) collect() {
 
 	s.mu.Lock()
 	c, err := cpu.Info()
-	if err == nil {
+	if err == nil && len(c) > 0 {
 		if c[0].ModelName != "" {
 			s.buffer.CPU.Value = c[0].ModelName
 		} else {
@@ -106,7 +105,10 @@ func (s *SystemService) collect() {
 	s.initStatic()
 	s.mu.Unlock()
 
-	var prevCPU, prevRAM, prevDisk int
+	cpu.Percent(time.Second, false)
+
+	var prevCPUPct, prevRAMPct, prevDiskPct int
+	var prevRAMVal, prevDiskVal string
 
 	for range ticker.C {
 		cpuPercent, err := cpu.Percent(0, false)
@@ -124,36 +126,55 @@ func (s *SystemService) collect() {
 			continue
 		}
 
-		newCPU := int(math.Floor(cpuPercent[0]))
-		newRAM := int(math.Floor(memStat.UsedPercent))
-		newDisk := int(math.Floor(diskStat.UsedPercent))
+		newCPUPct := int(math.Floor(cpuPercent[0]))
+		newRAMPct := int(math.Floor(memStat.UsedPercent))
+		newDiskPct := int(math.Floor(diskStat.UsedPercent))
+		newRAMVal := readable.ReadableSizePair(memStat.Used, memStat.Total)
+		newDiskVal := readable.ReadableSizePair(diskStat.Used, diskStat.Total)
+
+		var publishes []func()
 
 		s.mu.Lock()
 
-		if newCPU != prevCPU {
-			prevCPU = newCPU
-			s.buffer.CPU.Percentage = newCPU
-			s.publishJSON("cpu", s.buffer.CPU)
+		if newCPUPct != prevCPUPct {
+			prevCPUPct = newCPUPct
+			s.buffer.CPU.Percentage = newCPUPct
+			pct := newCPUPct
+			publishes = append(publishes, func() { s.publishInt("cpu-percentage", pct) })
 		}
 
-		if newRAM != prevRAM {
-			prevRAM = newRAM
-			s.buffer.RAM = Detail{
-				Value:      readable.ReadableSizePair(memStat.Used, memStat.Total),
-				Percentage: newRAM,
-			}
-			s.publishJSON("ram", s.buffer.RAM)
+		if newRAMVal != prevRAMVal {
+			prevRAMVal = newRAMVal
+			s.buffer.RAM.Value = newRAMVal
+			val := newRAMVal
+			publishes = append(publishes, func() { s.publishString("ram-value", val) })
 		}
 
-		if newDisk != prevDisk {
-			prevDisk = newDisk
-			s.buffer.Disk = Detail{
-				Value:      readable.ReadableSizePair(diskStat.Used, diskStat.Total),
-				Percentage: newDisk,
-			}
-			s.publishJSON("disk", s.buffer.Disk)
+		if newRAMPct != prevRAMPct {
+			prevRAMPct = newRAMPct
+			s.buffer.RAM.Percentage = newRAMPct
+			pct := newRAMPct
+			publishes = append(publishes, func() { s.publishInt("ram-percentage", pct) })
+		}
+
+		if newDiskVal != prevDiskVal {
+			prevDiskVal = newDiskVal
+			s.buffer.Disk.Value = newDiskVal
+			val := newDiskVal
+			publishes = append(publishes, func() { s.publishString("disk-value", val) })
+		}
+
+		if newDiskPct != prevDiskPct {
+			prevDiskPct = newDiskPct
+			s.buffer.Disk.Percentage = newDiskPct
+			pct := newDiskPct
+			publishes = append(publishes, func() { s.publishInt("disk-percentage", pct) })
 		}
 
 		s.mu.Unlock()
+
+		for _, fn := range publishes {
+			fn()
+		}
 	}
 }

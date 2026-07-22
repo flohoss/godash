@@ -18,6 +18,7 @@ type WeatherService struct {
 	sse          *sse.Server
 	mu           sync.RWMutex
 	lastResponse *meteo.WeatherResponse
+	loc          *time.Location
 }
 
 type Day struct {
@@ -46,37 +47,29 @@ type More struct {
 }
 
 func NewWeatherService(sse *sse.Server) *WeatherService {
-	w := &WeatherService{sse: sse}
+	loc, err := time.LoadLocation(config.GetTimeZone())
+	if err != nil {
+		loc = time.Local
+	}
+	w := &WeatherService{sse: sse, loc: loc}
 	sse.CreateStream("weather")
 
-	if err := w.fetchAndPublish(); err != nil {
-		slog.Error("Failed initial weather fetch", "error", err)
-		w.weather = []Day{{
-			Name:           "Loading...",
-			TemperatureMax: "--",
-			TemperatureMin: "--",
-			Icon:           "icon-[bi--cloud-fill]",
-			More:           More{},
-		}}
-	}
+	w.weather = []Day{{
+		Name:           "Loading...",
+		TemperatureMax: "--",
+		TemperatureMin: "--",
+		Icon:           "icon-[bi--cloud-fill]",
+		More:           More{},
+	}}
 
-	RegisterSnapshot("weather", w.publishSnapshot)
+	go func() {
+		if err := w.fetchAndPublish(); err != nil {
+			slog.Error("Failed initial weather fetch", "error", err)
+		}
+	}()
 
 	go w.collect()
 	return w
-}
-
-func (w *WeatherService) publishSnapshot() {
-	w.mu.RLock()
-	weather := w.weather
-	hourly := w.hourly
-	w.mu.RUnlock()
-	if len(weather) == 0 {
-		return
-	}
-	w.publishCurrent(weather[0])
-	w.publishForecast(weather)
-	w.publishHourly(hourly)
 }
 
 func (w *WeatherService) publishCurrent(day Day) {
@@ -85,14 +78,6 @@ func (w *WeatherService) publishCurrent(day Day) {
 		return
 	}
 	w.sse.Publish("weather", &sse.Event{Event: []byte("current"), Data: append([]byte(nil), data...)})
-}
-
-func (w *WeatherService) publishForecast(days []Day) {
-	data, err := json.Marshal(days)
-	if err != nil {
-		return
-	}
-	w.sse.Publish("weather", &sse.Event{Event: []byte("forecast"), Data: append([]byte(nil), data...)})
 }
 
 func (w *WeatherService) publishHourly(hours []Hour) {
@@ -136,11 +121,16 @@ func (w *WeatherService) collect() {
 func (w *WeatherService) recomputeHourly() {
 	w.mu.RLock()
 	res := w.lastResponse
+	prev := w.hourly
+	loc := w.loc
 	w.mu.RUnlock()
 	if res == nil {
 		return
 	}
-	hours := buildHourly(res)
+	hours := buildHourly(res, loc)
+	if hoursEqual(prev, hours) {
+		return
+	}
 	w.mu.Lock()
 	w.hourly = hours
 	w.mu.Unlock()
@@ -148,15 +138,24 @@ func (w *WeatherService) recomputeHourly() {
 }
 
 func (w *WeatherService) fetchAndPublish() error {
-	settings := config.GetWeatherSettings()
+	settings, tz := config.GetWeatherConfig()
 	res, err := meteo.GetWeather(meteo.Options{
 		Latitude:  settings.Latitude,
 		Longitude: settings.Longitude,
-		TimeZone:  config.GetTimeZone(),
+		TimeZone:  tz,
 		Units:     settings.Units,
 	})
 	if err != nil {
 		return err
+	}
+
+	if len(res.Daily.Time) == 0 || len(res.Daily.Sunrise) == 0 || len(res.Daily.Sunset) == 0 {
+		return fmt.Errorf("incomplete weather data received")
+	}
+
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		loc = time.Local
 	}
 
 	w.mu.RLock()
@@ -164,6 +163,10 @@ func (w *WeatherService) fetchAndPublish() error {
 	w.mu.RUnlock()
 
 	if !hasChanged {
+		w.mu.Lock()
+		w.lastResponse = &res
+		w.loc = loc
+		w.mu.Unlock()
 		w.recomputeHourly()
 		return nil
 	}
@@ -175,12 +178,12 @@ func (w *WeatherService) fetchAndPublish() error {
 			Name:           t.Format("Mon 02 Jan"),
 			TemperatureMax: fmt.Sprintf("%.1f %s", res.Daily.TemperatureMax[i], res.DailyUnits.TemperatureMax),
 			TemperatureMin: fmt.Sprintf("%.1f %s", res.Daily.TemperatureMin[i], res.DailyUnits.TemperatureMin),
-			Icon:           getIcon(res.Daily.WeatherCode[i], res.Current.IsDay == 1),
+			Icon:           getIcon(res.Daily.WeatherCode[i], res.Current.IsDay != 0),
 		}
 		if i == 0 {
 			sunrise, _ := time.Parse("2006-01-02T15:04", res.Daily.Sunrise[0])
 			sunset, _ := time.Parse("2006-01-02T15:04", res.Daily.Sunset[0])
-			day.Icon = getIcon(res.Current.WeatherCode, res.Current.IsDay == 1)
+			day.Icon = getIcon(res.Current.WeatherCode, res.Current.IsDay != 0)
 			day.More = More{
 				CurrentTemperature:  fmt.Sprintf("%.1f %s", res.Current.Temperature2m, res.CurrentUnits.Temperature2m),
 				ApparentTemperature: fmt.Sprintf("%.1f %s", res.Current.ApparentTemperature, res.CurrentUnits.ApparentTemperature),
@@ -193,38 +196,36 @@ func (w *WeatherService) fetchAndPublish() error {
 		newWeather = append(newWeather, day)
 	}
 
-	hours := buildHourly(&res)
+	hours := buildHourly(&res, loc)
 
 	w.mu.Lock()
 	w.weather = newWeather
 	w.hourly = hours
 	w.lastResponse = &res
+	w.loc = loc
 	w.mu.Unlock()
 
 	w.publishCurrent(newWeather[0])
-	w.publishForecast(newWeather)
 	w.publishHourly(hours)
 
 	return nil
 }
 
-func buildHourly(res *meteo.WeatherResponse) []Hour {
+func buildHourly(res *meteo.WeatherResponse, loc *time.Location) []Hour {
 	if len(res.Hourly.Time) == 0 {
 		return []Hour{}
-	}
-	loc, err := time.LoadLocation(config.GetTimeZone())
-	if err != nil {
-		loc = time.Local
 	}
 	now := time.Now().In(loc)
 	start := now.Truncate(time.Hour).Add(time.Hour)
 	hours := make([]Hour, 0, 8)
-	for t := start; len(hours) < 8; t = t.Add(time.Hour) {
-		idx := nearestHourIndex(res, t)
+	maxIter := len(res.Hourly.Time) + 2
+	for t := start; len(hours) < 8 && maxIter > 0; t = t.Add(time.Hour) {
+		maxIter--
+		idx := nearestHourIndex(res, t, loc)
 		if idx < 0 {
 			continue
 		}
-		isDay := res.Hourly.IsDay[idx] == 1
+		isDay := res.Hourly.IsDay[idx] != 0
 		hours = append(hours, Hour{
 			Time:        t.Format("15:04"),
 			Temperature: fmt.Sprintf("%.0f %s", res.Hourly.Temperature2m[idx], res.HourlyUnits.Temperature2m),
@@ -236,24 +237,58 @@ func buildHourly(res *meteo.WeatherResponse) []Hour {
 	return hours
 }
 
-func nearestHourIndex(res *meteo.WeatherResponse, target time.Time) int {
-	bestIdx := -1
-	bestDelta := time.Duration(1<<63 - 1)
-	for i, ts := range res.Hourly.Time {
-		t, err := time.ParseInLocation("2006-01-02T15:04", ts, target.Location())
+func nearestHourIndex(res *meteo.WeatherResponse, target time.Time, loc *time.Location) int {
+	lo, hi := 0, len(res.Hourly.Time)-1
+	for lo <= hi {
+		mid := lo + (hi-lo)/2
+		t, err := time.ParseInLocation("2006-01-02T15:04", res.Hourly.Time[mid], loc)
 		if err != nil {
-			continue
+			return -1
 		}
-		delta := t.Sub(target)
-		if delta < 0 {
-			delta = -delta
-		}
-		if delta < bestDelta {
-			bestDelta = delta
-			bestIdx = i
+		if t.Before(target) {
+			lo = mid + 1
+		} else if t.After(target) {
+			hi = mid - 1
+		} else {
+			return mid
 		}
 	}
-	return bestIdx
+	best := lo
+	if hi >= 0 {
+		if lo >= len(res.Hourly.Time) {
+			best = hi
+		} else {
+			tLo, _ := time.ParseInLocation("2006-01-02T15:04", res.Hourly.Time[lo], loc)
+			tHi, _ := time.ParseInLocation("2006-01-02T15:04", res.Hourly.Time[hi], loc)
+			dLo := tLo.Sub(target)
+			if dLo < 0 {
+				dLo = -dLo
+			}
+			dHi := tHi.Sub(target)
+			if dHi < 0 {
+				dHi = -dHi
+			}
+			if dHi <= dLo {
+				best = hi
+			}
+		}
+	}
+	if best < 0 || best >= len(res.Hourly.Time) {
+		return -1
+	}
+	return best
+}
+
+func hoursEqual(a, b []Hour) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
 
 func (w *WeatherService) hasResponseChanged(newRes *meteo.WeatherResponse) bool {
