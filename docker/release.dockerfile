@@ -38,6 +38,7 @@ COPY --from=node-builder /app/assets/js/sse.js ./assets/js/sse.js
 COPY --from=node-builder /app/assets/css/style.css ./assets/css/style.css
 COPY --from=golang-builder /app/godash .
 COPY ./docker/release.entrypoint.sh .
+RUN chmod +x /app/release.entrypoint.sh
 
 EXPOSE 8156
 
