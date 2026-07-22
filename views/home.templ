@@ -12,15 +12,12 @@ import (
 	"github.com/flohoss/godash/views/weather"
 )
 
-var assetVersion = func() string {
-	if v := os.Getenv("APP_VERSION"); v != "" {
-		return v
-	}
-	return time.Now().Format("20060102150405")
-}()
-
 func appendVersionQuery(url string) string {
-	return url + "?v=" + assetVersion
+	v := os.Getenv("APP_VERSION")
+	if v == "" {
+		v = time.Now().Format("20060102150405")
+	}
+	return url + "?v=" + v
 }
 
 templ Home(title string, b []config.Category, l []config.Category, buffer services.Buffer, static services.Static, d []services.Day, h []services.Hour) {
