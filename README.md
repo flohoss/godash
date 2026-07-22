@@ -153,7 +153,7 @@ docker compose up
 ```bash
 # Node packages
 docker compose run --rm npm install
-docker compose run --rm npm update --latest
+docker compose run --rm --entrypoint npx npm npm-check-updates -u && docker compose run --rm npm install
 
 # Go packages
 docker compose run --rm go get -u ./...
