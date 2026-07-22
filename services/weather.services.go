@@ -31,10 +31,8 @@ type Day struct {
 type Hour struct {
 	Time        string `json:"time"`
 	Temperature string `json:"temperature"`
-	FeelsLike   string `json:"feels_like"`
 	Icon        string `json:"icon"`
 	WindSpeed   string `json:"wind_speed"`
-	WindDir     string `json:"wind_dir"`
 	PrecipProb  string `json:"precip_prob"`
 }
 
@@ -43,7 +41,6 @@ type More struct {
 	ApparentTemperature string `json:"apparent_temperature"`
 	Humidity            string `json:"humidity"`
 	WindSpeed           string `json:"wind_speed"`
-	WindDir             string `json:"wind_dir"`
 	Sunrise             string `json:"sunrise"`
 	Sunset              string `json:"sunset"`
 }
@@ -189,7 +186,6 @@ func (w *WeatherService) fetchAndPublish() error {
 				ApparentTemperature: fmt.Sprintf("%.1f %s", res.Current.ApparentTemperature, res.CurrentUnits.ApparentTemperature),
 				Humidity:            fmt.Sprintf("%d %s", res.Current.RelativeHumidity, res.CurrentUnits.RelativeHumidity),
 				WindSpeed:           fmt.Sprintf("%.0f %s", res.Current.WindSpeed10m, res.CurrentUnits.WindSpeed10m),
-				WindDir:             windDirArrow(res.Current.WindDirection10m),
 				Sunrise:             sunrise.Format("15:04"),
 				Sunset:              sunset.Format("15:04"),
 			}
@@ -216,7 +212,11 @@ func buildHourly(res *meteo.WeatherResponse) []Hour {
 	if len(res.Hourly.Time) == 0 {
 		return []Hour{}
 	}
-	now := time.Now()
+	loc, err := time.LoadLocation(config.GetTimeZone())
+	if err != nil {
+		loc = time.Local
+	}
+	now := time.Now().In(loc)
 	start := now.Truncate(time.Hour).Add(time.Hour)
 	hours := make([]Hour, 0, 8)
 	for t := start; len(hours) < 8; t = t.Add(time.Hour) {
@@ -228,22 +228,12 @@ func buildHourly(res *meteo.WeatherResponse) []Hour {
 		hours = append(hours, Hour{
 			Time:        t.Format("15:04"),
 			Temperature: fmt.Sprintf("%.0f %s", res.Hourly.Temperature2m[idx], res.HourlyUnits.Temperature2m),
-			FeelsLike:   fmt.Sprintf("%.0f %s", res.Hourly.ApparentTemperature[idx], res.HourlyUnits.ApparentTemperature),
 			Icon:        getIcon(res.Hourly.WeatherCode[idx], isDay),
 			WindSpeed:   fmt.Sprintf("%.0f %s", res.Hourly.WindSpeed10m[idx], res.HourlyUnits.WindSpeed10m),
-			WindDir:     windDirArrow(res.Hourly.WindDirection10m[idx]),
 			PrecipProb:  fmt.Sprintf("%d%%", res.Hourly.PrecipitationProbability[idx]),
 		})
 	}
 	return hours
-}
-
-func windDirArrow(deg int) string {
-	arrows := []string{"↓", "↙", "←", "↖", "↑", "↗", "→", "↘"}
-	if deg < 0 || deg >= 360 {
-		return ""
-	}
-	return arrows[(deg+22)/45%8]
 }
 
 func nearestHourIndex(res *meteo.WeatherResponse, target time.Time) int {
@@ -278,8 +268,7 @@ func (w *WeatherService) hasResponseChanged(newRes *meteo.WeatherResponse) bool 
 		prev.Current.IsDay != newRes.Current.IsDay ||
 		prev.Current.RelativeHumidity != newRes.Current.RelativeHumidity ||
 		prev.Current.ApparentTemperature != newRes.Current.ApparentTemperature ||
-		prev.Current.WindSpeed10m != newRes.Current.WindSpeed10m ||
-		prev.Current.WindDirection10m != newRes.Current.WindDirection10m {
+		prev.Current.WindSpeed10m != newRes.Current.WindSpeed10m {
 		return true
 	}
 
