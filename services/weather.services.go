@@ -53,6 +53,7 @@ func NewWeatherService(sse *sse.Server) *WeatherService {
 	}
 	w := &WeatherService{sse: sse, loc: loc}
 	sse.CreateStream("weather")
+	RegisterSnapshot("weather", w.publishSnapshot)
 
 	w.weather = []Day{{
 		Name:           "Loading...",
@@ -70,6 +71,18 @@ func NewWeatherService(sse *sse.Server) *WeatherService {
 
 	go w.collect()
 	return w
+}
+
+func (w *WeatherService) publishSnapshot() {
+	w.mu.RLock()
+	weather := w.weather
+	hourly := w.hourly
+	w.mu.RUnlock()
+	if len(weather) == 0 {
+		return
+	}
+	w.publishCurrent(weather[0])
+	w.publishHourly(hourly)
 }
 
 func (w *WeatherService) publishCurrent(day Day) {

@@ -83,6 +83,9 @@ func main() {
 
 	sse := sseserver.New()
 	sse.AutoReplay = false
+	sse.OnSubscribe = func(streamID string, sub *sseserver.Subscriber) {
+		services.PublishSnapshot(streamID)
+	}
 
 	s := services.NewSystemService(sse)
 	w := services.NewWeatherService(sse)

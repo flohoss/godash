@@ -42,6 +42,7 @@ type Detail struct {
 func NewSystemService(sse *sse.Server) *SystemService {
 	s := SystemService{sse: sse}
 	sse.CreateStream("system")
+	RegisterSnapshot("system", s.publishSnapshot)
 	go s.collect()
 	return &s
 }
@@ -61,7 +62,15 @@ func (s *SystemService) publishInt(id string, n int) {
 	}
 	s.sse.Publish("system", &sse.Event{Event: []byte(id), Data: append([]byte(nil), data...)})
 }
-
+func (s *SystemService) publishSnapshot() {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	s.publishInt("cpu-percentage", s.buffer.CPU.Percentage)
+	s.publishString("ram-value", s.buffer.RAM.Value)
+	s.publishInt("ram-percentage", s.buffer.RAM.Percentage)
+	s.publishString("disk-value", s.buffer.Disk.Value)
+	s.publishInt("disk-percentage", s.buffer.Disk.Percentage)
+}
 func (s *SystemService) GetBuffer() Buffer {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
