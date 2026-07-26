@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -23,6 +24,10 @@ func DownloadSelfHostedIcon(url, title, filePath string) (string, error) {
 	data, err := io.ReadAll(io.LimitReader(resp.Body, 10<<20))
 	if err != nil {
 		return "", fmt.Errorf("failed to read icon: %w", err)
+	}
+	ct := http.DetectContentType(data)
+	if !strings.HasPrefix(ct, "image/") {
+		return "", fmt.Errorf("downloaded icon is not an image: %s", ct)
 	}
 	tmpPath := filePath + ".tmp"
 	if err := os.WriteFile(tmpPath, data, fs.FileMode(0640)); err != nil {
