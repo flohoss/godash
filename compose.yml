@@ -1,12 +1,12 @@
 # Single source of truth for container tool versions. CI reads this block too.
 x-build-args: &build-args
-  V_GOLANG: ${V_GOLANG:-1.26.4}
+  V_GOLANG: ${V_GOLANG:-1.26}
   V_NODE: ${V_NODE:-25}
   V_ALPINE: ${V_ALPINE:-3}
   V_TEMPL: ${V_TEMPL:-0.3.1020}
 
 x-images:
-  go: &go-image golang:${V_GOLANG:-1.26.4}
+  go: &go-image golang:${V_GOLANG:-1.26}
   node: &node-image node:${V_NODE:-25}
 
 services:
