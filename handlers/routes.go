@@ -3,59 +3,76 @@ package handlers
 import (
 	"bytes"
 	"net/http"
-	"os"
+	"sync"
 
 	"github.com/a-h/templ"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/r3labs/sse/v2"
 )
 
 func longCacheLifetime(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
+	return func(c *echo.Context) error {
 		c.Response().Header().Set(echo.HeaderCacheControl, "public, max-age=31536000")
 		return next(c)
 	}
 }
 
-func staticHandler(root string) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		p := c.Param("*")
-		full := root + "/" + p
-		info, err := os.Stat(full)
-		if err != nil || info.IsDir() {
-			return c.NoContent(http.StatusNotFound)
+func sseConnectionLimiter(maxPerIP int) echo.MiddlewareFunc {
+	var mu sync.Mutex
+	counts := map[string]int{}
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			ip := c.RealIP()
+			mu.Lock()
+			if counts[ip] >= maxPerIP {
+				mu.Unlock()
+				return c.NoContent(http.StatusServiceUnavailable)
+			}
+			counts[ip]++
+			mu.Unlock()
+
+			defer func() {
+				mu.Lock()
+				counts[ip]--
+				if counts[ip] <= 0 {
+					delete(counts, ip)
+				}
+				mu.Unlock()
+			}()
+
+			return next(c)
 		}
-		return c.File(full)
 	}
 }
 
-func render(c echo.Context, cmp templ.Component) error {
+func render(c *echo.Context, cmp templ.Component) error {
 	var buf bytes.Buffer
 	if err := cmp.Render(c.Request().Context(), &buf); err != nil {
 		return c.String(http.StatusInternalServerError, "render error")
 	}
-	c.Response().Header().Set(echo.HeaderContentType, "text/html; charset=utf-8")
-	c.Response().Writer.WriteHeader(http.StatusOK)
-	_, _ = c.Response().Writer.Write(buf.Bytes())
+	w := c.Response()
+	w.Header().Set(echo.HeaderContentType, "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(buf.Bytes())
 	return nil
 }
 
 func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler) {
-	e.GET("/sse", echo.WrapHandler(sse))
+	e.GET("/sse", echo.WrapHandler(sse), sseConnectionLimiter(10))
 
 	assets := e.Group("/assets", longCacheLifetime)
-	assets.GET("/*", staticHandler("assets"))
+	assets.Static("/", "assets")
 
 	icons := e.Group("/icons", longCacheLifetime)
-	icons.GET("/*", staticHandler("config/icons"))
+	icons.Static("/", "config/icons")
 
-	e.GET("/robots.txt", func(ctx echo.Context) error {
+	e.GET("/robots.txt", func(ctx *echo.Context) error {
 		return ctx.String(http.StatusOK, "User-agent: *\nDisallow: /")
 	})
 
 	e.GET("/", appHandler.handleIndex)
 
-	e.GET("/*", func(c echo.Context) error {
+	e.GET("/*", func(c *echo.Context) error {
 		return c.Redirect(http.StatusFound, "/")
 	})
 }

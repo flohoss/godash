@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	sseserver "github.com/r3labs/sse/v2"
 	"github.com/spf13/viper"
 
@@ -22,15 +22,17 @@ import (
 	"github.com/flohoss/godash/services"
 )
 
-func setupRouter() *echo.Echo {
-	e := echo.New()
+func setupRouter(logger *slog.Logger) *echo.Echo {
+	e := echo.NewWithConfig(echo.Config{
+		Logger:      logger,
+		IPExtractor: echo.ExtractIPFromRealIPHeader(),
+	})
 
-	e.HideBanner = true
-	e.HidePort = true
-
+	e.Use(middleware.RequestID())
+	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
-		Skipper: func(c echo.Context) bool {
+		Skipper: func(c *echo.Context) bool {
 			return c.Path() == "/sse"
 		},
 	}))
@@ -46,7 +48,7 @@ func setLogger() {
 	slog.Debug("logger set", "level", config.GetLogLevel())
 }
 
-func setupViperWatcher() {
+func setupViperWatcher(echoInst *echo.Echo) {
 	var (
 		mu    sync.Mutex
 		timer *time.Timer
@@ -66,6 +68,7 @@ func setupViperWatcher() {
 		debounce(2*time.Second, func() {
 			config.ValidateAndLoadConfig()
 			setLogger()
+			echoInst.Logger = slog.Default()
 			slog.Debug("config changed", "file", e.Name)
 		})
 	})
@@ -77,9 +80,9 @@ func main() {
 	config.New()
 	setLogger()
 
-	e := setupRouter()
+	e := setupRouter(slog.Default())
 
-	setupViperWatcher()
+	setupViperWatcher(e)
 
 	sse := sseserver.New()
 	sse.AutoReplay = false
@@ -95,20 +98,22 @@ func main() {
 
 	slog.Info("Starting server", "url", fmt.Sprintf("http://%s", config.GetServer()))
 
-	go func() {
-		if err := e.Start(config.GetServer()); err != nil && err != http.ErrServerClosed {
-			slog.Error("Failed to start server", "error", err)
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	slog.Info("Shutting down server")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		slog.Error("Failed to shutdown server", "error", err)
+
+	sc := echo.StartConfig{
+		Address:         config.GetServer(),
+		HideBanner:      true,
+		HidePort:        true,
+		GracefulTimeout: 10 * time.Second,
+		BeforeServeFunc: func(s *http.Server) error {
+			s.ReadHeaderTimeout = 10 * time.Second
+			s.ReadTimeout = 30 * time.Second
+			s.IdleTimeout = 120 * time.Second
+			return nil
+		},
+	}
+	if err := sc.Start(ctx, e); err != nil {
+		slog.Error("Failed to start server", "error", err)
 	}
 }

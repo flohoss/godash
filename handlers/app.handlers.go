@@ -4,7 +4,7 @@ import (
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/services"
 	"github.com/flohoss/godash/views"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 type SystemService interface {
@@ -29,7 +29,7 @@ type AppHandler struct {
 	weatherService WeatherService
 }
 
-func (bh *AppHandler) handleIndex(ctx echo.Context) error {
+func (bh *AppHandler) handleIndex(ctx *echo.Context) error {
 	buffer := bh.systemService.GetBuffer()
 	static := bh.systemService.GetStatic()
 	weather := bh.weatherService.GetCurrentWeather()
