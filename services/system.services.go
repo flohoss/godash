@@ -83,35 +83,43 @@ func (s *SystemService) GetStatic() Static {
 	return s.static
 }
 
-func (s *SystemService) initStatic() {
-	s.static.CPU = strconv.Itoa(runtime.NumCPU()) + " threads"
+func (s *SystemService) computeStatic() Static {
+	var st Static
+	st.CPU = strconv.Itoa(runtime.NumCPU()) + " threads"
 	p, err := disk.Partitions(false)
 	if err == nil {
-		s.static.Disk = strconv.Itoa(len(p)) + " partitions"
+		st.Disk = strconv.Itoa(len(p)) + " partitions"
 	}
 
 	r, err := mem.VirtualMemory()
 	if err == nil && r.SwapTotal > 0 {
-		s.static.RAM = readable.ReadableSize(r.SwapTotal) + " swap"
+		st.RAM = readable.ReadableSize(r.SwapTotal) + " swap"
 	} else {
-		s.static.RAM = "no swap"
+		st.RAM = "no swap"
 	}
+	return st
 }
 
 func (s *SystemService) collect() {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
+	cpuTicker := time.NewTicker(time.Second)
+	defer cpuTicker.Stop()
+	diskTicker := time.NewTicker(10 * time.Second)
+	defer diskTicker.Stop()
 
-	s.mu.Lock()
 	c, err := cpu.Info()
+	cpuModel := ""
 	if err == nil && len(c) > 0 {
 		if c[0].ModelName != "" {
-			s.buffer.CPU.Value = c[0].ModelName
+			cpuModel = c[0].ModelName
 		} else {
-			s.buffer.CPU.Value = c[0].VendorID
+			cpuModel = c[0].VendorID
 		}
 	}
-	s.initStatic()
+	static := s.computeStatic()
+
+	s.mu.Lock()
+	s.buffer.CPU.Value = cpuModel
+	s.static = static
 	s.mu.Unlock()
 
 	cpu.Percent(time.Second, false)
@@ -119,71 +127,86 @@ func (s *SystemService) collect() {
 	var prevCPUPct, prevRAMPct, prevDiskPct int
 	var prevRAMVal, prevDiskVal string
 
-	for range ticker.C {
-		cpuPercent, err := cpu.Percent(0, false)
-		if err != nil || len(cpuPercent) == 0 {
-			continue
-		}
-
-		memStat, err := mem.VirtualMemory()
-		if err != nil {
-			continue
-		}
-
+	pollDisk := func() {
 		diskStat, err := disk.Usage("/")
 		if err != nil {
-			continue
+			return
 		}
-
-		newCPUPct := int(math.Floor(cpuPercent[0]))
-		newRAMPct := int(math.Floor(memStat.UsedPercent))
 		newDiskPct := int(math.Floor(diskStat.UsedPercent))
-		newRAMVal := readable.ReadableSizePair(memStat.Used, memStat.Total)
 		newDiskVal := readable.ReadableSizePair(diskStat.Used, diskStat.Total)
 
 		var publishes []func()
-
 		s.mu.Lock()
-
-		if newCPUPct != prevCPUPct {
-			prevCPUPct = newCPUPct
-			s.buffer.CPU.Percentage = newCPUPct
-			pct := newCPUPct
-			publishes = append(publishes, func() { s.publishInt("cpu-percentage", pct) })
-		}
-
-		if newRAMVal != prevRAMVal {
-			prevRAMVal = newRAMVal
-			s.buffer.RAM.Value = newRAMVal
-			val := newRAMVal
-			publishes = append(publishes, func() { s.publishString("ram-value", val) })
-		}
-
-		if newRAMPct != prevRAMPct {
-			prevRAMPct = newRAMPct
-			s.buffer.RAM.Percentage = newRAMPct
-			pct := newRAMPct
-			publishes = append(publishes, func() { s.publishInt("ram-percentage", pct) })
-		}
-
 		if newDiskVal != prevDiskVal {
 			prevDiskVal = newDiskVal
 			s.buffer.Disk.Value = newDiskVal
 			val := newDiskVal
 			publishes = append(publishes, func() { s.publishString("disk-value", val) })
 		}
-
 		if newDiskPct != prevDiskPct {
 			prevDiskPct = newDiskPct
 			s.buffer.Disk.Percentage = newDiskPct
 			pct := newDiskPct
 			publishes = append(publishes, func() { s.publishInt("disk-percentage", pct) })
 		}
-
 		s.mu.Unlock()
-
 		for _, fn := range publishes {
 			fn()
+		}
+	}
+
+	pollDisk()
+
+	for {
+		select {
+		case <-cpuTicker.C:
+			cpuPercent, err := cpu.Percent(0, false)
+			if err != nil || len(cpuPercent) == 0 {
+				continue
+			}
+
+			memStat, err := mem.VirtualMemory()
+			if err != nil {
+				continue
+			}
+
+			newCPUPct := int(math.Floor(cpuPercent[0]))
+			newRAMPct := int(math.Floor(memStat.UsedPercent))
+			newRAMVal := readable.ReadableSizePair(memStat.Used, memStat.Total)
+
+			var publishes []func()
+
+			s.mu.Lock()
+
+			if newCPUPct != prevCPUPct {
+				prevCPUPct = newCPUPct
+				s.buffer.CPU.Percentage = newCPUPct
+				pct := newCPUPct
+				publishes = append(publishes, func() { s.publishInt("cpu-percentage", pct) })
+			}
+
+			if newRAMVal != prevRAMVal {
+				prevRAMVal = newRAMVal
+				s.buffer.RAM.Value = newRAMVal
+				val := newRAMVal
+				publishes = append(publishes, func() { s.publishString("ram-value", val) })
+			}
+
+			if newRAMPct != prevRAMPct {
+				prevRAMPct = newRAMPct
+				s.buffer.RAM.Percentage = newRAMPct
+				pct := newRAMPct
+				publishes = append(publishes, func() { s.publishInt("ram-percentage", pct) })
+			}
+
+			s.mu.Unlock()
+
+			for _, fn := range publishes {
+				fn()
+			}
+
+		case <-diskTicker.C:
+			pollDisk()
 		}
 	}
 }
