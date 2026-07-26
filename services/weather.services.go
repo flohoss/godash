@@ -228,13 +228,21 @@ func buildHourly(res *meteo.WeatherResponse, loc *time.Location) []Hour {
 	if len(res.Hourly.Time) == 0 {
 		return []Hour{}
 	}
+	parsed := make([]time.Time, len(res.Hourly.Time))
+	for i, ts := range res.Hourly.Time {
+		t, err := time.ParseInLocation("2006-01-02T15:04", ts, loc)
+		if err != nil {
+			return []Hour{}
+		}
+		parsed[i] = t
+	}
 	now := time.Now().In(loc)
 	start := now.Truncate(time.Hour).Add(time.Hour)
 	hours := make([]Hour, 0, 8)
-	maxIter := len(res.Hourly.Time) + 2
+	maxIter := len(parsed) + 2
 	for t := start; len(hours) < 8 && maxIter > 0; t = t.Add(time.Hour) {
 		maxIter--
-		idx := nearestHourIndex(res, t, loc)
+		idx := nearestHourIndex(parsed, t)
 		if idx < 0 {
 			continue
 		}
@@ -250,14 +258,11 @@ func buildHourly(res *meteo.WeatherResponse, loc *time.Location) []Hour {
 	return hours
 }
 
-func nearestHourIndex(res *meteo.WeatherResponse, target time.Time, loc *time.Location) int {
-	lo, hi := 0, len(res.Hourly.Time)-1
+func nearestHourIndex(parsed []time.Time, target time.Time) int {
+	lo, hi := 0, len(parsed)-1
 	for lo <= hi {
 		mid := lo + (hi-lo)/2
-		t, err := time.ParseInLocation("2006-01-02T15:04", res.Hourly.Time[mid], loc)
-		if err != nil {
-			return -1
-		}
+		t := parsed[mid]
 		if t.Before(target) {
 			lo = mid + 1
 		} else if t.After(target) {
@@ -268,16 +273,14 @@ func nearestHourIndex(res *meteo.WeatherResponse, target time.Time, loc *time.Lo
 	}
 	best := lo
 	if hi >= 0 {
-		if lo >= len(res.Hourly.Time) {
+		if lo >= len(parsed) {
 			best = hi
 		} else {
-			tLo, _ := time.ParseInLocation("2006-01-02T15:04", res.Hourly.Time[lo], loc)
-			tHi, _ := time.ParseInLocation("2006-01-02T15:04", res.Hourly.Time[hi], loc)
-			dLo := tLo.Sub(target)
+			dLo := parsed[lo].Sub(target)
 			if dLo < 0 {
 				dLo = -dLo
 			}
-			dHi := tHi.Sub(target)
+			dHi := parsed[hi].Sub(target)
 			if dHi < 0 {
 				dHi = -dHi
 			}
@@ -286,7 +289,7 @@ func nearestHourIndex(res *meteo.WeatherResponse, target time.Time, loc *time.Lo
 			}
 		}
 	}
-	if best < 0 || best >= len(res.Hourly.Time) {
+	if best < 0 || best >= len(parsed) {
 		return -1
 	}
 	return best
