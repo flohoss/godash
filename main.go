@@ -29,7 +29,6 @@ func setupRouter(logger *slog.Logger) *echo.Echo {
 	})
 
 	e.Use(middleware.RequestID())
-	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c *echo.Context) bool {
