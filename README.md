@@ -14,14 +14,13 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
   - [Docker](#docker)
     - [run command](#run-command)
     - [compose file](#compose-file)
-  - [✨ Star History](#-star-history)
+  - [Star History](#star-history)
   - [License](#license)
-  - [Contributing](#contributing)
 
 ## Features
 
 - Displays current weather
-- Displays weather forcast for up to 6 days
+- Displays weather forecast for up to 6 days
 - Shows system status and resource usage
 - Provides quick access to bookmarks with icons and links
 - Lightweight and easy to deploy with Docker
@@ -43,7 +42,7 @@ goDash is a simple, customizable dashboard written in Go. It provides an overvie
 
 At startup, godash will look for a `config.yaml` file in the current directory or create one. If it exists, it will be used to override the default values.
 
-Icons can be stored in a folder called icons or godash will automatically download from [https://selfh.st/icons/](https://selfh.st/icons/) with the prefix `sh/`
+Icons can be stored in a folder called icons or godash will automatically download from [https://selfh.st/icons/](https://selfh.st/icons/) with the prefix `sh/`.
 
 ```yaml
 log_level: 'info' # Valid options: debug, info, warn, error
@@ -122,40 +121,16 @@ services:
       - ./config:/app/config
 ```
 
-## ✨ Star History
+## Star History
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=flohoss/godash&type=Date&theme=dark" />
-  <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=flohoss/godash&type=Date" />
-  <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=flohoss/godash&type=Date" />
-</picture>
+<a href="https://www.star-history.com/?repos=flohoss%2Fgodash&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=flohoss/godash&type=date&theme=dark&legend=top-left&sealed_token=6Ag5zM06B6DLI4I699XoN7k_yDqrMQn1Eol0z0DJYVgjKObubm_DsOEMx9Aps0WA1FQhGDlGzlgNciBaU3lXX9qKb-GYr2cZT3HDLVPXJLtkmN7iUiTBW5OK1IaSZgxGtxEUJjP32KcMjEDJjIVLpTzeZzCTxQAWCiH_bwOXgljbGdzUcNfZQydW2TJi" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=flohoss/godash&type=date&legend=top-left&sealed_token=6Ag5zM06B6DLI4I699XoN7k_yDqrMQn1Eol0z0DJYVgjKObubm_DsOEMx9Aps0WA1FQhGDlGzlgNciBaU3lXX9qKb-GYr2cZT3HDLVPXJLtkmN7iUiTBW5OK1IaSZgxGtxEUJjP32KcMjEDJjIVLpTzeZzCTxQAWCiH_bwOXgljbGdzUcNfZQydW2TJi" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=flohoss/godash&type=date&legend=top-left&sealed_token=6Ag5zM06B6DLI4I699XoN7k_yDqrMQn1Eol0z0DJYVgjKObubm_DsOEMx9Aps0WA1FQhGDlGzlgNciBaU3lXX9qKb-GYr2cZT3HDLVPXJLtkmN7iUiTBW5OK1IaSZgxGtxEUJjP32KcMjEDJjIVLpTzeZzCTxQAWCiH_bwOXgljbGdzUcNfZQydW2TJi" />
+ </picture>
+</a>
 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/flohoss/godash/blob/main/LICENSE) file for details.
-
-## Contributing
-
-Feel free to open issues or submit pull requests to improve goDash!
-
----
-
-## Development
-
-### Automatic rebuild and reload
-
-```sh
-docker compose up
-```
-
-### Update Dependencies
-
-```bash
-# Node packages
-docker compose run --rm npm install
-docker compose run --rm --entrypoint npx npm npm-check-updates -u && docker compose run --rm npm install
-
-# Go packages
-docker compose run --rm go get -u ./...
-docker compose run --rm go mod tidy
-```
