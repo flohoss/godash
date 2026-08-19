@@ -2,20 +2,18 @@
 
 goDash is a simple, customizable dashboard written in Go. It provides an overview of weather information, system status, and bookmarks with icons and links.
 
-# Table of Contents
+## Table of Contents
 
-- [GoDash](#godash)
-- [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Screenshots](#screenshots)
-    - [Mobile](#mobile)
-    - [Desktop](#desktop)
-  - [Config](#config)
-  - [Docker](#docker)
-    - [run command](#run-command)
-    - [compose file](#compose-file)
-  - [Star History](#star-history)
-  - [License](#license)
+- [Features](#features)
+- [Screenshots](#screenshots)
+  - [Mobile](#mobile)
+  - [Desktop](#desktop)
+- [Config](#config)
+- [Docker](#docker)
+  - [run command](#run-command)
+  - [compose file](#compose-file)
+- [Development](#development)
+- [License](#license)
 
 ## Features
 
@@ -121,15 +119,9 @@ services:
       - ./config:/app/config
 ```
 
-## Star History
+## Development
 
-<a href="https://www.star-history.com/?repos=flohoss%2Fgodash&type=date&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=flohoss/godash&type=date&theme=dark&legend=top-left&sealed_token=6Ag5zM06B6DLI4I699XoN7k_yDqrMQn1Eol0z0DJYVgjKObubm_DsOEMx9Aps0WA1FQhGDlGzlgNciBaU3lXX9qKb-GYr2cZT3HDLVPXJLtkmN7iUiTBW5OK1IaSZgxGtxEUJjP32KcMjEDJjIVLpTzeZzCTxQAWCiH_bwOXgljbGdzUcNfZQydW2TJi" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=flohoss/godash&type=date&legend=top-left&sealed_token=6Ag5zM06B6DLI4I699XoN7k_yDqrMQn1Eol0z0DJYVgjKObubm_DsOEMx9Aps0WA1FQhGDlGzlgNciBaU3lXX9qKb-GYr2cZT3HDLVPXJLtkmN7iUiTBW5OK1IaSZgxGtxEUJjP32KcMjEDJjIVLpTzeZzCTxQAWCiH_bwOXgljbGdzUcNfZQydW2TJi" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=flohoss/godash&type=date&legend=top-left&sealed_token=6Ag5zM06B6DLI4I699XoN7k_yDqrMQn1Eol0z0DJYVgjKObubm_DsOEMx9Aps0WA1FQhGDlGzlgNciBaU3lXX9qKb-GYr2cZT3HDLVPXJLtkmN7iUiTBW5OK1IaSZgxGtxEUJjP32KcMjEDJjIVLpTzeZzCTxQAWCiH_bwOXgljbGdzUcNfZQydW2TJi" />
- </picture>
-</a>
+All development workflows — formatting, dependency updates, and automatic rebuild — are documented in [`AGENTS.md`](AGENTS.md).
 
 ## License
 

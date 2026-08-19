@@ -8,22 +8,24 @@ Read before making changes. Rule-oriented and self-contained.
 - **No comments.** Use descriptive function or service names instead.
 - **No code markers** like `// ... existing code ...` in edits.
 - Go imports: stdlib, then external, then internal (`github.com/flohoss/godash/...`), each block alphabetical.
+- Never edit generated files (`*_templ.go`).
 
-## Development
+## Tooling — always via Docker Compose, never on the host
 
-- Start dev server: `docker compose up` (auto-rebuild + hot-reload via `templ generate --watch --proxy`).
-- Update node packages: `docker compose run --rm npm install` (bump versions: `docker compose run --rm --entrypoint npx npm npm-check-updates -u && docker compose run --rm npm install`).
-- Update go packages: `docker compose run --rm go get -u ./...` then `docker compose run --rm go mod tidy`.
+- **Dev server:** `docker compose up` (auto-rebuild + hot-reload via `templ generate --watch --proxy`). The server compiles `*.templ` into `*_templ.go` and **hot-reloads the browser on every file change**. Do not run `go build` or `templ generate` manually. Do not edit `*_templ.go` by hand — edit the matching `*.templ` source and let the watcher regenerate. Errors appear live in the running server/browser.
+- **Format:** `docker compose run --rm go fmt ./...`
 
-## Verification
+Run formatting after every code change, even small edits. Only commit if formatting passes.
 
-The dev server compiles `*.templ` into `*_templ.go`, runs `go run .` behind the proxy, and **hot-reloads the browser on every file change**. Do not run `go build` or `templ generate` manually. Do not edit `*_templ.go` by hand — edit the matching `*.templ` source and let the watcher regenerate. Errors appear live in the running server/browser.
+## Common Commands
 
-After any code change, run formatting before committing (do not skip even for small edits):
-
-- `docker compose run --rm go fmt ./...`
-
-Only commit if formatting passes.
+```sh
+docker compose run --rm npm install
+docker compose run --rm --entrypoint npx npm --yes npm-check-updates -u && docker compose run --rm npm install
+docker compose run --rm go get -u ./...
+docker compose run --rm go mod tidy
+docker compose run --rm go fmt ./...
+```
 
 ## Git
 
