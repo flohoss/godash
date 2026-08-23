@@ -3,8 +3,6 @@
 [![CI](https://github.com/flohoss/godash/actions/workflows/ci.yaml/badge.svg)](https://github.com/flohoss/godash/actions/workflows/ci.yaml)
 [![Coverage](https://raw.githubusercontent.com/wiki/flohoss/godash/coverage.svg)](https://github.com/flohoss/godash/wiki/coverage.html)
 
-[![RepoRanker](https://reporanker.com/badge/flohoss/godash)](https://reporanker.com/repos/flohoss/godash)
-
 A self-hosted dashboard written in Go. See the weather forecast, monitor system resources in real time, and keep your bookmarks with icons and links in one place — all driven by a single YAML config file.
 
 </div>
@@ -54,7 +52,7 @@ The container runs as an unprivileged user (`PUID`/`PGID`, defaults to `1000:100
 
 ## Features
 
-- **Weather** — current conditions and a 6-day forecast, pulled from [Open-Meteo](https://open-meteo.com/) with no API key required. Choose between Celsius and Fahrenheit.
+- **Weather** — current conditions and an hourly forecast, pulled from [Open-Meteo](https://open-meteo.com/) with no API key required. Choose between Celsius and Fahrenheit.
 - **Realtime system status** — CPU, RAM, and disk usage streamed live to the browser over Server-Sent Events (SSE).
 - **Bookmarks** — applications and links organized into categories, each with a name, optional icon, and URL.
 - **Dark / light icons** — each bookmark can have both a dark and a light icon, automatically picked based on the active theme.
@@ -148,16 +146,16 @@ GoDash can store both a **dark** and a **light** variant of each icon. When both
 
 ## Screenshots
 
-### Mobile
+### Dark mode
 
 <p align="center">
-  <img src="img/mobile.webp" width="200" />
+  <img src="screenshots/dark.webp" width="500" />
 </p>
 
-### Desktop
+### Light mode
 
 <p align="center">
-  <img src="img/desktop.webp" width="600" />
+  <img src="screenshots/light.webp" width="500" />
 </p>
 
 ## Development
