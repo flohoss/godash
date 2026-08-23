@@ -150,6 +150,8 @@ func ValidateAndLoadConfig() error {
 	replaceIconStrings(tempCfg.Applications)
 	replaceIconStrings(tempCfg.Links)
 
+	cleanupOrphanedIcons(tempCfg.Applications, tempCfg.Links)
+
 	mu.Lock()
 	cfg = tempCfg
 	mu.Unlock()
@@ -213,6 +215,38 @@ func clearIconCache() {
 	iconCacheMu.Lock()
 	defer iconCacheMu.Unlock()
 	iconCache = map[string][2]string{}
+}
+
+func cleanupOrphanedIcons(categories ...[]Category) {
+	referenced := map[string]bool{}
+	for _, apps := range categories {
+		for i := range apps {
+			for _, app := range apps[i].Entries {
+				for _, path := range []string{app.Icon, app.IconLight} {
+					if path == "" || isExternalIcon(path) {
+						continue
+					}
+					referenced[path] = true
+				}
+			}
+		}
+	}
+
+	entries, err := os.ReadDir(iconsFolder)
+	if err != nil {
+		slog.Warn("could not scan icons folder for cleanup", "error", err)
+		return
+	}
+	for _, entry := range entries {
+		path := "/icons/" + entry.Name()
+		if !referenced[path] {
+			if err := os.Remove(iconsFolder + entry.Name()); err != nil {
+				slog.Warn("could not remove orphaned icon", "path", entry.Name(), "error", err)
+			} else {
+				slog.Info("removed orphaned icon", "path", entry.Name())
+			}
+		}
+	}
 }
 
 func isExternalIcon(icon string) bool {
