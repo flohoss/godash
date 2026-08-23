@@ -85,7 +85,7 @@ applications:
         ignore_dark: false # Keep using the same icon even if a light variant exists
         url: 'https://www.notion.so'
       - name: 'Slack'
-        icon: 'sh/slack.svg' # Automatically downloaded from selfh.st
+        icon: 'sh/slack' # Automatically downloaded from selfh.st
         ignore_dark: true
         url: 'https://slack.com'
 
@@ -138,7 +138,7 @@ Simple text bookmarks grouped into categories, without icons:
 
 Icons can be provided in any of three ways:
 
-- **`sh/` prefix** — downloaded automatically from [selfh.st/icons](https://selfh.st/icons/) (e.g. `sh/slack.svg`) and cached locally.
+- **`sh/` prefix** — downloaded automatically from [selfh.st/icons](https://selfh.st/icons/) (e.g. `sh/slack`) and cached locally.
 - **Local file** — a file name or path such as `notion.png`, resolved from the `icons` folder.
 - **External URL** — a full URL, served directly without caching.
 
