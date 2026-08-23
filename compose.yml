@@ -50,6 +50,8 @@ services:
       - ./:/app/
 
   test:
+    profiles:
+      - dev
     build:
       context: .
       dockerfile: docker/dev.dockerfile
