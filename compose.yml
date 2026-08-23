@@ -49,6 +49,16 @@ services:
     volumes:
       - ./:/app/
 
+  test:
+    build:
+      context: .
+      dockerfile: docker/dev.dockerfile
+      args: *build-args
+    working_dir: /app
+    entrypoint: /app/docker/test.entrypoint.sh
+    volumes:
+      - ./:/app/
+
   npm:
     profiles:
       - dev

@@ -21,18 +21,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Go
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Run Go tests with coverage
-        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+      - name: Run tests
+        run: docker compose run --rm test
 
       - name: Show coverage summary
         run: |
-          go tool cover -func=coverage.out | tee coverage.txt
           echo "## Coverage" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           cat coverage.txt >> "$GITHUB_STEP_SUMMARY"
