@@ -170,14 +170,17 @@ func replaceIconStrings(applications []Category) {
 
 			var filePath, filePathLight string
 
-			if strings.HasPrefix(bookmark.Icon, "sh/") {
-				path, lightPath, err := downloadIcons(handleSelfHostedIcons(bookmark.Icon, ".webp"))
+			switch {
+			case isExternalIcon(bookmark.Icon):
+				filePath, filePathLight = bookmark.Icon, ""
+			case strings.HasPrefix(bookmark.Icon, "sh/"):
+				path, lightPath, err := downloadSelfHostedIcon(bookmark.Icon)
 				if err != nil {
 					slog.Error(err.Error())
-					continue
+				} else {
+					filePath, filePathLight = path, lightPath
 				}
-				filePath, filePathLight = path, lightPath
-			} else {
+			default:
 				ext := filepath.Ext(bookmark.Icon)
 				path, lightPath, err := handleLocalIcons(bookmark.Icon, ext)
 				if err != nil {
@@ -210,6 +213,25 @@ func clearIconCache() {
 	iconCacheMu.Lock()
 	defer iconCacheMu.Unlock()
 	iconCache = map[string][2]string{}
+}
+
+func isExternalIcon(icon string) bool {
+	return strings.HasPrefix(icon, "http://") || strings.HasPrefix(icon, "https://")
+}
+
+func downloadSelfHostedIcon(icon string) (string, string, error) {
+	for _, ext := range []string{".svg", ".webp", ".png"} {
+		title, iconURL, lightTitle, lightURL := handleSelfHostedIcons(icon, ext)
+		if title == "" {
+			return "", "", fmt.Errorf("invalid self-hosted icon: %s", icon)
+		}
+		path, lightPath, err := downloadIcons(title, iconURL, lightTitle, lightURL)
+		if err == nil {
+			return path, lightPath, nil
+		}
+		slog.Debug("self-hosted icon format unavailable, trying next", "icon", icon, "ext", ext, "error", err)
+	}
+	return "", "", fmt.Errorf("no available format for self-hosted icon: %s", icon)
 }
 
 func downloadIcons(title, url, lightTitle, lightUrl string) (string, string, error) {

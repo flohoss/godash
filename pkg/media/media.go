@@ -25,9 +25,8 @@ func DownloadSelfHostedIcon(url, title, filePath string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read icon: %w", err)
 	}
-	ct := http.DetectContentType(data)
-	if !strings.HasPrefix(ct, "image/") {
-		return "", fmt.Errorf("downloaded icon is not an image: %s", ct)
+	if !isIconContentType(resp.Header.Get("Content-Type"), data) {
+		return "", fmt.Errorf("downloaded icon is not an image: %s", http.DetectContentType(data))
 	}
 	tmpPath := filePath + ".tmp"
 	if err := os.WriteFile(tmpPath, data, fs.FileMode(0640)); err != nil {
@@ -38,4 +37,16 @@ func DownloadSelfHostedIcon(url, title, filePath string) (string, error) {
 		return "", fmt.Errorf("failed to move icon: %w", err)
 	}
 	return filePath, nil
+}
+
+func isIconContentType(header string, data []byte) bool {
+	ct := strings.ToLower(strings.TrimSpace(strings.Split(header, ";")[0]))
+	if strings.HasPrefix(ct, "image/") {
+		return true
+	}
+	switch strings.Split(strings.ToLower(strings.TrimSpace(http.DetectContentType(data))), ";")[0] {
+	case "image/svg+xml", "text/xml", "application/xml":
+		return true
+	}
+	return false
 }
