@@ -11,6 +11,7 @@ import (
 )
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
+var baseURL = "https://api.open-meteo.com/v1/forecast"
 
 type WeatherResponse struct {
 	CurrentUnits struct {
@@ -64,7 +65,6 @@ type Options struct {
 }
 
 func GetWeather(options Options) (WeatherResponse, error) {
-	baseURL := "https://api.open-meteo.com/v1/forecast"
 	current := "temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,is_day,wind_speed_10m"
 	daily := "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset"
 	hourly := "temperature_2m,weather_code,is_day,wind_speed_10m,precipitation_probability"
