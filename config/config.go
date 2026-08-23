@@ -150,7 +150,7 @@ func ValidateAndLoadConfig() error {
 	replaceIconStrings(tempCfg.Applications)
 	replaceIconStrings(tempCfg.Links)
 
-	cleanupOrphanedIcons(tempCfg.Applications, tempCfg.Links)
+	cleanupOrphanedIcons(iconsFolder, tempCfg.Applications, tempCfg.Links)
 
 	mu.Lock()
 	cfg = tempCfg
@@ -174,7 +174,9 @@ func replaceIconStrings(applications []Category) {
 
 			switch {
 			case isExternalIcon(bookmark.Icon):
-				filePath, filePathLight = bookmark.Icon, ""
+				if u, err := url.Parse(bookmark.Icon); err == nil && u.Scheme != "" && u.Host != "" {
+					filePath, filePathLight = bookmark.Icon, ""
+				}
 			case strings.HasPrefix(bookmark.Icon, "sh/"):
 				path, lightPath, err := downloadSelfHostedIcon(bookmark.Icon)
 				if err != nil {
@@ -184,7 +186,7 @@ func replaceIconStrings(applications []Category) {
 				}
 			default:
 				ext := filepath.Ext(bookmark.Icon)
-				path, lightPath, err := handleLocalIcons(bookmark.Icon, ext)
+				path, lightPath, err := handleLocalIcons(iconsFolder, bookmark.Icon, ext)
 				if err != nil {
 					slog.Warn("could not find local icon", "path", bookmark.Icon, "error", err)
 				}
@@ -217,7 +219,7 @@ func clearIconCache() {
 	iconCache = map[string][2]string{}
 }
 
-func cleanupOrphanedIcons(categories ...[]Category) {
+func cleanupOrphanedIcons(iconsDir string, categories ...[]Category) {
 	referenced := map[string]bool{}
 	for _, apps := range categories {
 		for i := range apps {
@@ -232,7 +234,7 @@ func cleanupOrphanedIcons(categories ...[]Category) {
 		}
 	}
 
-	entries, err := os.ReadDir(iconsFolder)
+	entries, err := os.ReadDir(iconsDir)
 	if err != nil {
 		slog.Warn("could not scan icons folder for cleanup", "error", err)
 		return
@@ -240,7 +242,7 @@ func cleanupOrphanedIcons(categories ...[]Category) {
 	for _, entry := range entries {
 		path := "/icons/" + entry.Name()
 		if !referenced[path] {
-			if err := os.Remove(iconsFolder + entry.Name()); err != nil {
+			if err := os.Remove(iconsDir + entry.Name()); err != nil {
 				slog.Warn("could not remove orphaned icon", "path", entry.Name(), "error", err)
 			} else {
 				slog.Info("removed orphaned icon", "path", entry.Name())
@@ -310,12 +312,12 @@ func handleSelfHostedIcons(icon, ext string) (string, string, string, string) {
 	return title, iconURL, lightTitle, lightURL
 }
 
-func handleLocalIcons(title, ext string) (string, string, error) {
+func handleLocalIcons(iconsDir, title, ext string) (string, string, error) {
 	clean := filepath.Clean(title)
 	if strings.Contains(clean, "..") || filepath.IsAbs(clean) {
 		return "", "", fmt.Errorf("invalid icon path: %s", title)
 	}
-	filePath := iconsFolder + clean
+	filePath := iconsDir + clean
 	if _, err := os.Stat(filePath); err != nil {
 		return "", "", err
 	}

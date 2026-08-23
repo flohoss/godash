@@ -12,6 +12,8 @@ import (
 	"github.com/r3labs/sse/v2"
 )
 
+var fetchWeather = meteo.GetWeather
+
 type WeatherService struct {
 	weather      []Day
 	hourly       []Hour
@@ -152,7 +154,7 @@ func (w *WeatherService) recomputeHourly() {
 
 func (w *WeatherService) fetchAndPublish() error {
 	settings, tz := config.GetWeatherConfig()
-	res, err := meteo.GetWeather(meteo.Options{
+	res, err := fetchWeather(meteo.Options{
 		Latitude:  settings.Latitude,
 		Longitude: settings.Longitude,
 		TimeZone:  tz,
