@@ -2,6 +2,7 @@ package services
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -40,14 +41,14 @@ func TestGetIcon(t *testing.T) {
 
 func TestHoursEqual(t *testing.T) {
 	hour := Hour{Time: "12:00", Temperature: "21 °C"}
-	if !hoursEqual([]Hour{hour}, []Hour{hour}) {
-		t.Error("hoursEqual() = false for identical slices")
+	if !slices.Equal([]Hour{hour}, []Hour{hour}) {
+		t.Error("slices.Equal() = false for identical slices")
 	}
-	if hoursEqual([]Hour{hour}, []Hour{}) {
-		t.Error("hoursEqual() = true for different lengths")
+	if slices.Equal([]Hour{hour}, []Hour{}) {
+		t.Error("slices.Equal() = true for different lengths")
 	}
-	if hoursEqual([]Hour{hour}, []Hour{{Time: "13:00", Temperature: "21 °C"}}) {
-		t.Error("hoursEqual() = true for different content")
+	if slices.Equal([]Hour{hour}, []Hour{{Time: "13:00", Temperature: "21 °C"}}) {
+		t.Error("slices.Equal() = true for different content")
 	}
 }
 

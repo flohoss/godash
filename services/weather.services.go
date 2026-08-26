@@ -1,9 +1,11 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"slices"
 	"sync"
 	"time"
 
@@ -65,14 +67,15 @@ func NewWeatherService(sse *sse.Server) *WeatherService {
 		More:           More{},
 	}}
 
-	go func() {
-		if err := w.fetchAndPublish(); err != nil {
-			slog.Error("Failed initial weather fetch", "error", err)
-		}
-	}()
-
-	go w.collect()
 	return w
+}
+
+func (w *WeatherService) Run(ctx context.Context) error {
+	if err := w.fetchAndPublish(); err != nil {
+		slog.Error("Failed initial weather fetch", "error", err)
+	}
+	w.collect(ctx)
+	return nil
 }
 
 func (w *WeatherService) publishSnapshot() {
@@ -115,7 +118,7 @@ func (w *WeatherService) GetCurrentHourly() []Hour {
 	return w.hourly
 }
 
-func (w *WeatherService) collect() {
+func (w *WeatherService) collect(ctx context.Context) {
 	fetchTicker := time.NewTicker(5 * time.Minute)
 	defer fetchTicker.Stop()
 	hourlyTicker := time.NewTicker(1 * time.Minute)
@@ -129,6 +132,8 @@ func (w *WeatherService) collect() {
 			}
 		case <-hourlyTicker.C:
 			w.recomputeHourly()
+		case <-ctx.Done():
+			return
 		}
 	}
 }
@@ -143,7 +148,7 @@ func (w *WeatherService) recomputeHourly() {
 		return
 	}
 	hours := buildHourly(res, loc)
-	if hoursEqual(prev, hours) {
+	if slices.Equal(prev, hours) {
 		return
 	}
 	w.mu.Lock()
@@ -261,52 +266,25 @@ func buildHourly(res *meteo.WeatherResponse, loc *time.Location) []Hour {
 }
 
 func nearestHourIndex(parsed []time.Time, target time.Time) int {
-	lo, hi := 0, len(parsed)-1
-	for lo <= hi {
-		mid := lo + (hi-lo)/2
-		t := parsed[mid]
-		if t.Before(target) {
-			lo = mid + 1
-		} else if t.After(target) {
-			hi = mid - 1
-		} else {
-			return mid
-		}
-	}
-	best := lo
-	if hi >= 0 {
-		if lo >= len(parsed) {
-			best = hi
-		} else {
-			dLo := parsed[lo].Sub(target)
-			if dLo < 0 {
-				dLo = -dLo
-			}
-			dHi := parsed[hi].Sub(target)
-			if dHi < 0 {
-				dHi = -dHi
-			}
-			if dHi <= dLo {
-				best = hi
-			}
-		}
-	}
-	if best < 0 || best >= len(parsed) {
+	if len(parsed) == 0 {
 		return -1
 	}
-	return best
-}
-
-func hoursEqual(a, b []Hour) bool {
-	if len(a) != len(b) {
-		return false
+	idx, found := slices.BinarySearchFunc(parsed, target, func(t, target time.Time) int {
+		return t.Compare(target)
+	})
+	if found {
+		return idx
 	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
+	if idx == 0 {
+		return 0
 	}
-	return true
+	if idx >= len(parsed) {
+		return len(parsed) - 1
+	}
+	if parsed[idx].Sub(target).Abs() >= parsed[idx-1].Sub(target).Abs() {
+		return idx - 1
+	}
+	return idx
 }
 
 func (w *WeatherService) hasResponseChanged(newRes *meteo.WeatherResponse) bool {

@@ -3,9 +3,11 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -85,10 +87,10 @@ func New() {
 	viper.SetDefault("weather.units", "celsius")
 	viper.SetDefault("weather.latitude", 52.5163)
 	viper.SetDefault("weather.longitude", 13.3776)
-	viper.SetDefault("applications", []map[string]interface{}{
+	viper.SetDefault("applications", []map[string]any{
 		{
 			"category": "Applications",
-			"entries": []map[string]interface{}{
+			"entries": []map[string]any{
 				{
 					"name": "GoDash",
 					"icon": "sh/homebox",
@@ -97,10 +99,10 @@ func New() {
 			},
 		},
 	})
-	viper.SetDefault("links", []map[string]interface{}{
+	viper.SetDefault("links", []map[string]any{
 		{
 			"category": "Applications",
-			"entries": []map[string]interface{}{
+			"entries": []map[string]any{
 				{
 					"name": "GoDash",
 					"url":  "https://github.com/flohoss/godash",
@@ -351,7 +353,7 @@ func GetLogLevel() slog.Level {
 func GetServer() string {
 	mu.RLock()
 	defer mu.RUnlock()
-	return fmt.Sprintf("%s:%d", cfg.Server.Address, cfg.Server.Port)
+	return net.JoinHostPort(cfg.Server.Address, strconv.Itoa(cfg.Server.Port))
 }
 
 func GetApplications() []Category {

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"math"
 	"runtime"
@@ -43,8 +44,12 @@ func NewSystemService(sse *sse.Server) *SystemService {
 	s := SystemService{sse: sse}
 	sse.CreateStream("system")
 	RegisterSnapshot("system", s.publishSnapshot)
-	go s.collect()
 	return &s
+}
+
+func (s *SystemService) Run(ctx context.Context) error {
+	s.collect(ctx)
+	return nil
 }
 
 func (s *SystemService) publishString(id string, v string) {
@@ -100,7 +105,7 @@ func (s *SystemService) computeStatic() Static {
 	return st
 }
 
-func (s *SystemService) collect() {
+func (s *SystemService) collect(ctx context.Context) {
 	cpuTicker := time.NewTicker(time.Second)
 	defer cpuTicker.Stop()
 	diskTicker := time.NewTicker(10 * time.Second)
@@ -207,6 +212,8 @@ func (s *SystemService) collect() {
 
 		case <-diskTicker.C:
 			pollDisk()
+		case <-ctx.Done():
+			return
 		}
 	}
 }

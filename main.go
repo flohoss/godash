@@ -100,6 +100,9 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
+	go s.Run(ctx)
+	go w.Run(ctx)
+
 	sc := echo.StartConfig{
 		Address:         config.GetServer(),
 		HideBanner:      true,
