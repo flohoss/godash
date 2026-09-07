@@ -6,10 +6,7 @@ import (
 )
 
 templ Badge(id, icon, static string, details services.Detail) {
-	{{ hideSmall := id == "disk" }}
-	<div
-		class={ "grid gap-1 w-full", templ.KV("hidden md:grid", hideSmall) }
-	>
+	<div class="grid gap-1 w-full">
 		<div class="flex gap-2 items-start justify-between w-full min-w-0">
 			<div>
 				<div
