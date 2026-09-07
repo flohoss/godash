@@ -6,10 +6,10 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.520",
+    "@iconify/json": "^2.2.525",
     "@iconify/tailwind4": "^1.2.3",
     "@tailwindcss/cli": "^4.3.3",
-    "daisyui": "^5.7.22",
+    "daisyui": "^5.7.28",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3"
   },
