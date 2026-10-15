@@ -57,22 +57,27 @@ func render(c *echo.Context, cmp templ.Component) error {
 	return nil
 }
 
-func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler) {
-	e.GET("/sse", echo.WrapHandler(sse), sseConnectionLimiter(10))
-
-	assets := e.Group("/assets", longCacheLifetime)
-	assets.Static("/", "assets")
-
-	icons := e.Group("/icons", longCacheLifetime)
-	icons.Static("/", "config/icons")
-
+func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHandler *AuthHandler) {
 	e.GET("/robots.txt", func(ctx *echo.Context) error {
 		return ctx.String(http.StatusOK, "User-agent: *\nDisallow: /")
 	})
 
-	e.GET("/", appHandler.handleIndex)
+	e.GET("/auth/login", authHandler.HandleStartLogin)
+	e.GET("/auth/callback", authHandler.HandleCallback)
 
-	e.GET("/*", func(c *echo.Context) error {
+	protected := e.Group("", authHandler.Auth.Middleware())
+
+	protected.GET("/sse", echo.WrapHandler(sse), sseConnectionLimiter(10))
+
+	assets := protected.Group("/assets", longCacheLifetime)
+	assets.Static("/", "assets")
+
+	icons := protected.Group("/icons", longCacheLifetime)
+	icons.Static("/", "config/icons")
+
+	protected.GET("/", appHandler.handleIndex)
+
+	protected.GET("/*", func(c *echo.Context) error {
 		return c.Redirect(http.StatusFound, "/")
 	})
 }

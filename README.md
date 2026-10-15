@@ -12,8 +12,10 @@ A self-hosted dashboard written in Go. See the weather forecast, monitor system 
 - [Quick Start](#quick-start)
 - [Features](#features)
 - [Configuration](#configuration)
+  - [Environment overrides](#environment-overrides-gd_)
   - [Top-level settings](#top-level-settings)
   - [Weather](#weather)
+  - [Single sign-on (OIDC)](#single-sign-on-oidc)
   - [Applications](#applications)
   - [Links](#links)
   - [Icons](#icons)
@@ -57,6 +59,7 @@ The container runs as an unprivileged user (`PUID`/`PGID`, defaults to `1000:100
 - **Bookmarks** — applications and links organized into categories, each with a name, optional icon, and URL.
 - **Dark / light icons** — each bookmark can have both a dark and a light icon, automatically picked based on the active theme.
 - **Single config file** — everything is defined in `config.yaml`, validated at startup and hot-reloaded on change.
+- **Optional single sign-on** — protect the dashboard with any OpenID Connect provider. See [Single sign-on (OIDC)](#single-sign-on-oidc).
 - **Lightweight & easy to deploy** — a single static binary served from a minimal Alpine container.
 
 ## Configuration
@@ -76,6 +79,16 @@ weather:
   units: 'celsius' # celsius | fahrenheit
   latitude: 52.5163 # Valid latitude (-90 to 90)
   longitude: 13.3776 # Valid longitude (-180 to 180)
+
+auth:
+  oidc:
+    enabled: false # Set to true to require a login for the dashboard
+    issuer_url: '' # Provider issuer, must match the `iss` claim exactly, no trailing /
+    client_id: ''
+    client_secret: ''
+    session_key: '' # At least 32 characters, signs the session cookie
+    session_ttl: '24h' # How long a login stays valid
+    cookie_secure: false # Set to true when served over HTTPS
 
 applications:
   - category: 'Productivity'
@@ -104,6 +117,15 @@ links:
 | `time_zone` | no       | IANA timezone used for weather and displayed times.                               |
 | `title`     | no       | Dashboard title shown in the header and browser tab.                              |
 | `server`    | no       | Bind address and port. `address` must be a valid IPv4, `port` between 1024–65535. |
+| `auth`      | no       | Optional single sign-on. See [Single sign-on (OIDC)](#single-sign-on-oidc).       |
+
+### Environment overrides (`GD_`)
+
+Any config value can be overridden with an environment variable prefixed `GD_`. Dots become underscores and keys are uppercased.
+
+- `GD_TITLE='My Dash'` overrides `title`
+- `GD_SERVER_PORT=9000` overrides `server.port`
+- `GD_AUTH_OIDC_CLIENT_SECRET=...` overrides `auth.oidc.client_secret`
 
 ### Weather
 
@@ -112,6 +134,46 @@ links:
 | `units`     | `celsius` or `fahrenheit`. Defaults to `celsius`. |
 | `latitude`  | Latitude of the forecast location (-90 to 90).    |
 | `longitude` | Longitude of the forecast location (-180 to 180). |
+
+### Single sign-on (OIDC)
+
+GoDash can require a login for the entire dashboard using any OpenID Connect provider, and is tested against [Pocket-ID](https://github.com/pocket-id/pocket-id).
+
+Set up:
+
+1. Create an OIDC client in your provider. Its callback URL is the address you open GoDash with, followed by `/auth/callback` — `https://godash.example.com/auth/callback`, or with the port when nothing terminates TLS on 443: `https://godash.example.com:8156/auth/callback`.
+2. Copy the client ID and secret the provider generates.
+3. Generate a `session_key` of at least 32 characters (e.g. `openssl rand -hex 32`).
+4. Enable it in the config:
+
+```yaml
+auth:
+  oidc:
+    enabled: true
+    issuer_url: 'https://id.example.com'
+    client_id: 'godash'
+    client_secret: 'change-me'
+    session_key: 'a-sufficiently-long-session-signing-key'
+```
+
+| Setting                       | Default | Description                                                                                                                                        |
+| ----------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`                     | `false` | Require a login for the dashboard.                                                                                                                 |
+| `issuer_url`                  | —       | The provider's issuer. Must match the `iss` claim exactly, with no trailing `/`.                                                                   |
+| `client_id` / `client_secret` | —       | Credentials issued by the provider.                                                                                                                |
+| `session_key`                 | —       | At least 32 characters, used to sign the session cookie. Rotating it invalidates all existing sessions. Required when `enabled`.                   |
+| `session_ttl`                 | `24h`   | How long a login stays valid.                                                                                                                      |
+| `cookie_secure`               | `false` | Set to `true` when GoDash is served over HTTPS. Left `false` over HTTPS, the browser drops the session cookie and bounces you back to the provider. |
+
+**Discovery** — The authorization, token, and JWKS endpoints come from the provider's `.well-known/openid-configuration`, so only the issuer needs configuring. Discovery is warmed in the background at startup, so the first login does not wait for the round trip, and bounded by a 10 second timeout. An unreachable provider is retried on the next login attempt — failures are never cached, so a provider that recovers needs no restart — and a login during the outage fails with `503 Service Unavailable` rather than `401`, so it is not mistaken for bad credentials.
+
+**Login flow** — Authorization code grant with PKCE and `state`. Unauthenticated requests are redirected straight to the provider; there is no separate login page. The provider returns to `/auth/callback`, which sets a signed session cookie and redirects to the dashboard. Only the `openid` scope is requested, and the session is keyed on the ID token's `sub` claim, so GoDash never needs the user's email address.
+
+**Sessions** — The session cookie is stateless: an HMAC-signed payload of the subject and expiry, verified on every request without a database lookup. It is renewed automatically once it passes half its lifetime, so a user who loads the dashboard regularly stays logged in; a user who stays away longer than `session_ttl` has to sign in again. Signed with `session_key`, so changing that key signs everyone out. There is no logout — sessions expire on their own; to invalidate every session early, rotate `session_key`.
+
+Every setting, including `enabled`, applies on config reload without a restart; changing `issuer_url` or `client_id` re-runs discovery on the next login.
+
+Use `GD_AUTH_OIDC_CLIENT_SECRET` and `GD_AUTH_OIDC_SESSION_KEY` to keep secrets out of the config file.
 
 ### Applications
 

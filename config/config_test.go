@@ -230,3 +230,38 @@ func TestCleanupOrphanedIcons(t *testing.T) {
 		t.Error("referenced icon was incorrectly removed")
 	}
 }
+
+func TestGetAuth(t *testing.T) {
+	setCfg(t, GlobalConfig{Auth: AuthSettings{OIDC: OIDCSettings{Enabled: true, IssuerURL: "https://sso.example.com"}}})
+
+	got := GetAuth().OIDC
+	if !got.Enabled || got.IssuerURL != "https://sso.example.com" {
+		t.Errorf("GetAuth() = %+v", got)
+	}
+}
+
+func TestOIDCValidation(t *testing.T) {
+	validKey := "a-sufficiently-long-session-signing-key"
+
+	tests := []struct {
+		name    string
+		key     string
+		wantErr bool
+	}{
+		{"empty key allowed when disabled", "", false},
+		{"valid key", validKey, false},
+		{"short key rejected", "too-short", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			setCfg(t, GlobalConfig{Auth: AuthSettings{OIDC: OIDCSettings{Enabled: tt.key != "", SessionKey: tt.key}}})
+
+			enabled := tt.key != ""
+			err := validateSessionKey(tt.key, enabled)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateSessionKey(%q, %v) error = %v, wantErr %v", tt.key, enabled, err, tt.wantErr)
+			}
+		})
+	}
+}

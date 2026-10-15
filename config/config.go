@@ -10,9 +10,11 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/flohoss/godash/pkg/media"
 	"github.com/go-playground/validator/v10"
+	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
 
@@ -39,6 +41,35 @@ type GlobalConfig struct {
 	Weather      Weather        `mapstructure:"weather"`
 	Applications []Category     `mapstructure:"applications"`
 	Links        []Category     `mapstructure:"links"`
+	Auth         AuthSettings   `mapstructure:"auth" validate:"omitempty"`
+}
+
+const MinSessionKeyLength = 32
+
+func validateSessionKey(key string, enabled bool) error {
+	if !enabled {
+		return nil
+	}
+
+	if len(key) < MinSessionKeyLength {
+		return fmt.Errorf("configuration validation failed: auth.oidc.session_key must be at least %d characters when OIDC is enabled", MinSessionKeyLength)
+	}
+
+	return nil
+}
+
+type AuthSettings struct {
+	OIDC OIDCSettings `mapstructure:"oidc" validate:"omitempty"`
+}
+
+type OIDCSettings struct {
+	Enabled      bool          `mapstructure:"enabled"`
+	IssuerURL    string        `mapstructure:"issuer_url" validate:"required_if=Enabled true,omitempty,url,endsnotwith=/"`
+	ClientID     string        `mapstructure:"client_id" validate:"required_if=Enabled true"`
+	ClientSecret string        `mapstructure:"client_secret" validate:"required_if=Enabled true"`
+	SessionKey   string        `mapstructure:"session_key" validate:"omitempty"`
+	SessionTTL   time.Duration `mapstructure:"session_ttl" validate:"gte=0"`
+	CookieSecure bool          `mapstructure:"cookie_secure"`
 }
 
 type ServerSettings struct {
@@ -87,6 +118,7 @@ func New() {
 	viper.SetDefault("weather.units", "celsius")
 	viper.SetDefault("weather.latitude", 52.5163)
 	viper.SetDefault("weather.longitude", 13.3776)
+	viper.SetDefault("auth.oidc.session_ttl", "24h")
 	viper.SetDefault("applications", []map[string]any{
 		{
 			"category": "Applications",
@@ -114,6 +146,9 @@ func New() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(ConfigFolder)
+	viper.SetEnvPrefix("GD")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -139,8 +174,15 @@ func ValidateAndLoadConfig() error {
 	defer reloadMu.Unlock()
 
 	var tempCfg GlobalConfig
-	if err := viper.Unmarshal(&tempCfg); err != nil {
+	decodeHook := mapstructure.ComposeDecodeHookFunc(
+		mapstructure.StringToTimeDurationHookFunc(),
+	)
+	if err := viper.Unmarshal(&tempCfg, viper.DecodeHook(decodeHook)); err != nil {
 		return fmt.Errorf("failed to unmarshal configuration: %w", err)
+	}
+
+	if err := validateSessionKey(tempCfg.Auth.OIDC.SessionKey, tempCfg.Auth.OIDC.Enabled); err != nil {
+		return err
 	}
 
 	if err := validate.Struct(tempCfg); err != nil {
@@ -384,4 +426,10 @@ func GetWeatherConfig() (Weather, string) {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.Weather, cfg.TimeZone
+}
+
+func GetAuth() AuthSettings {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Auth
 }

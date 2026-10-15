@@ -1,10 +1,11 @@
 package handlers
 
 import (
+	"github.com/labstack/echo/v5"
+
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/services"
 	"github.com/flohoss/godash/views"
-	"github.com/labstack/echo/v5"
 )
 
 type SystemService interface {

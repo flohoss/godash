@@ -19,6 +19,7 @@ import (
 
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/handlers"
+	"github.com/flohoss/godash/internal/auth"
 	"github.com/flohoss/godash/services"
 )
 
@@ -92,13 +93,16 @@ func main() {
 	s := services.NewSystemService(sse)
 	w := services.NewWeatherService(sse)
 
+	authService := auth.New()
+
 	appHandler := handlers.NewAppHandler(s, w)
-	handlers.SetupRoutes(e, sse, appHandler)
+	authHandler := handlers.NewAuthHandler(authService)
+	handlers.SetupRoutes(e, sse, appHandler, authHandler)
 
 	slog.Info("Starting server", "url", fmt.Sprintf("http://%s", config.GetServer()))
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	go s.Run(ctx)
 	go w.Run(ctx)
