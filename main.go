@@ -25,8 +25,9 @@ import (
 
 func setupRouter(logger *slog.Logger) *echo.Echo {
 	e := echo.NewWithConfig(echo.Config{
-		Logger:      logger,
-		IPExtractor: handlers.BuildIPExtractor(config.GetTrustedProxies()),
+		Logger:                       logger,
+		IPExtractor:                  handlers.BuildIPExtractor(config.GetTrustedProxies()),
+		NoGroupAutoRegister404Routes: true,
 	})
 
 	e.Use(middleware.RequestID())
