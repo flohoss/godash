@@ -55,16 +55,32 @@ type providerState struct {
 type Auth struct {
 	providerMu sync.Mutex
 	provider   *providerState
+	wg         sync.WaitGroup
 }
 
 func New() *Auth {
 	service := &Auth{}
+	service.warmProvider()
+	return service
+}
 
-	if service.Enabled() {
-		go service.resolve()
+func (a *Auth) Shutdown() {
+	if a == nil {
+		return
+	}
+	a.wg.Wait()
+}
+
+func (a *Auth) warmProvider() {
+	if !a.Enabled() {
+		return
 	}
 
-	return service
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+		_, _ = a.resolve()
+	}()
 }
 
 func (a *Auth) Enabled() bool {

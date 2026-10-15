@@ -18,6 +18,7 @@ type AuthService interface {
 	StartSession(c *echo.Context, subject string)
 	Authenticate(c *echo.Context) (*auth.User, error)
 	Middleware() echo.MiddlewareFunc
+	Shutdown()
 }
 
 type AuthHandler struct {

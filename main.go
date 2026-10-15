@@ -49,7 +49,7 @@ func setLogger() {
 	slog.Debug("logger set", "level", config.GetLogLevel())
 }
 
-func setupViperWatcher(echoInst *echo.Echo) {
+func setupViperWatcher(onReload func()) {
 	var (
 		mu    sync.Mutex
 		timer *time.Timer
@@ -69,7 +69,9 @@ func setupViperWatcher(echoInst *echo.Echo) {
 		debounce(2*time.Second, func() {
 			config.ValidateAndLoadConfig()
 			setLogger()
-			echoInst.Logger = slog.Default()
+			if onReload != nil {
+				onReload()
+			}
 			slog.Debug("config changed", "file", e.Name)
 		})
 	})
@@ -83,7 +85,7 @@ func main() {
 
 	e := setupRouter(slog.Default())
 
-	setupViperWatcher(e)
+	setupViperWatcher(func() { e.Logger = slog.Default() })
 
 	sse := sseserver.New()
 	sse.AutoReplay = false
@@ -108,6 +110,13 @@ func main() {
 	go s.Run(ctx)
 	go w.Run(ctx)
 
+	shutdownDone := make(chan struct{})
+	go func() {
+		<-ctx.Done()
+		authService.Shutdown()
+		close(shutdownDone)
+	}()
+
 	sc := echo.StartConfig{
 		Address:         config.GetServer(),
 		HideBanner:      true,
@@ -123,4 +132,6 @@ func main() {
 	if err := sc.Start(ctx, e); err != nil {
 		slog.Error("Failed to start server", "error", err)
 	}
+	stop()
+	<-shutdownDone
 }
