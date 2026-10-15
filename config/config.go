@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/flohoss/godash/internal/validate"
 	"github.com/flohoss/godash/pkg/media"
-	"github.com/go-playground/validator/v10"
 	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
@@ -24,7 +24,6 @@ const (
 )
 
 var cfg GlobalConfig
-var validate *validator.Validate
 var mu sync.RWMutex
 var reloadMu sync.Mutex
 
@@ -76,6 +75,7 @@ type ServerSettings struct {
 	Address        string   `mapstructure:"address" validate:"omitempty,ipv4"`
 	Port           int      `mapstructure:"port" validate:"omitempty,gte=1024,lte=65535"`
 	TrustedProxies []string `mapstructure:"trusted_proxies" validate:"omitempty,dive,cidr"`
+	AppUrl         string   `mapstructure:"app_url" validate:"omitempty,url,endsnotwith=/"`
 }
 
 type Weather struct {
@@ -107,7 +107,6 @@ type AppConfig struct {
 func init() {
 	os.Mkdir(ConfigFolder, 0750)
 	os.Mkdir(iconsFolder, 0750)
-	validate = validator.New()
 }
 
 func New() {
@@ -187,7 +186,7 @@ func ValidateAndLoadConfig() error {
 	}
 
 	if err := validate.Struct(tempCfg); err != nil {
-		return fmt.Errorf("configuration validation failed: %w", err)
+		return fmt.Errorf("configuration validation failed:\n%s", err)
 	}
 
 	clearIconCache()
@@ -200,6 +199,10 @@ func ValidateAndLoadConfig() error {
 	mu.Lock()
 	cfg = tempCfg
 	mu.Unlock()
+
+	if tempCfg.Auth.OIDC.Enabled && tempCfg.Server.AppUrl == "" {
+		slog.Warn("OIDC is enabled without server.app_url; the callback URL is derived from the request")
+	}
 
 	return nil
 }
@@ -439,4 +442,10 @@ func GetTrustedProxies() []string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.Server.TrustedProxies
+}
+
+func GetAppUrl() string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Server.AppUrl
 }

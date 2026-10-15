@@ -196,6 +196,31 @@ func TestResolve_TimesOutOnAStuckProvider(t *testing.T) {
 	}
 }
 
+// Behind proxies that do not forward the original scheme (e.g. NetBird), the
+// registered redirect URI would be built with http and rejected by the
+// provider. app_url overrides the request-derived value in that case.
+func TestCallbackURL_PrefersAppUrl(t *testing.T) {
+	loadAuthConfig(t, true, "https://sso.example.com")
+	viper.Set("server.app_url", "https://home.fhoss.de")
+	if err := config.ValidateAndLoadConfig(); err != nil {
+		t.Fatalf("failed to load test config: %v", err)
+	}
+
+	service := &Auth{}
+
+	router := echo.New()
+	var got string
+	router.GET("/auth/login", func(c *echo.Context) error {
+		got = service.callbackURL(c)
+		return c.NoContent(http.StatusOK)
+	})
+	router.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "http://godash:8156/auth/login", nil))
+
+	if got != "https://home.fhoss.de/auth/callback" {
+		t.Errorf("callbackURL() = %q, want %q", got, "https://home.fhoss.de/auth/callback")
+	}
+}
+
 func TestMiddleware_DisabledLetsEverythingThrough(t *testing.T) {
 	loadAuthConfig(t, false, "")
 

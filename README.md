@@ -75,6 +75,7 @@ server:
   address: '0.0.0.0' # Valid IPv4 address, defaults to 0.0.0.0
   port: 8156 # Must be between 1024 and 65535, defaults to 8156
   trusted_proxies: [] # CIDRs of proxies whose X-Forwarded-For may be trusted, empty means direct connections only
+  app_url: '' # Public URL of the dashboard, used as OIDC redirect base instead of the incoming request
 
 weather:
   units: 'celsius' # celsius | fahrenheit

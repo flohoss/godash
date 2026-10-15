@@ -207,6 +207,9 @@ func (a *Auth) loginConfig(provider *providerState, c *echo.Context) oauth2.Conf
 }
 
 func (a *Auth) callbackURL(c *echo.Context) string {
+	if appUrl := config.GetAppUrl(); appUrl != "" {
+		return appUrl + callbackPath
+	}
 	return c.Scheme() + "://" + c.Request().Host + callbackPath
 }
 
