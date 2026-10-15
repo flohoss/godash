@@ -74,6 +74,7 @@ title: 'My Dashboard' # Any string
 server:
   address: '0.0.0.0' # Valid IPv4 address, defaults to 0.0.0.0
   port: 8156 # Must be between 1024 and 65535, defaults to 8156
+  trusted_proxies: [] # CIDRs of proxies whose X-Forwarded-For may be trusted, empty means direct connections only
 
 weather:
   units: 'celsius' # celsius | fahrenheit
@@ -126,6 +127,21 @@ Any config value can be overridden with an environment variable prefixed `GD_`. 
 - `GD_TITLE='My Dash'` overrides `title`
 - `GD_SERVER_PORT=9000` overrides `server.port`
 - `GD_AUTH_OIDC_CLIENT_SECRET=...` overrides `auth.oidc.client_secret`
+
+### Reverse proxies
+
+The client IP decides the per-IP SSE connection limit, so the `X-Forwarded-For` header is only honoured when the connecting peer is listed in `server.trusted_proxies`. Behind a reverse proxy, list the proxy's networks there to have the forwarded client address used instead:
+
+```yaml
+server:
+  address: '0.0.0.0'
+  port: 8156
+  trusted_proxies:
+    - '10.0.0.0/8'
+    - 'fd00::/8'
+```
+
+Each entry must be a valid CIDR. Loopback, link-local, and private networks are never trusted implicitly, so the header is ignored unless the connecting proxy is listed. With an empty list the header is ignored entirely — the direct connection address is used, which is safest when GoDash is exposed directly.
 
 ### Weather
 

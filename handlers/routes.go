@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"bytes"
+	"log/slog"
+	"net"
 	"net/http"
 	"sync"
 
@@ -15,6 +17,28 @@ func longCacheLifetime(next echo.HandlerFunc) echo.HandlerFunc {
 		c.Response().Header().Set(echo.HeaderCacheControl, "public, max-age=31536000")
 		return next(c)
 	}
+}
+
+func BuildIPExtractor(trustedProxies []string) echo.IPExtractor {
+	if len(trustedProxies) == 0 {
+		return echo.ExtractIPDirect()
+	}
+
+	options := []echo.TrustOption{
+		echo.TrustLoopback(false),
+		echo.TrustLinkLocal(false),
+		echo.TrustPrivateNet(false),
+	}
+	for _, proxy := range trustedProxies {
+		_, network, err := net.ParseCIDR(proxy)
+		if err != nil {
+			slog.Error("Ignoring invalid trusted proxy entry", "entry", proxy, "error", err)
+			continue
+		}
+		options = append(options, echo.TrustIPRange(network))
+	}
+
+	return echo.ExtractIPFromXFFHeader(options...)
 }
 
 func sseConnectionLimiter(maxPerIP int) echo.MiddlewareFunc {

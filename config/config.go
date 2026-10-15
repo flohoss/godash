@@ -73,8 +73,9 @@ type OIDCSettings struct {
 }
 
 type ServerSettings struct {
-	Address string `mapstructure:"address" validate:"omitempty,ipv4"`
-	Port    int    `mapstructure:"port" validate:"omitempty,gte=1024,lte=65535"`
+	Address        string   `mapstructure:"address" validate:"omitempty,ipv4"`
+	Port           int      `mapstructure:"port" validate:"omitempty,gte=1024,lte=65535"`
+	TrustedProxies []string `mapstructure:"trusted_proxies" validate:"omitempty,dive,cidr"`
 }
 
 type Weather struct {
@@ -432,4 +433,10 @@ func GetAuth() AuthSettings {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.Auth
+}
+
+func GetTrustedProxies() []string {
+	mu.RLock()
+	defer mu.RUnlock()
+	return cfg.Server.TrustedProxies
 }
