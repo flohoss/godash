@@ -1,0 +1,30 @@
+# Docker build context exclusions.
+#
+# node_modules is ~530 MB and is reinstalled inside the node-builder with
+# `npm ci`, so it must never be sent as build context.
+node_modules
+npm-debug.log*
+
+# VCS metadata is not used by the build (version comes from the APP_VERSION
+# build arg), and shipping it risks "error obtaining VCS status" on a detached
+# HEAD.
+.git
+.gitignore
+
+# Local runtime state and config are not part of the image.
+tmp/
+config/config.yaml
+config/icons/
+config/downloads/
+
+# Coverage output; the badge under coverage/ is a repo asset, not a build input.
+coverage.out
+coverage.out.raw
+coverage.txt
+coverage.html
+
+# Editor / OS noise.
+.vscode
+.idea
+.DS_Store
+__debug*
