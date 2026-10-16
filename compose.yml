@@ -3,7 +3,7 @@ x-build-args: &build-args
   V_GOLANG: ${V_GOLANG:-1.27.2}
   V_NODE: ${V_NODE:-25}
   V_ALPINE: ${V_ALPINE:-3}
-  V_TEMPL: ${V_TEMPL:-0.3.1020}
+  V_TEMPL: ${V_TEMPL:-0.3.1070}
 
 x-images:
   go: &go-image golang:${V_GOLANG:-1.27.2}
