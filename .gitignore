@@ -208,4 +208,6 @@ config/downloads/
 config/config.yaml
 config/icons/
 coverage.out
+coverage.out.raw
 coverage.txt
+coverage.html
