@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/spf13/viper"
 )
 
 func setCfg(t *testing.T, c GlobalConfig) {
@@ -263,5 +265,121 @@ func TestOIDCValidation(t *testing.T) {
 				t.Errorf("validateSessionKey(%q, %v) error = %v, wantErr %v", tt.key, enabled, err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestAuthOption_Path(t *testing.T) {
+	if got := (AuthOption{Provider: ProviderOIDC}).Path(); got != "/auth/oidc" {
+		t.Errorf("Path() = %q, want %q", got, "/auth/oidc")
+	}
+}
+
+// The login page only offers a provider when OIDC is switched on.
+func TestGetAuthProviders(t *testing.T) {
+	setCfg(t, GlobalConfig{Auth: AuthSettings{OIDC: OIDCSettings{Enabled: false}}})
+	if got := GetAuthProviders(); len(got) != 0 {
+		t.Errorf("expected no providers when OIDC is off, got %+v", got)
+	}
+
+	setCfg(t, GlobalConfig{Auth: AuthSettings{OIDC: OIDCSettings{Enabled: true}}})
+	got := GetAuthProviders()
+	if len(got) != 1 {
+		t.Fatalf("expected one provider, got %+v", got)
+	}
+	if got[0].Provider != ProviderOIDC || got[0].Path() != "/auth/oidc" {
+		t.Errorf("unexpected provider %+v", got[0])
+	}
+}
+
+func TestGetTrustedProxies(t *testing.T) {
+	setCfg(t, GlobalConfig{Server: ServerSettings{TrustedProxies: []string{"10.0.0.0/8"}}})
+
+	got := GetTrustedProxies()
+	if len(got) != 1 || got[0] != "10.0.0.0/8" {
+		t.Errorf("GetTrustedProxies() = %+v", got)
+	}
+}
+
+func TestGetAppUrl(t *testing.T) {
+	setCfg(t, GlobalConfig{Server: ServerSettings{AppUrl: "https://home.fhoss.de"}})
+	if got := GetAppUrl(); got != "https://home.fhoss.de" {
+		t.Errorf("GetAppUrl() = %q", got)
+	}
+}
+
+func TestConfigLoaded(t *testing.T) {
+	viper.Reset()
+	if ConfigLoaded() {
+		t.Error("expected ConfigLoaded() to be false without a config file")
+	}
+
+	dir := t.TempDir()
+	file := filepath.Join(dir, "config.yaml")
+	if err := os.WriteFile(file, []byte("title: Test\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	viper.Reset()
+	viper.SetConfigFile(file)
+	if err := viper.ReadInConfig(); err != nil {
+		t.Fatalf("failed to read config: %v", err)
+	}
+	t.Cleanup(viper.Reset)
+
+	if !ConfigLoaded() {
+		t.Error("expected ConfigLoaded() to be true after reading a config file")
+	}
+}
+
+// ValidateAndLoadConfig is what turns YAML into the cached config, including the
+// session-key rule that only applies when OIDC is enabled.
+func TestValidateAndLoadConfig(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	viper.Set("time_zone", "UTC")
+	viper.Set("title", "Loaded")
+	viper.Set("auth.oidc.enabled", true)
+	viper.Set("auth.oidc.issuer_url", "https://sso.example.com")
+	viper.Set("auth.oidc.client_id", "godash")
+	viper.Set("auth.oidc.client_secret", "secret")
+	viper.Set("auth.oidc.session_key", "a-sufficiently-long-session-signing-key")
+
+	if err := ValidateAndLoadConfig(); err != nil {
+		t.Fatalf("ValidateAndLoadConfig() = %v", err)
+	}
+	if got := GetTitle(); got != "Loaded" {
+		t.Errorf("GetTitle() = %q, want %q", got, "Loaded")
+	}
+}
+
+func TestValidateAndLoadConfig_RejectsShortSessionKeyWhenEnabled(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	viper.Set("time_zone", "UTC")
+	viper.Set("auth.oidc.enabled", true)
+	viper.Set("auth.oidc.issuer_url", "https://sso.example.com")
+	viper.Set("auth.oidc.client_id", "godash")
+	viper.Set("auth.oidc.client_secret", "secret")
+	viper.Set("auth.oidc.session_key", "short")
+
+	if err := ValidateAndLoadConfig(); err == nil {
+		t.Error("expected a short session key to be rejected")
+	}
+}
+
+func TestValidateAndLoadConfig_RejectsATrailingSlashIssuer(t *testing.T) {
+	viper.Reset()
+	t.Cleanup(viper.Reset)
+
+	viper.Set("time_zone", "UTC")
+	viper.Set("auth.oidc.enabled", true)
+	viper.Set("auth.oidc.issuer_url", "https://sso.example.com/")
+	viper.Set("auth.oidc.client_id", "godash")
+	viper.Set("auth.oidc.client_secret", "secret")
+	viper.Set("auth.oidc.session_key", "a-sufficiently-long-session-signing-key")
+
+	if err := ValidateAndLoadConfig(); err == nil {
+		t.Error("expected a trailing-slash issuer to be rejected")
 	}
 }

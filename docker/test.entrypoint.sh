@@ -2,5 +2,5 @@
 set -e
 
 templ generate
-go test ./... -covermode=atomic -coverprofile=coverage.out "$@"
+./scripts/coverage.sh coverage.out "$@"
 go tool cover -func=coverage.out | tee coverage.txt

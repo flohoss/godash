@@ -15,6 +15,7 @@ Read before making changes. Rule-oriented and self-contained.
 - **Dev server:** `docker compose up` (auto-rebuild + hot-reload via `templ generate --watch --proxy`). The server compiles `*.templ` into `*_templ.go` and **hot-reloads the browser on every file change**. Do not run `go build` or `templ generate` manually. Do not edit `*_templ.go` by hand — edit the matching `*.templ` source and let the watcher regenerate. Errors appear live in the running server/browser.
 - **Format:** `docker compose run --rm go fmt ./...`
 - **Tests:** `docker compose run --rm test`
+- **Coverage:** `docker compose run --rm test` writes `coverage.out`/`coverage.txt` via `scripts/coverage.sh`, which strips generated files (any `// Code generated ... DO NOT EDIT.` marker, e.g. `*_templ.go`) so the number reflects hand-written code only.
 
 Run formatting and tests after every code change, even small edits. Only commit if formatting and tests pass.
 

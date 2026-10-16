@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -227,5 +228,152 @@ func TestSessionTTL_DefaultsWhenUnset(t *testing.T) {
 
 	if got := New().SessionTTL(); got != gosso.DefaultSessionTTL {
 		t.Errorf("SessionTTL() = %v, want %v", got, gosso.DefaultSessionTTL)
+	}
+}
+
+// settings() is the only place godash hands its configuration to gosso, so a
+// typo here would silently disable the session key or the callback URL.
+func TestSettings_MapsConfigIntoGosso(t *testing.T) {
+	loadAuthConfig(t, true, "https://sso.example.com")
+	viper.Set("server.app_url", "https://home.fhoss.de")
+	viper.Set("auth.oidc.session_ttl", "2h")
+	viper.Set("auth.oidc.cookie_secure", true)
+	if err := config.ValidateAndLoadConfig(); err != nil {
+		t.Fatalf("failed to load test config: %v", err)
+	}
+
+	got := settings()
+
+	if !got.Enabled {
+		t.Error("expected Enabled to follow the config")
+	}
+	if got.IssuerURL != "https://sso.example.com" {
+		t.Errorf("IssuerURL = %q", got.IssuerURL)
+	}
+	if got.ClientID != "godash" {
+		t.Errorf("ClientID = %q", got.ClientID)
+	}
+	if got.ClientSecret != "test-secret" {
+		t.Errorf("ClientSecret = %q", got.ClientSecret)
+	}
+	if got.SessionKey != "a-sufficiently-long-session-signing-key" {
+		t.Errorf("SessionKey = %q", got.SessionKey)
+	}
+	if got.SessionTTL != 2*time.Hour {
+		t.Errorf("SessionTTL = %v, want 2h", got.SessionTTL)
+	}
+	if !got.CookieSecure {
+		t.Error("expected CookieSecure to follow the config")
+	}
+	if got.AppURL != "https://home.fhoss.de" {
+		t.Errorf("AppURL = %q", got.AppURL)
+	}
+}
+
+// SessionCookie is godash's own signing helper, not a gosso call, so the
+// fallback and the configured key both need to be verified here.
+func TestSessionCookie_IsSignedWithTheConfiguredKey(t *testing.T) {
+	loadAuthConfig(t, true, "https://sso.example.com")
+
+	cookie := SessionCookie("user-subject")
+
+	if cookie.Name != SessionCookieName {
+		t.Errorf("cookie name = %q, want %q", cookie.Name, SessionCookieName)
+	}
+	subject, expiresAt, err := gosso.VerifyHMAC("a-sufficiently-long-session-signing-key", cookie.Value, time.Now())
+	if err != nil {
+		t.Fatalf("SessionCookie() is not verifiable: %v", err)
+	}
+	if subject != "user-subject" {
+		t.Errorf("subject = %q, want %q", subject, "user-subject")
+	}
+	if remaining := time.Until(expiresAt); remaining < 23*time.Hour || remaining > 25*time.Hour {
+		t.Errorf("expiry in %v, want roughly 24h", remaining)
+	}
+}
+
+func TestSessionCookie_DefaultsWhenTTLUnset(t *testing.T) {
+	loadAuthConfig(t, true, "https://sso.example.com")
+
+	viper.Set("auth.oidc.session_ttl", "0s")
+	if err := config.ValidateAndLoadConfig(); err != nil {
+		t.Fatalf("failed to load test config: %v", err)
+	}
+
+	cookie := SessionCookie("user-subject")
+
+	_, expiresAt, err := gosso.VerifyHMAC("a-sufficiently-long-session-signing-key", cookie.Value, time.Now())
+	if err != nil {
+		t.Fatalf("SessionCookie() is not verifiable: %v", err)
+	}
+	if remaining := time.Until(expiresAt); remaining < gosso.DefaultSessionTTL-time.Minute {
+		t.Errorf("expiry in %v, want the %v default", remaining, gosso.DefaultSessionTTL)
+	}
+}
+
+func TestEnabled_FollowsConfig(t *testing.T) {
+	loadAuthConfig(t, false, "")
+	if New().Enabled() {
+		t.Error("expected Enabled() to be false when OIDC is off")
+	}
+
+	loadAuthConfig(t, true, "https://sso.example.com")
+	if !New().Enabled() {
+		t.Error("expected Enabled() to be true when OIDC is on")
+	}
+}
+
+func TestClassifyLoginError(t *testing.T) {
+	if got := ClassifyLoginError(nil); got != "" {
+		t.Errorf("ClassifyLoginError(nil) = %q, want empty", got)
+	}
+	if got := ClassifyLoginError(ErrProviderUnavailable); got != LoginErrorUnavailable {
+		t.Errorf("ClassifyLoginError(unavailable) = %q, want %q", got, LoginErrorUnavailable)
+	}
+	if got := ClassifyLoginError(errors.New("boom")); got != LoginErrorFailed {
+		t.Errorf("ClassifyLoginError(other) = %q, want %q", got, LoginErrorFailed)
+	}
+}
+
+// StartLogin without a reachable provider must surface the failure instead of
+// redirecting the browser into a dead handshake.
+func TestStartLogin_ReportsAnUnreachableProvider(t *testing.T) {
+	loadAuthConfig(t, true, "https://sso.example.com")
+
+	router := echo.New()
+	router.GET("/auth/login", func(c *echo.Context) error {
+		return New().StartLogin(c)
+	})
+
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/auth/login", nil))
+
+	if rec.Code != http.StatusInternalServerError && rec.Code != http.StatusFound {
+		t.Fatalf("expected an error or a redirect, got %d", rec.Code)
+	}
+}
+
+// StartSession delegates to the configured SessionManager, which for godash is
+// the signed-cookie store.
+func TestStartSession_SetsASignedCookie(t *testing.T) {
+	loadAuthConfig(t, true, "https://sso.example.com")
+
+	service := New()
+
+	router := echo.New()
+	router.GET("/auth/callback", func(c *echo.Context) error {
+		service.StartSession(c, "user-subject")
+		return c.NoContent(http.StatusOK)
+	})
+
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/auth/callback", nil))
+
+	cookie := findCookie(rec, SessionCookieName)
+	if cookie == nil {
+		t.Fatal("expected a session cookie")
+	}
+	if _, _, err := gosso.VerifyHMAC("a-sufficiently-long-session-signing-key", cookie.Value, time.Now()); err != nil {
+		t.Fatalf("session cookie is not verifiable: %v", err)
 	}
 }

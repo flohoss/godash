@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -60,7 +61,10 @@ func sampleWeatherService() *fakeWeatherService {
 
 type stubAuthService struct {
 	*auth.Auth
-	startLogin func(c *echo.Context) error
+	startLogin        func(c *echo.Context) error
+	consumeLoginState func(c *echo.Context) (string, string, error)
+	exchange          func(c *echo.Context, code, verifier string) (string, error)
+	startSession      func(c *echo.Context, subject string)
 }
 
 func (s *stubAuthService) StartLogin(c *echo.Context) error {
@@ -68,6 +72,28 @@ func (s *stubAuthService) StartLogin(c *echo.Context) error {
 		return s.startLogin(c)
 	}
 	return s.Auth.StartLogin(c)
+}
+
+func (s *stubAuthService) ConsumeLoginState(c *echo.Context) (string, string, error) {
+	if s.consumeLoginState != nil {
+		return s.consumeLoginState(c)
+	}
+	return s.Auth.ConsumeLoginState(c)
+}
+
+func (s *stubAuthService) Exchange(c *echo.Context, code, verifier string) (string, error) {
+	if s.exchange != nil {
+		return s.exchange(c, code, verifier)
+	}
+	return s.Auth.Exchange(c, code, verifier)
+}
+
+func (s *stubAuthService) StartSession(c *echo.Context, subject string) {
+	if s.startSession != nil {
+		s.startSession(c, subject)
+		return
+	}
+	s.Auth.StartSession(c, subject)
 }
 
 func statusOf(e *echo.Echo, method, target string) (int, string) {
@@ -215,5 +241,130 @@ func TestSetupRoutes_WithAuth_ServesDashboardWithValidSession(t *testing.T) {
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected the dashboard to be served with a valid session, got %d", rec.Code)
+	}
+}
+
+// A stale or missing state cookie must not be treated as a successful login.
+func TestSetupRoutes_WithAuth_CallbackRedirectsToLoginWithoutState(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	got, location := statusOf(e, http.MethodGet, "/auth/callback?code=x&state=y")
+	if got != http.StatusFound || location != "/auth/login?error=expired" {
+		t.Errorf("/auth/callback = %d %q, want 302 to /auth/login?error=expired", got, location)
+	}
+}
+
+// A state mismatch means the callback does not belong to the login this browser
+// started, so it must be discarded.
+func TestSetupRoutes_WithAuth_CallbackRedirectsToLoginOnStateMismatch(t *testing.T) {
+	loadOIDCConfig(t, true)
+
+	service := &stubAuthService{Auth: auth.New()}
+	service.consumeLoginState = func(*echo.Context) (string, string, error) {
+		return "expected-state", "verifier", nil
+	}
+
+	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
+	e := echo.New()
+	SetupRoutes(e, nil, appHandler, NewAuthHandler(service))
+
+	got, location := statusOf(e, http.MethodGet, "/auth/callback?code=x&state=different")
+	if got != http.StatusFound || location != "/auth/login?error=expired" {
+		t.Errorf("/auth/callback = %d %q, want 302 to /auth/login?error=expired", got, location)
+	}
+}
+
+// A provider outage during the code exchange is reported as unavailable so the
+// user is not told their credentials were wrong.
+func TestSetupRoutes_WithAuth_CallbackReportsUnavailableProvider(t *testing.T) {
+	loadOIDCConfig(t, true)
+
+	service := &stubAuthService{Auth: auth.New()}
+	service.consumeLoginState = func(*echo.Context) (string, string, error) {
+		return "state", "verifier", nil
+	}
+	service.exchange = func(*echo.Context, string, string) (string, error) {
+		return "", auth.ErrProviderUnavailable
+	}
+
+	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
+	e := echo.New()
+	SetupRoutes(e, nil, appHandler, NewAuthHandler(service))
+
+	got, location := statusOf(e, http.MethodGet, "/auth/callback?code=x&state=state")
+	if got != http.StatusFound || location != "/auth/login?error=unavailable" {
+		t.Errorf("/auth/callback = %d %q, want 302 to /auth/login?error=unavailable", got, location)
+	}
+}
+
+// A failed exchange sends the user back to the login page instead of a bare error.
+func TestSetupRoutes_WithAuth_CallbackRedirectsToLoginOnFailedExchange(t *testing.T) {
+	loadOIDCConfig(t, true)
+
+	service := &stubAuthService{Auth: auth.New()}
+	service.consumeLoginState = func(*echo.Context) (string, string, error) {
+		return "state", "verifier", nil
+	}
+	service.exchange = func(*echo.Context, string, string) (string, error) {
+		return "", errors.New("bad code")
+	}
+
+	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
+	e := echo.New()
+	SetupRoutes(e, nil, appHandler, NewAuthHandler(service))
+
+	got, location := statusOf(e, http.MethodGet, "/auth/callback?code=x&state=state")
+	if got != http.StatusFound || location != "/auth/login?error=failed" {
+		t.Errorf("/auth/callback = %d %q, want 302 to /auth/login?error=failed", got, location)
+	}
+}
+
+// A successful exchange starts the session and lands the user on the dashboard.
+func TestSetupRoutes_WithAuth_CallbackStartsSessionOnSuccess(t *testing.T) {
+	loadOIDCConfig(t, true)
+
+	var subject string
+	service := &stubAuthService{Auth: auth.New()}
+	service.consumeLoginState = func(*echo.Context) (string, string, error) {
+		return "state", "verifier", nil
+	}
+	service.exchange = func(*echo.Context, string, string) (string, error) {
+		return "user-subject", nil
+	}
+	service.startSession = func(c *echo.Context, got string) {
+		subject = got
+		c.SetCookie(auth.SessionCookie(got))
+	}
+
+	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
+	e := echo.New()
+	SetupRoutes(e, nil, appHandler, NewAuthHandler(service))
+
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/auth/callback?code=x&state=state", nil))
+
+	if rec.Code != http.StatusFound {
+		t.Fatalf("/auth/callback = %d, want %d", rec.Code, http.StatusFound)
+	}
+	if location := rec.Header().Get(echo.HeaderLocation); location != "/" {
+		t.Errorf("expected a redirect to /, got %q", location)
+	}
+	if subject != "user-subject" {
+		t.Errorf("session subject = %q, want %q", subject, "user-subject")
+	}
+}
+
+// With auth disabled the callback must not leak a handshake.
+func TestSetupRoutes_WithoutAuth_CallbackIsNotFound(t *testing.T) {
+	loadOIDCConfig(t, false)
+
+	service := &stubAuthService{Auth: auth.New()}
+	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
+
+	e := echo.New()
+	SetupRoutes(e, nil, appHandler, NewAuthHandler(service))
+
+	if got, _ := statusOf(e, http.MethodGet, "/auth/callback?code=x&state=y"); got != http.StatusNotFound {
+		t.Errorf("/auth/callback = %d, want %d", got, http.StatusNotFound)
 	}
 }
