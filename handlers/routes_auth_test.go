@@ -101,16 +101,27 @@ func TestSetupRoutes_WithoutAuth_DisablesTheOIDCHandshake(t *testing.T) {
 	}
 }
 
-// Everything except the OIDC handshake sits behind the session check, so an
-// unauthenticated request is redirected into the login flow.
+// Everything except the OIDC handshake and the static assets sits behind the
+// session check, so an unauthenticated request is redirected into the login flow.
 func TestSetupRoutes_WithAuth_ProtectsTheDashboard(t *testing.T) {
 	e, _ := setupRouterWithAuth(t)
 
-	for _, path := range []string{"/", "/assets/css/style.css", "/icons/favicon.ico", "/sse", "/anything"} {
+	for _, path := range []string{"/", "/icons/favicon.ico", "/sse", "/anything"} {
 		got, location := statusOf(e, http.MethodGet, path)
 		if got != http.StatusFound || location != "/auth/login" {
 			t.Errorf("%s = %d %q, want 302 to /auth/login", path, got, location)
 		}
+	}
+}
+
+// Static assets stay public so the login page can load its stylesheet and
+// script without a session.
+func TestSetupRoutes_WithAuth_ServesAssetsWithoutSession(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	got, location := statusOf(e, http.MethodGet, "/assets/css/style.css")
+	if got == http.StatusFound && location == "/auth/login" {
+		t.Error("/assets/css/style.css was redirected to the login page; assets must stay public")
 	}
 }
 

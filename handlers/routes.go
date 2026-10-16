@@ -90,12 +90,12 @@ func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHand
 	e.GET("/auth/:provider", authHandler.HandleStartLogin)
 	e.GET("/auth/callback", authHandler.HandleCallback)
 
+	assets := e.Group("/assets", longCacheLifetime)
+	assets.Static("/", "assets")
+
 	protected := e.Group("", authHandler.Auth.Middleware())
 
 	protected.GET("/sse", echo.WrapHandler(sse), sseConnectionLimiter(10))
-
-	assets := protected.Group("/assets", longCacheLifetime)
-	assets.Static("/", "assets")
 
 	icons := protected.Group("/icons", longCacheLifetime)
 	icons.Static("/", "config/icons")
