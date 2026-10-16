@@ -206,11 +206,11 @@ func TestSetupRoutes_WithAuth_RendersLoginPageWithError(t *testing.T) {
 
 // A valid session lets the dashboard through without a redirect.
 func TestSetupRoutes_WithAuth_ServesDashboardWithValidSession(t *testing.T) {
-	e, service := setupRouterWithAuth(t)
+	e, _ := setupRouterWithAuth(t)
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.AddCookie(service.SessionCookie("user-subject"))
+	req.AddCookie(auth.SessionCookie("user-subject"))
 	e.ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {

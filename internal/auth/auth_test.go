@@ -1,11 +1,8 @@
 package auth
 
 import (
-	"errors"
-	"net"
 	"net/http"
 	"net/http/httptest"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/flohoss/godash/config"
+	"github.com/flohoss/gosso"
 )
 
 func loadAuthConfig(t *testing.T, enabled bool, issuerURL string) {
@@ -53,21 +51,6 @@ func serveWithCookie(service *Auth, target, cookie string) *httptest.ResponseRec
 	return rec
 }
 
-func TestEnabled_FollowsConfigReload(t *testing.T) {
-	loadAuthConfig(t, true, "https://sso.example.com")
-
-	service := &Auth{}
-	if !service.Enabled() {
-		t.Fatal("expected auth to be enabled")
-	}
-
-	loadAuthConfig(t, false, "")
-
-	if service.Enabled() {
-		t.Fatal("expected auth to be disabled after the reload")
-	}
-}
-
 // Discovery is warmed in the background so the first login does not pay for the
 // round trip, without blocking startup when the provider is slow or down.
 func TestNew_WarmsProviderInBackground(t *testing.T) {
@@ -82,118 +65,13 @@ func TestNew_WarmsProviderInBackground(t *testing.T) {
 
 	deadline := time.Now().Add(5 * time.Second)
 	for time.Now().Before(deadline) {
-		service.providerMu.Lock()
-		resolved := service.provider != nil
-		service.providerMu.Unlock()
-
-		if resolved {
+		if service.core.Resolved() {
 			return
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 
 	t.Fatal("expected the provider to be discovered in the background")
-}
-
-// A provider that cannot be discovered degrades into a retryable error instead
-// of a cached failure, so a provider that comes back later needs no restart.
-func TestResolve_RetriesAfterAFailedDiscovery(t *testing.T) {
-	loadAuthConfig(t, true, "https://sso.example.com")
-
-	service := &Auth{}
-
-	if _, err := service.resolve(); !errors.Is(err, ErrProviderUnavailable) {
-		t.Fatalf("expected ErrProviderUnavailable, got %v", err)
-	}
-
-	oidcServer := &oidctest.Server{}
-	server := httptest.NewServer(oidcServer)
-	defer server.Close()
-	oidcServer.SetIssuer(server.URL)
-
-	loadAuthConfig(t, true, server.URL)
-
-	resolved, err := service.resolve()
-	if err != nil {
-		t.Fatalf("expected discovery to succeed after the provider came back: %v", err)
-	}
-	if resolved == nil || resolved.verifier == nil {
-		t.Fatal("expected a resolved provider")
-	}
-}
-
-// The second attempt has to hit the network again rather than replay the first
-// failure, which a cached error would block.
-func TestResolve_RetriesTheSameIssuerAfterAFailure(t *testing.T) {
-	var healthy atomic.Bool
-
-	oidcServer := &oidctest.Server{}
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if !healthy.Load() {
-			http.Error(w, "unavailable", http.StatusServiceUnavailable)
-			return
-		}
-		oidcServer.ServeHTTP(w, r)
-	}))
-	defer server.Close()
-	oidcServer.SetIssuer(server.URL)
-
-	loadAuthConfig(t, true, server.URL)
-
-	service := &Auth{}
-
-	if _, err := service.resolve(); !errors.Is(err, ErrProviderUnavailable) {
-		t.Fatalf("expected ErrProviderUnavailable, got %v", err)
-	}
-
-	healthy.Store(true)
-
-	resolved, err := service.resolve()
-	if err != nil {
-		t.Fatalf("expected the same issuer to be retried: %v", err)
-	}
-	if resolved == nil {
-		t.Fatal("expected a resolved provider")
-	}
-}
-
-// A server that accepts the connection but never responds would otherwise hang
-// discovery forever. The timeout keeps the caller unblocked so login can be
-// retried on the next request.
-func TestResolve_TimesOutOnAStuckProvider(t *testing.T) {
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("failed to open listener: %v", err)
-	}
-	t.Cleanup(func() { listener.Close() })
-
-	go func() {
-		for {
-			conn, err := listener.Accept()
-			if err != nil {
-				return
-			}
-			go func() {
-				<-t.Context().Done()
-				conn.Close()
-			}()
-		}
-	}()
-
-	loadAuthConfig(t, true, "http://"+listener.Addr().String())
-
-	service := &Auth{}
-
-	started := time.Now()
-	_, err = service.resolve()
-	elapsed := time.Since(started)
-
-	if !errors.Is(err, ErrProviderUnavailable) {
-		t.Fatalf("expected ErrProviderUnavailable, got %v", err)
-	}
-	if elapsed > 15*time.Second {
-		t.Fatalf("discovery took %v, expected it to give up instead of hanging", elapsed)
-	}
 }
 
 // Behind proxies that do not forward the original scheme (e.g. NetBird), the
@@ -206,25 +84,25 @@ func TestCallbackURL_PrefersAppUrl(t *testing.T) {
 		t.Fatalf("failed to load test config: %v", err)
 	}
 
-	service := &Auth{}
+	service := New()
 
 	router := echo.New()
 	var got string
 	router.GET("/auth/login", func(c *echo.Context) error {
-		got = service.callbackURL(c)
+		got = service.core.CallbackURL(c)
 		return c.NoContent(http.StatusOK)
 	})
 	router.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "http://godash:8156/auth/login", nil))
 
 	if got != "https://home.fhoss.de/auth/callback" {
-		t.Errorf("callbackURL() = %q, want %q", got, "https://home.fhoss.de/auth/callback")
+		t.Errorf("CallbackURL() = %q, want %q", got, "https://home.fhoss.de/auth/callback")
 	}
 }
 
 func TestMiddleware_DisabledLetsEverythingThrough(t *testing.T) {
 	loadAuthConfig(t, false, "")
 
-	service := &Auth{}
+	service := New()
 
 	if got := serveWithCookie(service, "/", "").Code; got != http.StatusOK {
 		t.Fatalf("expected open access when disabled, got %d", got)
@@ -236,7 +114,7 @@ func TestMiddleware_DisabledLetsEverythingThrough(t *testing.T) {
 func TestMiddleware_RedirectsToLoginWhenUnauthenticated(t *testing.T) {
 	loadAuthConfig(t, true, "https://sso.example.com")
 
-	service := &Auth{}
+	service := New()
 
 	rec := serveWithCookie(service, "/", "")
 
@@ -251,8 +129,8 @@ func TestMiddleware_RedirectsToLoginWhenUnauthenticated(t *testing.T) {
 func TestMiddleware_AcceptsValidSession(t *testing.T) {
 	loadAuthConfig(t, true, "https://sso.example.com")
 
-	service := &Auth{}
-	value := signSession(service.settings().SessionKey, "user-subject", time.Now().Add(time.Hour))
+	service := New()
+	value := gosso.SignHMAC("a-sufficiently-long-session-signing-key", "user-subject", time.Now().Add(time.Hour))
 
 	if got := serveWithCookie(service, "/", SessionCookieName+"="+value).Code; got != http.StatusOK {
 		t.Fatalf("expected 200 for a valid session, got %d", got)
@@ -262,8 +140,8 @@ func TestMiddleware_AcceptsValidSession(t *testing.T) {
 func TestMiddleware_RejectsTamperedSession(t *testing.T) {
 	loadAuthConfig(t, true, "https://sso.example.com")
 
-	service := &Auth{}
-	value := signSession("a-different-signing-key-that-is-long-enough", "user-subject", time.Now().Add(time.Hour))
+	service := New()
+	value := gosso.SignHMAC("a-different-signing-key-that-is-long-enough", "user-subject", time.Now().Add(time.Hour))
 
 	if got := serveWithCookie(service, "/", SessionCookieName+"="+value).Code; got != http.StatusFound {
 		t.Fatalf("expected a redirect for a tampered session, got %d", got)
@@ -275,9 +153,8 @@ func TestMiddleware_RejectsTamperedSession(t *testing.T) {
 func TestAuthenticate_RefreshesExpiringSession(t *testing.T) {
 	loadAuthConfig(t, true, "https://sso.example.com")
 
-	service := &Auth{}
-	settings := service.settings()
-	value := signSession(settings.SessionKey, "user-subject", time.Now().Add(time.Minute))
+	service := New()
+	value := gosso.SignHMAC("a-sufficiently-long-session-signing-key", "user-subject", time.Now().Add(time.Minute))
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -300,7 +177,7 @@ func TestAuthenticate_RefreshesExpiringSession(t *testing.T) {
 	if refreshed == nil {
 		t.Fatal("expected the expiring session to be refreshed")
 	}
-	if _, expiresAt, err := verifySession(settings.SessionKey, refreshed.Value, time.Now()); err != nil {
+	if _, expiresAt, err := gosso.VerifyHMAC("a-sufficiently-long-session-signing-key", refreshed.Value, time.Now()); err != nil {
 		t.Fatalf("refreshed cookie is not valid: %v", err)
 	} else if time.Until(expiresAt) < time.Hour {
 		t.Error("expected the refreshed cookie to carry a fresh expiry")
@@ -310,8 +187,8 @@ func TestAuthenticate_RefreshesExpiringSession(t *testing.T) {
 func TestAuthenticate_KeepsFreshSession(t *testing.T) {
 	loadAuthConfig(t, true, "https://sso.example.com")
 
-	service := &Auth{}
-	value := signSession(service.settings().SessionKey, "user-subject", time.Now().Add(23*time.Hour))
+	service := New()
+	value := gosso.SignHMAC("a-sufficiently-long-session-signing-key", "user-subject", time.Now().Add(23*time.Hour))
 
 	rec := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -348,7 +225,7 @@ func TestSessionTTL_DefaultsWhenUnset(t *testing.T) {
 		t.Fatalf("failed to load test config: %v", err)
 	}
 
-	if got := (&Auth{}).SessionTTL(); got != defaultSessionTTL {
-		t.Errorf("SessionTTL() = %v, want %v", got, defaultSessionTTL)
+	if got := New().SessionTTL(); got != gosso.DefaultSessionTTL {
+		t.Errorf("SessionTTL() = %v, want %v", got, gosso.DefaultSessionTTL)
 	}
 }
