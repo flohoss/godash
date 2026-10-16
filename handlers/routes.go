@@ -86,7 +86,8 @@ func SetupRoutes(e *echo.Echo, sse *sse.Server, appHandler *AppHandler, authHand
 		return ctx.String(http.StatusOK, "User-agent: *\nDisallow: /")
 	})
 
-	e.GET("/auth/login", authHandler.HandleStartLogin)
+	e.GET("/auth/login", authHandler.HandleLoginPage)
+	e.GET("/auth/:provider", authHandler.HandleStartLogin)
 	e.GET("/auth/callback", authHandler.HandleCallback)
 
 	protected := e.Group("", authHandler.Auth.Middleware())

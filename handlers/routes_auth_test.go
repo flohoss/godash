@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/labstack/echo/v5"
@@ -37,6 +38,9 @@ func setupRouterWithAuth(t *testing.T) (*echo.Echo, *stubAuthService) {
 	loadOIDCConfig(t, true)
 
 	service := &stubAuthService{Auth: auth.New()}
+	service.startLogin = func(c *echo.Context) error {
+		return auth.ErrProviderUnavailable
+	}
 
 	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
 	authHandler := NewAuthHandler(service)
@@ -56,12 +60,26 @@ func sampleWeatherService() *fakeWeatherService {
 
 type stubAuthService struct {
 	*auth.Auth
+	startLogin func(c *echo.Context) error
+}
+
+func (s *stubAuthService) StartLogin(c *echo.Context) error {
+	if s.startLogin != nil {
+		return s.startLogin(c)
+	}
+	return s.Auth.StartLogin(c)
 }
 
 func statusOf(e *echo.Echo, method, target string) (int, string) {
 	rec := httptest.NewRecorder()
 	e.ServeHTTP(rec, httptest.NewRequest(method, target, nil))
 	return rec.Code, rec.Header().Get(echo.HeaderLocation)
+}
+
+func bodyOf(e *echo.Echo, method, target string) (int, string) {
+	rec := httptest.NewRecorder()
+	e.ServeHTTP(rec, httptest.NewRequest(method, target, nil))
+	return rec.Code, rec.Body.String()
 }
 
 // With auth disabled the OIDC routes must behave like any unknown route rather
@@ -104,6 +122,74 @@ func TestSetupRoutes_WithAuth_KeepsHandshakeOpen(t *testing.T) {
 	}
 	if got, _ := statusOf(e, http.MethodGet, "/robots.txt"); got != http.StatusOK {
 		t.Errorf("/robots.txt = %d, want %d", got, http.StatusOK)
+	}
+}
+
+// Unknown provider identifiers must not start a handshake.
+func TestSetupRoutes_WithAuth_RejectsUnknownProvider(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	if got, _ := statusOf(e, http.MethodGet, "/auth/unknown"); got != http.StatusNotFound {
+		t.Errorf("/auth/unknown = %d, want %d", got, http.StatusNotFound)
+	}
+}
+
+// The login page always renders, even with a single provider, and offers a
+// button that starts the handshake.
+func TestSetupRoutes_WithAuth_LoginPageRendersProviderButtons(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	got, body := bodyOf(e, http.MethodGet, "/auth/login")
+	if got != http.StatusOK {
+		t.Fatalf("/auth/login = %d, want %d", got, http.StatusOK)
+	}
+	if !strings.Contains(body, "Sign in with OIDC") {
+		t.Errorf("expected the OIDC button, got %q", body)
+	}
+	if !strings.Contains(body, "/auth/oidc") {
+		t.Errorf("expected the OIDC button to link to /auth/oidc, got %q", body)
+	}
+}
+
+// A provider that cannot be reached sends the user back to the login page with
+// an error signal instead of bouncing them in a redirect loop.
+func TestSetupRoutes_WithAuth_HandshakeFailureRedirectsToLogin(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	got, location := statusOf(e, http.MethodGet, "/auth/oidc")
+	if got != http.StatusFound || location != "/auth/login?error=unavailable" {
+		t.Errorf("/auth/oidc = %d %q, want 302 to /auth/login?error=unavailable", got, location)
+	}
+}
+
+// A provider-side rejection sends the user back to the login page with an error
+// signal instead of a bare JSON error.
+func TestSetupRoutes_WithAuth_CallbackRedirectsToLoginOnProviderError(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	got, location := statusOf(e, http.MethodGet, "/auth/callback?error=access_denied")
+	if got != http.StatusFound || location != "/auth/login?error=rejected" {
+		t.Errorf("/auth/callback?error=access_denied = %d %q, want 302 to /auth/login?error=rejected", got, location)
+	}
+}
+
+// The login page renders the provider buttons and maps the error code to a
+// human-readable message.
+func TestSetupRoutes_WithAuth_RendersLoginPageWithError(t *testing.T) {
+	e, _ := setupRouterWithAuth(t)
+
+	got, body := bodyOf(e, http.MethodGet, "/auth/login?error=expired")
+	if got != http.StatusOK {
+		t.Fatalf("/auth/login?error=expired = %d, want %d", got, http.StatusOK)
+	}
+	if !strings.Contains(body, "The login session expired") {
+		t.Errorf("expected the expired-session message in the login page, got %q", body)
+	}
+	if !strings.Contains(body, "Sign in with OIDC") {
+		t.Errorf("expected the OIDC button in the login page, got %q", body)
+	}
+	if !strings.Contains(body, "/auth/oidc") {
+		t.Errorf("expected the OIDC button to link to /auth/oidc, got %q", body)
 	}
 }
 

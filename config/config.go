@@ -57,8 +57,25 @@ func validateSessionKey(key string, enabled bool) error {
 	return nil
 }
 
+const (
+	ProviderOIDC = "oidc"
+
+	oidcProviderName = "OIDC"
+	oidcProviderIcon = "icon-[cib--open-id]"
+)
+
 type AuthSettings struct {
 	OIDC OIDCSettings `mapstructure:"oidc" validate:"omitempty"`
+}
+
+type AuthOption struct {
+	Provider string
+	Name     string
+	Icon     string
+}
+
+func (o AuthOption) Path() string {
+	return "/auth/" + o.Provider
 }
 
 type OIDCSettings struct {
@@ -436,6 +453,18 @@ func GetAuth() AuthSettings {
 	mu.RLock()
 	defer mu.RUnlock()
 	return cfg.Auth
+}
+
+func GetAuthProviders() []AuthOption {
+	mu.RLock()
+	defer mu.RUnlock()
+
+	providers := make([]AuthOption, 0, 1)
+	if cfg.Auth.OIDC.Enabled {
+		providers = append(providers, AuthOption{Provider: ProviderOIDC, Name: oidcProviderName, Icon: oidcProviderIcon})
+	}
+
+	return providers
 }
 
 func GetTrustedProxies() []string {

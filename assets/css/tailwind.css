@@ -53,6 +53,10 @@
   @apply text-lg select-none truncate underline decoration-primary underline-offset-4;
 }
 
+@utility auth-buttons {
+  @apply flex flex-col gap-3 w-full;
+}
+
 @utility distance {
   @apply flex items-center gap-2;
 }

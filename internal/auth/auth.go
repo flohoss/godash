@@ -42,6 +42,26 @@ var (
 	scopes = []string{oidc.ScopeOpenID}
 )
 
+type LoginError string
+
+const (
+	LoginErrorRejected    LoginError = "rejected"
+	LoginErrorExpired     LoginError = "expired"
+	LoginErrorUnavailable LoginError = "unavailable"
+	LoginErrorFailed      LoginError = "failed"
+)
+
+func ClassifyLoginError(err error) LoginError {
+	switch {
+	case err == nil:
+		return ""
+	case errors.Is(err, ErrProviderUnavailable):
+		return LoginErrorUnavailable
+	default:
+		return LoginErrorFailed
+	}
+}
+
 type User struct {
 	Subject string
 }

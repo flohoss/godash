@@ -1,0 +1,61 @@
+package auth
+
+import (
+	"github.com/flohoss/godash/config"
+	authdomain "github.com/flohoss/godash/internal/auth"
+	"github.com/flohoss/godash/views/layout"
+)
+
+func errorMessage(code authdomain.LoginError) string {
+	switch code {
+	case authdomain.LoginErrorRejected:
+		return "The identity provider rejected the login."
+	case authdomain.LoginErrorExpired:
+		return "The login session expired, please try again."
+	case authdomain.LoginErrorUnavailable:
+		return "The identity provider is not reachable."
+	case authdomain.LoginErrorFailed:
+		return "Authentication failed, please try again."
+	default:
+		return ""
+	}
+}
+
+templ Login(title string, options []config.AuthOption, code authdomain.LoginError) {
+	@layout.FullPage(title, loginPage(options, code))
+}
+
+templ loginPage(options []config.AuthOption, code authdomain.LoginError) {
+	{{ message := errorMessage(code) }}
+	<div class="hero min-h-dvh bg-base-200">
+		<div class="hero-content w-full flex-col">
+			<div class="card w-full max-w-sm bg-base-100 shadow-xl">
+				<div class="card-body gap-4">
+					<h1 class="card-title justify-center text-2xl">Sign in</h1>
+					if message != "" {
+						@errorAlert(message)
+					}
+					<div class="auth-buttons">
+						for _, option := range options {
+							@authButton(option)
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+templ errorAlert(message string) {
+	<div role="alert" class="alert alert-error">
+		<span class="icon-[bi--exclamation-triangle] size-5"></span>
+		<span>{ message }</span>
+	</div>
+}
+
+templ authButton(option config.AuthOption) {
+	<a href={ option.Path() } class="btn btn-primary w-full gap-2">
+		<span class={ "size-5", option.Icon }></span>
+		{ "Sign in with " + option.Name }
+	</a>
+}
