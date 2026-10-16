@@ -1,0 +1,51 @@
+package layout
+
+import (
+	"os"
+	"time"
+)
+
+func appendVersionQuery(url string) string {
+	v := os.Getenv("APP_VERSION")
+	if v == "" {
+		v = time.Now().Format("20060102150405")
+	}
+	return url + "?v=" + v
+}
+
+templ Head(title string) {
+	<meta charset="UTF-8"/>
+	<title>{ title }</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+	<meta name="description" content="A blazing fast start-page for services written in Go "/>
+	<meta name="theme-color" content="#d07915"/>
+	<link rel="icon" type="image/x-icon" href="/assets/favicon/favicon.ico"/>
+	<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png"/>
+	<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png"/>
+	<link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png"/>
+	<link rel="manifest" href="/assets/favicon/site.webmanifest"/>
+	<link rel="stylesheet" href={ appendVersionQuery("/assets/css/style.css") }/>
+	<script src={ appendVersionQuery("/assets/js/sse.js") } defer></script>
+}
+
+templ Page(title string, content templ.Component) {
+	@document(title, "container", content)
+}
+
+templ FullPage(title string, content templ.Component) {
+	@document(title, "", content)
+}
+
+templ document(title string, mainClass string, content templ.Component) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			@Head(title)
+		</head>
+		<body>
+			<main id="main" class={ mainClass }>
+				@content
+			</main>
+		</body>
+	</html>
+}
