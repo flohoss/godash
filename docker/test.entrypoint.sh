@@ -2,5 +2,5 @@
 set -e
 
 templ generate
-./scripts/coverage.sh coverage.out "$@"
+./coverage/coverage.sh coverage.out "$@"
 go tool cover -func=coverage.out | tee coverage.txt

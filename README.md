@@ -1,7 +1,7 @@
 <div align="center">
 
 [![CI](https://github.com/flohoss/godash/actions/workflows/ci.yaml/badge.svg)](https://github.com/flohoss/godash/actions/workflows/ci.yaml)
-[![Coverage](./assets/coverage.svg)](https://github.com/flohoss/godash/actions/workflows/ci.yaml)
+[![Coverage](./coverage/coverage.svg)](https://github.com/flohoss/godash/actions/workflows/ci.yaml)
 
 A self-hosted dashboard written in Go. See the weather forecast, monitor system resources in real time, and keep your bookmarks with icons and links in one place — all driven by a single YAML config file.
 
