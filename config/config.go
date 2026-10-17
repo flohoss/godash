@@ -14,6 +14,7 @@ import (
 
 	"github.com/flohoss/godash/internal/validate"
 	"github.com/flohoss/godash/pkg/media"
+	"github.com/flohoss/gosso/v2"
 	mapstructure "github.com/go-viper/mapstructure/v2"
 	"github.com/spf13/viper"
 )
@@ -23,14 +24,14 @@ const (
 	iconsFolder  = ConfigFolder + "icons/"
 )
 
-var cfg GlobalConfig
-var mu sync.RWMutex
-var reloadMu sync.Mutex
-
 var (
 	iconCache   = map[string][2]string{}
 	iconCacheMu sync.Mutex
 )
+
+var cfg GlobalConfig
+var mu sync.RWMutex
+var reloadMu sync.Mutex
 
 type GlobalConfig struct {
 	LogLevel     string         `mapstructure:"log_level" validate:"omitempty,oneof=debug info warn error"`
@@ -43,15 +44,17 @@ type GlobalConfig struct {
 	Auth         AuthSettings   `mapstructure:"auth" validate:"omitempty"`
 }
 
-const MinSessionKeyLength = 32
+const MinSessionKeyLength = gosso.MinSessionKeyLength
 
+// validateSessionKey re-exports gosso's session-key rule so callers configuring
+// godash directly keep the same enforcement on the app level.
 func validateSessionKey(key string, enabled bool) error {
 	if !enabled {
 		return nil
 	}
 
-	if len(key) < MinSessionKeyLength {
-		return fmt.Errorf("configuration validation failed: auth.oidc.session_key must be at least %d characters when OIDC is enabled", MinSessionKeyLength)
+	if err := gosso.ValidateSessionKey(key); err != nil {
+		return fmt.Errorf("configuration validation failed: auth.oidc.session_key must be at least %d characters when OIDC is enabled: %w", MinSessionKeyLength, err)
 	}
 
 	return nil

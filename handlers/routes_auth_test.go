@@ -13,6 +13,7 @@ import (
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/internal/auth"
 	"github.com/flohoss/godash/services"
+	"github.com/flohoss/gosso/v2"
 )
 
 func loadOIDCConfig(t *testing.T, enabled bool) {
@@ -61,10 +62,8 @@ func sampleWeatherService() *fakeWeatherService {
 
 type stubAuthService struct {
 	*auth.Auth
-	startLogin        func(c *echo.Context) error
-	consumeLoginState func(c *echo.Context) (string, string, error)
-	exchange          func(c *echo.Context, code, verifier string) (string, error)
-	startSession      func(c *echo.Context, subject string)
+	startLogin     func(c *echo.Context) error
+	handleCallback func(c *echo.Context) (*gosso.LoginResult, *gosso.LoginFailure)
 }
 
 func (s *stubAuthService) StartLogin(c *echo.Context) error {
@@ -74,26 +73,11 @@ func (s *stubAuthService) StartLogin(c *echo.Context) error {
 	return s.Auth.StartLogin(c)
 }
 
-func (s *stubAuthService) ConsumeLoginState(c *echo.Context) (string, string, error) {
-	if s.consumeLoginState != nil {
-		return s.consumeLoginState(c)
+func (s *stubAuthService) HandleCallback(c *echo.Context) (*gosso.LoginResult, *gosso.LoginFailure) {
+	if s.handleCallback != nil {
+		return s.handleCallback(c)
 	}
-	return s.Auth.ConsumeLoginState(c)
-}
-
-func (s *stubAuthService) Exchange(c *echo.Context, code, verifier string) (string, error) {
-	if s.exchange != nil {
-		return s.exchange(c, code, verifier)
-	}
-	return s.Auth.Exchange(c, code, verifier)
-}
-
-func (s *stubAuthService) StartSession(c *echo.Context, subject string) {
-	if s.startSession != nil {
-		s.startSession(c, subject)
-		return
-	}
-	s.Auth.StartSession(c, subject)
+	return s.Auth.HandleCallback(c)
 }
 
 func statusOf(e *echo.Echo, method, target string) (int, string) {
@@ -260,8 +244,8 @@ func TestSetupRoutes_WithAuth_CallbackRedirectsToLoginOnStateMismatch(t *testing
 	loadOIDCConfig(t, true)
 
 	service := &stubAuthService{Auth: auth.New()}
-	service.consumeLoginState = func(*echo.Context) (string, string, error) {
-		return "expected-state", "verifier", nil
+	service.handleCallback = func(*echo.Context) (*gosso.LoginResult, *gosso.LoginFailure) {
+		return nil, &gosso.LoginFailure{Code: auth.LoginErrorExpired, Cause: gosso.ErrStateMismatch}
 	}
 
 	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
@@ -280,11 +264,8 @@ func TestSetupRoutes_WithAuth_CallbackReportsUnavailableProvider(t *testing.T) {
 	loadOIDCConfig(t, true)
 
 	service := &stubAuthService{Auth: auth.New()}
-	service.consumeLoginState = func(*echo.Context) (string, string, error) {
-		return "state", "verifier", nil
-	}
-	service.exchange = func(*echo.Context, string, string) (string, error) {
-		return "", auth.ErrProviderUnavailable
+	service.handleCallback = func(*echo.Context) (*gosso.LoginResult, *gosso.LoginFailure) {
+		return nil, &gosso.LoginFailure{Code: auth.LoginErrorUnavailable, Cause: auth.ErrProviderUnavailable}
 	}
 
 	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
@@ -302,11 +283,8 @@ func TestSetupRoutes_WithAuth_CallbackRedirectsToLoginOnFailedExchange(t *testin
 	loadOIDCConfig(t, true)
 
 	service := &stubAuthService{Auth: auth.New()}
-	service.consumeLoginState = func(*echo.Context) (string, string, error) {
-		return "state", "verifier", nil
-	}
-	service.exchange = func(*echo.Context, string, string) (string, error) {
-		return "", errors.New("bad code")
+	service.handleCallback = func(*echo.Context) (*gosso.LoginResult, *gosso.LoginFailure) {
+		return nil, &gosso.LoginFailure{Code: auth.LoginErrorFailed, Cause: errors.New("bad code")}
 	}
 
 	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())
@@ -325,15 +303,11 @@ func TestSetupRoutes_WithAuth_CallbackStartsSessionOnSuccess(t *testing.T) {
 
 	var subject string
 	service := &stubAuthService{Auth: auth.New()}
-	service.consumeLoginState = func(*echo.Context) (string, string, error) {
-		return "state", "verifier", nil
-	}
-	service.exchange = func(*echo.Context, string, string) (string, error) {
-		return "user-subject", nil
-	}
-	service.startSession = func(c *echo.Context, got string) {
-		subject = got
-		c.SetCookie(auth.SessionCookie(got))
+	service.handleCallback = func(c *echo.Context) (*gosso.LoginResult, *gosso.LoginFailure) {
+		subject = "user-subject"
+		c.SetCookie(auth.SessionCookie("user-subject"))
+
+		return &gosso.LoginResult{Subject: "user-subject", Redirect: "/"}, nil
 	}
 
 	appHandler := NewAppHandler(&fakeSystemService{}, sampleWeatherService())

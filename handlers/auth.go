@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 
@@ -10,14 +9,13 @@ import (
 	"github.com/flohoss/godash/config"
 	"github.com/flohoss/godash/internal/auth"
 	authview "github.com/flohoss/godash/views/auth"
+	"github.com/flohoss/gosso/v2"
 )
 
 type AuthService interface {
 	Enabled() bool
 	StartLogin(c *echo.Context) error
-	ConsumeLoginState(c *echo.Context) (string, string, error)
-	Exchange(c *echo.Context, code, verifier string) (string, error)
-	StartSession(c *echo.Context, subject string)
+	HandleCallback(c *echo.Context) (*gosso.LoginResult, *gosso.LoginFailure)
 	Authenticate(c *echo.Context) (*auth.User, error)
 	Middleware() echo.MiddlewareFunc
 	Shutdown()
@@ -63,36 +61,16 @@ func (ah *AuthHandler) HandleCallback(c *echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, "Not found")
 	}
 
-	if providerError := c.QueryParam("error"); providerError != "" {
-		slog.Warn("OIDC provider rejected login", "error", providerError)
-		return redirectToLogin(c, auth.LoginErrorRejected)
+	result, failure := ah.Auth.HandleCallback(c)
+	if failure != nil {
+		gosso.LogFailure(failure)
+
+		return redirectToLogin(c, failure.Code)
 	}
 
-	state, verifier, err := ah.Auth.ConsumeLoginState(c)
-	if err != nil {
-		slog.Warn("OIDC login session expired or missing")
-		return redirectToLogin(c, auth.LoginErrorExpired)
-	}
+	slog.Info("User logged in", "subject", result.Subject)
 
-	if c.QueryParam("state") != state {
-		slog.Warn("OIDC state mismatch, discarding callback")
-		return redirectToLogin(c, auth.LoginErrorExpired)
-	}
-
-	subject, err := ah.Auth.Exchange(c, c.QueryParam("code"), verifier)
-	if err != nil {
-		if errors.Is(err, auth.ErrProviderUnavailable) {
-			slog.Error("OIDC provider unavailable", "error", err)
-		} else {
-			slog.Error("OIDC login failed", "error", err)
-		}
-		return redirectToLogin(c, auth.ClassifyLoginError(err))
-	}
-
-	ah.Auth.StartSession(c, subject)
-	slog.Info("User logged in", "subject", subject)
-
-	return c.Redirect(http.StatusFound, "/")
+	return c.Redirect(http.StatusFound, result.Redirect)
 }
 
 func redirectToLogin(c *echo.Context, code auth.LoginError) error {
@@ -101,12 +79,11 @@ func redirectToLogin(c *echo.Context, code auth.LoginError) error {
 
 func loginErrorFromQuery(raw string) auth.LoginError {
 	code := auth.LoginError(raw)
-	switch code {
-	case auth.LoginErrorRejected, auth.LoginErrorExpired, auth.LoginErrorUnavailable, auth.LoginErrorFailed:
+	if code.Valid() {
 		return code
-	default:
-		return ""
 	}
+
+	return ""
 }
 
 func isKnownProvider(provider string) bool {

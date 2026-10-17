@@ -5,7 +5,7 @@ go 1.27.2
 require (
 	github.com/a-h/templ v0.3.1070
 	github.com/coreos/go-oidc/v3 v3.21.0
-	github.com/flohoss/gosso v1.0.1
+	github.com/flohoss/gosso/v2 v2.0.0
 	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-playground/locales v0.14.2
 	github.com/go-playground/universal-translator v0.18.2

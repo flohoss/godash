@@ -7,7 +7,7 @@ import (
 	"github.com/labstack/echo/v5"
 
 	"github.com/flohoss/godash/config"
-	"github.com/flohoss/gosso"
+	"github.com/flohoss/gosso/v2"
 )
 
 const (
@@ -47,29 +47,21 @@ func (a *Auth) Enabled() bool {
 }
 
 func (a *Auth) StartLogin(c *echo.Context) error {
-	return a.core.StartLogin(c, "")
+	return a.core.StartLogin(c.Response(), c.Request(), "")
 }
 
-func (a *Auth) ConsumeLoginState(c *echo.Context) (string, string, error) {
-	state, verifier, _, err := a.core.ConsumeLoginState(c)
-
-	return state, verifier, err
-}
-
-func (a *Auth) Exchange(c *echo.Context, code, verifier string) (string, error) {
-	return a.core.Exchange(c, code, verifier)
-}
-
-func (a *Auth) StartSession(c *echo.Context, subject string) {
-	_ = a.core.StartSession(c, subject)
+func (a *Auth) HandleCallback(c *echo.Context) (*gosso.LoginResult, *gosso.LoginFailure) {
+	return a.core.HandleCallback(c.Response(), c.Request())
 }
 
 func (a *Auth) Authenticate(c *echo.Context) (*gosso.User, error) {
-	return a.core.Authenticate(c)
+	return a.core.Authenticate(c.Response(), c.Request())
 }
 
 func (a *Auth) Middleware() echo.MiddlewareFunc {
-	return a.core.Middleware()
+	echoesCore := a.core.Middleware()
+
+	return echo.WrapMiddleware(echoesCore)
 }
 
 func (a *Auth) SessionTTL() time.Duration {
@@ -78,10 +70,7 @@ func (a *Auth) SessionTTL() time.Duration {
 
 func SessionCookie(subject string) *http.Cookie {
 	oidc := config.GetAuth().OIDC
-	expiresAt := time.Now().Add(oidc.SessionTTL)
-	if oidc.SessionTTL <= 0 {
-		expiresAt = time.Now().Add(gosso.DefaultSessionTTL)
-	}
+	expiresAt := time.Now().Add(gosso.Config{SessionTTL: oidc.SessionTTL}.EffectiveSessionTTL())
 
 	return &http.Cookie{
 		Name:  SessionCookieName,
