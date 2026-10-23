@@ -1,6 +1,6 @@
 module github.com/flohoss/godash
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/a-h/templ v0.3.1070
@@ -11,15 +11,15 @@ require (
 	github.com/go-playground/universal-translator v0.18.2
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/go-viper/mapstructure/v2 v2.5.0
-	github.com/labstack/echo/v5 v5.4.0
+	github.com/labstack/echo/v5 v5.4.2
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/shirou/gopsutil/v4 v4.26.9
 	github.com/spf13/viper v1.21.0
 )
 
 require (
-	github.com/ebitengine/purego v0.11.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
+	github.com/ebitengine/purego v0.11.2 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.16 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/leodido/go-urn v1.5.0 // indirect

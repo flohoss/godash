@@ -24,14 +24,14 @@ func TestLongCacheLifetime(t *testing.T) {
 }
 
 // runWithIP drives the middleware directly with a given X-Real-IP and a handler
-// that completes immediately, returning the response status.
+// that completes immediately, returning the response status. The request comes
+// from a trusted proxy so that Echo honours the header.
 func runWithIP(t *testing.T, mw echo.MiddlewareFunc, ip string) int {
 	t.Helper()
 	e := echo.NewWithConfig(echo.Config{
 		IPExtractor: echo.ExtractIPFromRealIPHeader(),
 	})
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set("X-Real-IP", ip)
+	req := newProxiedRequest(ip)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
@@ -42,6 +42,13 @@ func runWithIP(t *testing.T, mw echo.MiddlewareFunc, ip string) int {
 	return rec.Code
 }
 
+func newProxiedRequest(ip string) *http.Request {
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.RemoteAddr = "127.0.0.1:8080"
+	req.Header.Set("X-Real-IP", ip)
+	return req
+}
+
 func TestSSEConnectionLimiter(t *testing.T) {
 	mw := sseConnectionLimiter(1)
 
@@ -50,10 +57,8 @@ func TestSSEConnectionLimiter(t *testing.T) {
 	done := make(chan int, 1)
 	go func() {
 		e := echo.NewWithConfig(echo.Config{IPExtractor: echo.ExtractIPFromRealIPHeader()})
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		req.Header.Set("X-Real-IP", "10.0.0.1")
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := e.NewContext(newProxiedRequest("10.0.0.1"), rec)
 		handler := mw(func(c *echo.Context) error {
 			<-release
 			return c.NoContent(http.StatusOK)
